@@ -6,16 +6,19 @@ namespace Backend.Services {
         private static bool ContextChecked = false;
         private static readonly string? SenderEmail = Environment.GetEnvironmentVariable("EMAIL_SENDER");
 
+        private static readonly string? EmailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+
         public static bool CheckPermission() {
-            return Environment.GetEnvironmentVariable("EMAILING_ENABLED") == "True";
+            return Environment.GetEnvironmentVariable("EMAILER_ENABLED") == "True";
         }
 
         public static void CheckContext() {
             if (CheckPermission()) {
-                var emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
-                if (string.IsNullOrEmpty(SenderEmail) || string.IsNullOrEmpty(emailPassword)) {
+                if (string.IsNullOrEmpty(SenderEmail) || string.IsNullOrEmpty(EmailPassword)) {
                     throw new Exception("ERROR: EMAIL_ADDRESS or EMAIL_PASSWORD environment variables not set.");
                 }
+            } else {
+                throw new Exception("ERROR: Emailer is not enabled.");
             }
 
             ContextChecked = true;
@@ -52,7 +55,7 @@ namespace Backend.Services {
 
                 using var smtp = new SmtpClient();
                 await smtp.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                await smtp.AuthenticateAsync(SenderEmail, Environment.GetEnvironmentVariable("EMAIL_PASSWORD"));
+                await smtp.AuthenticateAsync(SenderEmail, EmailPassword);
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);
                 return "SUCCESS: Email sent successfully.";
