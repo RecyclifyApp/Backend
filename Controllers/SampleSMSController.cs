@@ -1,3 +1,5 @@
+// This controller is just to illustrate how to dispatch SMS texts using the SmsService class.
+
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,3 +1,5 @@
+// This controller is just to illustrate how to dispatch emails using the Emailer class.
+
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 

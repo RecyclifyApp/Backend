@@ -1,3 +1,4 @@
+// This controller is just to illustrate how to manage file upload using the AssetsManager class.
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
