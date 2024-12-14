@@ -7,6 +7,10 @@ namespace Backend.Services {
                 throw new ArgumentException("Invalid message. Please provide a valid message.");
             } else {
                 try {
+                    if (!File.Exists(_logFilePath)) {
+                        File.Create(_logFilePath).Dispose();
+                    }
+
                     using (var writer = new StreamWriter(_logFilePath, append: true)) {
                         string formattedDate = DateTime.Now.ToString("dd MMM yyyy, h:mm tt");
                         writer.WriteLine($"{formattedDate} - {message}");
