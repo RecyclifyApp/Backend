@@ -7,7 +7,7 @@ namespace Backend.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     public class SampleSMSController : ControllerBase {
-        [HttpPost("send")]
+        [HttpPost("send-sms")]
         public async Task<IActionResult> SendSMS(string recipientNo, string message) {
             SmsService.CheckContext();
             

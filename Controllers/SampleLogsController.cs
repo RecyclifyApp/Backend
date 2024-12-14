@@ -7,7 +7,7 @@ namespace Backend.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     public class SampleLogsController : ControllerBase {
-        [HttpPost("log")]
+        [HttpPost("log-message")]
         public IActionResult LogMessage(string message) {
             if (string.IsNullOrEmpty(message)) {
                 return BadRequest("Invalid message. Please provide a valid message.");

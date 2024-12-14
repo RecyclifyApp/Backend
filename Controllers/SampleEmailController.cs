@@ -7,7 +7,7 @@ namespace Backend.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     public class SampleEmailController : ControllerBase {
-        [HttpPost("send")]
+        [HttpPost("send-email")]
         public async Task<IActionResult> SendEmail(string recipientEmail, string title, string template) {
             try {
                 Emailer.CheckContext();

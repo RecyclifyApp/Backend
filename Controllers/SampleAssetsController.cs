@@ -7,7 +7,7 @@ namespace Backend.Controllers {
     [Route("api/[controller]")]
     public class SampleAssetsController : ControllerBase {
 
-        [HttpPost("upload")]
+        [HttpPost("upload-file")]
         public async Task<IActionResult> UploadFile(IFormFile file) {
             if (file == null || file.Length == 0) {
                 return BadRequest("Invalid file. Please upload a valid file.");
@@ -30,7 +30,7 @@ namespace Backend.Controllers {
             }
         }
 
-        [HttpDelete("delete")]
+        [HttpDelete("delete-file")]
         public async Task<IActionResult> DeleteFile(string fileName) {
             if (string.IsNullOrEmpty(fileName)) {
                 return BadRequest("Invalid file name. Please provide a valid file name.");
@@ -49,7 +49,7 @@ namespace Backend.Controllers {
             }
         }
 
-        [HttpGet("url")]
+        [HttpGet("get-file-url")]
         public async Task<IActionResult> RetrieveFileUrl(string fileName) {
             if (string.IsNullOrEmpty(fileName)) {
                 return BadRequest("Invalid file name. Please provide a valid file name.");
