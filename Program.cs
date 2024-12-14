@@ -1,8 +1,11 @@
+using Backend.Services;
 using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
 Env.Load();
+
+Bootcheck.Run();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
