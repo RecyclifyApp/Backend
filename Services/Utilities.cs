@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 
 namespace Backend.Services {
     public static class Utilities {
-        // Generate a new UUID
         public static string GenerateUniqueID(int customLength = 0) {
             if (customLength == 0) {
                 return Guid.NewGuid().ToString();

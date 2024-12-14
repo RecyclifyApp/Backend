@@ -23,4 +23,7 @@ if (app.Environment.IsDevelopment()) {
 app.UseHttpsRedirection();
 app.MapControllers();
 
+Console.WriteLine($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}" + "/swagger/index.html");
+Console.WriteLine("");
+
 app.Run();
