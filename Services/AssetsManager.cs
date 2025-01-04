@@ -7,17 +7,17 @@ namespace Backend.Services {
         private static readonly StorageClient _storageClient;
 
         static AssetsManager() {
-            var credentialsPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+            var credentialsPath = Environment.GetEnvironmentVariable("FIREBASE_APPLICATION_CREDENTIALS");
 
             if (string.IsNullOrEmpty(credentialsPath)) {
-                throw new Exception("ERROR: GOOGLE_APPLICATION_CREDENTIALS environment variable not set.");
+                throw new Exception("ERROR: FIREBASE_APPLICATION_CREDENTIALS environment variable not set.");
             }
 
             FirebaseApp.Create(new AppOptions() {
                 Credential = GoogleCredential.FromFile(credentialsPath)
             });
 
-            _storageClient = StorageClient.Create();
+            _storageClient = StorageClient.Create(GoogleCredential.FromFile(credentialsPath));
         }
 
         public static async Task<string> UploadFileAsync(Stream stream, string fileName, string contentType) {

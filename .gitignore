@@ -3,3 +3,5 @@ bin
 obj
 Config
 logs.txt
+labels.txt
+/data

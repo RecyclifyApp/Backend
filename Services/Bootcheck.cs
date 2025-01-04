@@ -18,6 +18,7 @@ namespace Backend.Services {
                 "TWILIO_AUTH_TOKEN",
                 "TWILIO_REGISTERED_PHONE_NUMBER",
                 "GOOGLE_APPLICATION_CREDENTIALS",
+                "FIREBASE_APPLICATION_CREDENTIALS",
                 "FIREBASE_STORAGE_BUCKET_URL"
             };
 
@@ -30,22 +31,24 @@ namespace Backend.Services {
                 Console.WriteLine($"Environment variables {string.Join(", ", missingVariables)} not set.");
                 Environment.Exit(1);
             } else {
-                var credentialsPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+                var firebaseCredentialsPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+                var gcpCredentialsPath = Environment.GetEnvironmentVariable("FIREBASE_APPLICATION_CREDENTIALS");
 
-                if (!File.Exists(credentialsPath)) {
+                if (!File.Exists(firebaseCredentialsPath) || !File.Exists(gcpCredentialsPath)) {
                     Console.WriteLine("");
-                    Console.WriteLine("Service account key file not found.");
+                    Console.WriteLine("Service account key files missing.");
                     Environment.Exit(1);
                 } else {
                     try {
-                        GoogleCredential.FromFile(credentialsPath);
+                        GoogleCredential.FromFile(firebaseCredentialsPath);
+                        GoogleCredential.FromFile(gcpCredentialsPath);
                         Console.WriteLine("");
                         Console.WriteLine("BOOTCHECK COMPLETE. SYSTEM READY.");
                         Console.WriteLine("");
                     } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine("Service account key file is invalid. It may have been tampered with.");
-                        Logger.Log("BOOTCHECK - Service account key file is invalid. ERROR: " + ex.Message);
+                        Console.WriteLine("Service account key files are invalid. They may have been tampered with.");
+                        Logger.Log("BOOTCHECK - Service account key files invalid. ERROR: " + ex.Message);
                         Environment.Exit(1);
                     }
                 }
