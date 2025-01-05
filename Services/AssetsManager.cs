@@ -82,22 +82,29 @@ namespace Backend.Services {
         public static async Task<string> GetFileUrlAsync(string fileName) {
             if (string.IsNullOrEmpty(fileName)) {
                 return "ERROR: Invalid file name. Please provide a valid file name.";
-            } else {
+            }
+
+            var bucketName = Environment.GetEnvironmentVariable("FIREBASE_STORAGE_BUCKET_URL");
+
+            if (string.IsNullOrEmpty(bucketName)) {
+                return "ERROR: FIREBASE_STORAGE_BUCKET_URL environment variable not set.";
+            }
+
+            try {
                 try {
-                    var bucketName = Environment.GetEnvironmentVariable("FIREBASE_STORAGE_BUCKET_URL");
-
                     var storageObject = await _storageClient.GetObjectAsync(bucketName, fileName);
-
                     if (storageObject == null) {
-                        return $"ERROR: File {fileName} not found in cloud storage.";
+                        return $"ERROR: File {fileName} does not exist.";
                     }
-
-                    var fileUrl = $"https://firebasestorage.googleapis.com/v0/b/{bucketName}/o/{fileName}?alt=media";
-
-                    return $"SUCCESS: File URL: {fileUrl}";
-                } catch (Exception ex) {
-                    return $"ERROR: {ex.Message}"; // Implement Logger
+                } catch (Google.GoogleApiException ex) when (ex.Error.Code == 404) {
+                    return $"ERROR: File {fileName} does not exist.";
                 }
+
+                var fileUrl = $"https://firebasestorage.googleapis.com/v0/b/{bucketName}/o/{fileName}?alt=media";
+                return $"SUCCESS: {fileUrl}";
+            } catch (Exception ex) {
+                Logger.Log($"ASSETSMANAGER ERROR: {ex.Message}");
+                return $"ERROR: {ex.Message}";
             }
         }
     }

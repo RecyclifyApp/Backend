@@ -46,7 +46,7 @@ namespace Backend.Controllers {
         }
 
         [HttpGet("get-file-url")]
-        public async Task<IActionResult> RetrieveFileUrl(string fileName) {
+        public async Task<IActionResult> GetFileUrl(string fileName) {
             if (string.IsNullOrEmpty(fileName)) {
                 return BadRequest("Invalid file name. Please provide a valid file name.");
             }
@@ -58,7 +58,7 @@ namespace Backend.Controllers {
                     return StatusCode(500, result);
                 }
 
-                return Ok(new { message = "File URL retrieved successfully.", url = result });
+                return Ok(result);
             } catch (Exception ex) {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
