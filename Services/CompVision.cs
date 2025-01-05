@@ -102,7 +102,17 @@ namespace Backend.Services {
                 await stream.CopyToAsync(fileStream);
             }
 
-            var optimizedImagePath = EnhanceAndOptimizeImage(tempPath);
+            string optimizedImagePath;
+            
+            try {
+                optimizedImagePath = EnhanceAndOptimizeImage(tempPath);
+            } catch (UnknownImageFormatException ex) {
+                Logger.Log($"IMAGE PROCESSING ERROR: {ex.Message}");
+                throw new Exception("Invalid image format. Please upload a valid image file.");
+            } catch (Exception ex) {
+                Logger.Log($"GENERAL ERROR: {ex.Message}");
+                throw new Exception("An error occurred while processing the image.");
+            }
 
             try {
                 var detectedObjects = await GetEnhancedDetectedObjectsAsync(optimizedImagePath);

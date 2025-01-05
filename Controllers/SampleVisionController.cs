@@ -11,8 +11,12 @@ namespace Backend.Controllers {
             if (file == null || file.Length == 0) {
                 return BadRequest(new { error = "No file uploaded" });
             } else {
-                var recognitionResult = await CompVision.Recognise(file);
-                return Ok(recognitionResult);
+                try {
+                    var recognitionResult = await CompVision.Recognise(file);
+                    return Ok(recognitionResult);
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = ex.Message });
+                }
             }
         }
     }
