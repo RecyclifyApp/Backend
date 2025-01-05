@@ -14,17 +14,13 @@ namespace Backend.Controllers {
             }
 
             try {
-                var fileName = file.FileName;
-                using var stream = file.OpenReadStream();
-                var contentType = file.ContentType;
-
-                var result = await AssetsManager.UploadFileAsync(stream, fileName, contentType);
+                var result = await AssetsManager.UploadFileAsync(file);
 
                 if (result.StartsWith("ERROR")) {
                     return StatusCode(500, result);
                 }
 
-                return Ok(new { message = "File uploaded successfully.", fileName });
+                return Ok(new { message = "File uploaded successfully.", file.FileName });
             } catch (Exception ex) {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }

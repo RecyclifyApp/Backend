@@ -20,8 +20,8 @@ namespace Backend.Services {
             _storageClient = StorageClient.Create(GoogleCredential.FromFile(credentialsPath));
         }
 
-        public static async Task<string> UploadFileAsync(Stream stream, string fileName, string contentType) {
-            if (stream == null || string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(contentType)) {
+        public static async Task<string> UploadFileAsync(IFormFile file) {
+            if (file == null || file.Length == 0) {
                 return "ERROR: One or more required parameters are missing.";
             } else {
                 try {
@@ -30,6 +30,10 @@ namespace Backend.Services {
                     if (string.IsNullOrEmpty(bucketName)) {
                         return "ERROR: FIREBASE_STORAGE_BUCKET_URL environment variable not set.";
                     }
+
+                    var stream = file.OpenReadStream();
+                    var fileName = file.FileName;
+                    var contentType = file.ContentType;
 
                     var storageObject = await _storageClient.UploadObjectAsync(
                         bucketName,
