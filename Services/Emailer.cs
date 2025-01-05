@@ -8,11 +8,11 @@ namespace Backend.Services {
 
         private static readonly string? EmailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
 
-        public static bool CheckPermission() {
+        private static bool CheckPermission() {
             return Environment.GetEnvironmentVariable("EMAILER_ENABLED") == "True";
         }
 
-        public static void CheckContext() {
+        private static void CheckContext() {
             if (CheckPermission()) {
                 if (string.IsNullOrEmpty(SenderEmail) || string.IsNullOrEmpty(EmailPassword)) {
                     throw new Exception("ERROR: EMAIL_ADDRESS or EMAIL_PASSWORD environment variables not set.");
@@ -25,6 +25,7 @@ namespace Backend.Services {
         }
 
         public static async Task<string> SendEmailAsync(string to, string subject, string template) {
+            CheckContext();
             if (!ContextChecked) {
                 return "ERROR: System context was not checked before sending email. Skipping email.";
             }

@@ -10,8 +10,6 @@ namespace Backend.Controllers {
         [HttpPost("send-email")]
         public async Task<IActionResult> SendEmail(string recipientEmail, string title, string template) {
             try {
-                Emailer.CheckContext();
-
                 var emailResult = await Emailer.SendEmailAsync(recipientEmail, title, template);
 
                 if (emailResult.StartsWith("ERROR"))

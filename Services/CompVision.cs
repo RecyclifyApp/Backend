@@ -5,6 +5,20 @@ using Newtonsoft.Json;
 
 namespace Backend.Services {
     public class CompVision {
+        private static bool ContextChecked = false;
+        
+        private static bool CheckPermission() {
+            return Environment.GetEnvironmentVariable("COMPVISION_ENABLED") == "True";
+        }
+
+        private static void CheckContext() {
+            if (!CheckPermission()) {
+                throw new Exception("ERROR: CompVision is not enabled.");
+            }
+
+            ContextChecked = true;
+        }
+
         private static readonly Dictionary<string, List<string>> categoryMap = LoadJson<Dictionary<string, List<string>>>("data/category_map.json");
 
         private static T LoadJson<T>(string path) {
@@ -95,6 +109,11 @@ namespace Backend.Services {
         }
 
         public static async Task<object> Recognise(IFormFile file) {
+            CheckContext();
+            if (!ContextChecked) {
+                return "ERROR: System context was not checked before proce4ssing image for recognition. Skipping image recognition.";
+            }
+
             var tempPath = Path.Combine(Path.GetTempPath(), file.FileName);
             var stream = file.OpenReadStream();
 

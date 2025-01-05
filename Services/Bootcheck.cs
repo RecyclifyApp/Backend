@@ -9,11 +9,12 @@ namespace Backend.Services {
             var missingVariables = new List<string>();
             var environmentVariables = new string[] {
                 "EMAILER_ENABLED",
+                "SMS_ENABLED",
+                "COMPVISION_ENABLED",
                 "EMAIL_SENDER",
                 "EMAIL_PASSWORD",
                 "HTTP_URL",
                 "HTTPS_URL",
-                "SMS_ENABLED",
                 "TWILIO_ACCOUNT_SID",
                 "TWILIO_AUTH_TOKEN",
                 "TWILIO_REGISTERED_PHONE_NUMBER",
