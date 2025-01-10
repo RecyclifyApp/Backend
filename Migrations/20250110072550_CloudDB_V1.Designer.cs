@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250110061831_CloudDB_V1")]
+    [Migration("20250110072550_CloudDB_V1")]
     partial class CloudDBV1
     {
         /// <inheritdoc />
@@ -27,14 +27,7 @@ namespace Backend.Migrations
                     b.Property<string>("AdminID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
                     b.HasKey("AdminID");
-
-                    b.HasIndex("UserID")
-                        .IsUnique();
 
                     b.ToTable("Admins");
                 });
@@ -348,7 +341,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Models.User", "User")
                         .WithOne("Admin")
-                        .HasForeignKey("Backend.Models.Admin", "UserID")
+                        .HasForeignKey("Backend.Models.Admin", "AdminID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -24,14 +24,7 @@ namespace Backend.Migrations
                     b.Property<string>("AdminID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
                     b.HasKey("AdminID");
-
-                    b.HasIndex("UserID")
-                        .IsUnique();
 
                     b.ToTable("Admins");
                 });
@@ -345,7 +338,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Models.User", "User")
                         .WithOne("Admin")
-                        .HasForeignKey("Backend.Models.Admin", "UserID")
+                        .HasForeignKey("Backend.Models.Admin", "AdminID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

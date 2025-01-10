@@ -35,6 +35,16 @@ namespace Backend {
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Admin>()
+                .HasKey(a => a.AdminID);
+
+            modelBuilder.Entity<Admin>()
+                .HasOne(a => a.User)
+                .WithOne(u => u.Admin)
+                .HasForeignKey<Admin>(a => a.AdminID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.Parent)
                 .WithOne(p => p.Student)

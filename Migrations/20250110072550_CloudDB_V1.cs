@@ -130,15 +130,14 @@ namespace Backend.Migrations
                 name: "Admins",
                 columns: table => new
                 {
-                    AdminID = table.Column<string>(type: "varchar(255)", nullable: false),
-                    UserID = table.Column<string>(type: "varchar(255)", nullable: false)
+                    AdminID = table.Column<string>(type: "varchar(255)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Admins", x => x.AdminID);
                     table.ForeignKey(
-                        name: "FK_Admins_Users_UserID",
-                        column: x => x.UserID,
+                        name: "FK_Admins_Users_AdminID",
+                        column: x => x.AdminID,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -314,12 +313,6 @@ namespace Backend.Migrations
                         onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Admins_UserID",
-                table: "Admins",
-                column: "UserID",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Classes_TeacherID",
