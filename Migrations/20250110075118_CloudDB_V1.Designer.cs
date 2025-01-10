@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250110072550_CloudDB_V1")]
+    [Migration("20250110075118_CloudDB_V1")]
     partial class CloudDBV1
     {
         /// <inheritdoc />
@@ -58,8 +58,7 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.DailyStudentPoints", b =>
                 {
                     b.Property<string>("StudentID")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnOrder(0);
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
@@ -67,7 +66,7 @@ namespace Backend.Migrations
                     b.Property<int>("PointsGained")
                         .HasColumnType("int");
 
-                    b.HasKey("StudentID");
+                    b.HasKey("StudentID", "Date");
 
                     b.ToTable("DailyStudentPoints");
                 });

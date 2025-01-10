@@ -52,6 +52,9 @@ namespace Backend {
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<DailyStudentPoints>()
+                .HasKey(dsp => new { dsp.StudentID, dsp.Date });
+
+            modelBuilder.Entity<DailyStudentPoints>()
                 .HasOne(d => d.Student)
                 .WithMany()
                 .HasForeignKey(d => d.StudentID)

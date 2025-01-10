@@ -248,7 +248,7 @@ namespace Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DailyStudentPoints", x => x.StudentID);
+                    table.PrimaryKey("PK_DailyStudentPoints", x => new { x.StudentID, x.Date });
                     table.ForeignKey(
                         name: "FK_DailyStudentPoints_Students_StudentID",
                         column: x => x.StudentID,
