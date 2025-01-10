@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250110075118_CloudDB_V1")]
+    [Migration("20250110075536_CloudDB_V1")]
     partial class CloudDBV1
     {
         /// <inheritdoc />
