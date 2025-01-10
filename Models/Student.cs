@@ -13,5 +13,9 @@ namespace Backend.Models {
         
         [ForeignKey(nameof(ParentID))]
         public virtual Parent? Parent { get; set; }
+
+        public ICollection<Redemption>? Redemptions { get; set; }
+        public int CurrentPoints { get; set; }
+        public int TotalPoints { get; set; }
     }
 }

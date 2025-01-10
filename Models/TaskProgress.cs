@@ -15,5 +15,11 @@ namespace Backend.Models {
 
         public int? Progress { get; set; }
         public required bool TaskVerified { get; set; } = false;
+
+        [ForeignKey("AssignedTeacherID")]
+        public required string AssignedTeacherID { get; set; }
+        public required virtual Teacher AssignedTeacher { get; set; }
+
+        public string? ImageUrls { get; set; }
     }
 }

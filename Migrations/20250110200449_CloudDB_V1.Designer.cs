@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250110075536_CloudDB_V1")]
+    [Migration("20250110200449_CloudDB_V1")]
     partial class CloudDBV1
     {
         /// <inheritdoc />
@@ -102,9 +102,12 @@ namespace Backend.Migrations
 
                     b.Property<string>("StudentID")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("ParentID");
+
+                    b.HasIndex("StudentID")
+                        .IsUnique();
 
                     b.ToTable("Parents");
                 });
@@ -214,16 +217,19 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<int>("CurrentPoints")
+                        .HasColumnType("int");
+
                     b.Property<string>("ParentID")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("TotalPoints")
+                        .HasColumnType("int");
 
                     b.HasKey("StudentID");
 
                     b.HasIndex("ClassID");
-
-                    b.HasIndex("ParentID")
-                        .IsUnique();
 
                     b.ToTable("Students");
                 });
@@ -254,6 +260,13 @@ namespace Backend.Migrations
                     b.Property<string>("TaskID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("AssignedTeacherID")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ImageUrls")
+                        .HasColumnType("text");
+
                     b.Property<int?>("Progress")
                         .HasColumnType("int");
 
@@ -266,6 +279,8 @@ namespace Backend.Migrations
 
                     b.HasKey("TaskID");
 
+                    b.HasIndex("AssignedTeacherID");
+
                     b.HasIndex("StudentID");
 
                     b.ToTable("TaskProgresses");
@@ -276,7 +291,7 @@ namespace Backend.Migrations
                     b.Property<string>("TeacherID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("TeacherName")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -352,7 +367,7 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.Teacher", "Teacher")
                         .WithMany("Classes")
                         .HasForeignKey("TeacherID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Teacher");
@@ -380,12 +395,29 @@ namespace Backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Backend.Models.Parent", b =>
+                {
+                    b.HasOne("Backend.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("Backend.Models.Parent", "ParentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Student", "Student")
+                        .WithOne("Parent")
+                        .HasForeignKey("Backend.Models.Parent", "StudentID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
                 {
                     b.HasOne("Backend.Models.Class", "Class")
                         .WithMany("QuestProgresses")
                         .HasForeignKey("ClassID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Backend.Models.Quest", "Quest")
@@ -408,7 +440,7 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("Backend.Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("Redemptions")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -426,19 +458,23 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.Parent", "Parent")
-                        .WithOne("Student")
-                        .HasForeignKey("Backend.Models.Student", "ParentID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("Backend.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("Backend.Models.Student", "StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Class");
-
-                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("Backend.Models.TaskProgress", b =>
                 {
+                    b.HasOne("Backend.Models.Teacher", "AssignedTeacher")
+                        .WithMany()
+                        .HasForeignKey("AssignedTeacherID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentID")
@@ -448,12 +484,23 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.Task", "Task")
                         .WithMany()
                         .HasForeignKey("TaskID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedTeacher");
 
                     b.Navigation("Student");
 
                     b.Navigation("Task");
+                });
+
+            modelBuilder.Entity("Backend.Models.Teacher", b =>
+                {
+                    b.HasOne("Backend.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("Backend.Models.Teacher", "TeacherID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Backend.Models.WeeklyClassPoints", b =>
@@ -476,10 +523,11 @@ namespace Backend.Migrations
                     b.Navigation("WeeklyClassPoints");
                 });
 
-            modelBuilder.Entity("Backend.Models.Parent", b =>
+            modelBuilder.Entity("Backend.Models.Student", b =>
                 {
-                    b.Navigation("Student")
-                        .IsRequired();
+                    b.Navigation("Parent");
+
+                    b.Navigation("Redemptions");
                 });
 
             modelBuilder.Entity("Backend.Models.Teacher", b =>

@@ -45,10 +45,33 @@ namespace Backend {
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Parent>()
+                .HasKey(p => p.ParentID);
+
+            modelBuilder.Entity<Parent>()
+                .HasOne<User>()
+                .WithOne()
+                .HasForeignKey<Parent>(p => p.ParentID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Parent>()
+                .HasOne(p => p.Student)
+                .WithOne(s => s.Parent)
+                .HasForeignKey<Parent>(p => p.ParentID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Student>()
+                .HasOne<User>()
+                .WithOne()
+                .HasForeignKey<Student>(s => s.StudentID)
+                .IsRequired()   
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.Parent)
                 .WithOne(p => p.Student)
-                .HasForeignKey<Student>(s => s.ParentID)
+                .HasForeignKey<Parent>(p => p.StudentID)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<DailyStudentPoints>()
@@ -75,18 +98,18 @@ namespace Backend {
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<QuestProgress>()
-                .HasOne(q => q.Class)
+                .HasOne(qp => qp.Class)
                 .WithMany(c => c.QuestProgresses)
-                .HasForeignKey(q => q.ClassID)
+                .HasForeignKey(qp => qp.ClassID)
                 .IsRequired()
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TaskProgress>()
                 .HasOne(t => t.Task)
                 .WithMany()
                 .HasForeignKey(t => t.TaskID)
                 .IsRequired()
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TaskProgress>()
                 .HasOne(t => t.Student)
@@ -94,6 +117,17 @@ namespace Backend {
                 .HasForeignKey(t => t.StudentID)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskProgress>()
+                .HasOne(t => t.AssignedTeacher)
+                .WithMany()
+                .HasForeignKey(t => t.AssignedTeacherID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskProgress>()
+                .Property(t => t.ImageUrls)
+                .HasColumnType("text");
 
             modelBuilder.Entity<WeeklyClassPoints>()
                 .HasKey(w => new { w.Date, w.ClassID });
@@ -103,6 +137,38 @@ namespace Backend {
                 .WithMany(c => c.WeeklyClassPoints)
                 .HasForeignKey(w => w.ClassID)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Redemption>()
+                .HasOne(r => r.Student)
+                .WithMany(s => s.Redemptions)
+                .HasForeignKey(r => r.StudentID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Teacher>()
+                .HasKey(t => t.TeacherID);
+
+            modelBuilder.Entity<Teacher>()
+                .HasOne<User>()
+                .WithOne()
+                .HasForeignKey<Teacher>(t => t.TeacherID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Teacher>()
+                .HasMany(t => t.Classes)
+                .WithOne(c => c.Teacher)
+                .HasForeignKey(c => c.TeacherID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Class>()
+                .HasKey(c => c.ClassID);
+
+            modelBuilder.Entity<Class>()
+                .HasOne(c => c.Teacher)
+                .WithMany(t => t.Classes)
+                .HasForeignKey(c => c.TeacherID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

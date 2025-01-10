@@ -16,19 +16,6 @@ namespace Backend.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Parents",
-                columns: table => new
-                {
-                    ParentID = table.Column<string>(type: "varchar(255)", nullable: false),
-                    StudentID = table.Column<string>(type: "longtext", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Parents", x => x.ParentID);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "Quests",
                 columns: table => new
                 {
@@ -75,19 +62,6 @@ namespace Backend.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Teachers",
-                columns: table => new
-                {
-                    TeacherID = table.Column<string>(type: "varchar(255)", nullable: false),
-                    Name = table.Column<string>(type: "longtext", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Teachers", x => x.TeacherID);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -102,27 +76,6 @@ namespace Backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Classes",
-                columns: table => new
-                {
-                    ClassID = table.Column<string>(type: "varchar(255)", nullable: false),
-                    ClassName = table.Column<string>(type: "longtext", nullable: false),
-                    ClassPoints = table.Column<int>(type: "int", nullable: false),
-                    TeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Classes", x => x.ClassID);
-                    table.ForeignKey(
-                        name: "FK_Classes_Teachers_TeacherID",
-                        column: x => x.TeacherID,
-                        principalTable: "Teachers",
-                        principalColumn: "TeacherID",
-                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -167,6 +120,46 @@ namespace Backend.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Teachers",
+                columns: table => new
+                {
+                    TeacherID = table.Column<string>(type: "varchar(255)", nullable: false),
+                    TeacherName = table.Column<string>(type: "longtext", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Teachers", x => x.TeacherID);
+                    table.ForeignKey(
+                        name: "FK_Teachers_Users_TeacherID",
+                        column: x => x.TeacherID,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Classes",
+                columns: table => new
+                {
+                    ClassID = table.Column<string>(type: "varchar(255)", nullable: false),
+                    ClassName = table.Column<string>(type: "longtext", nullable: false),
+                    ClassPoints = table.Column<int>(type: "int", nullable: false),
+                    TeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Classes", x => x.ClassID);
+                    table.ForeignKey(
+                        name: "FK_Classes_Teachers_TeacherID",
+                        column: x => x.TeacherID,
+                        principalTable: "Teachers",
+                        principalColumn: "TeacherID",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "QuestProgresses",
                 columns: table => new
                 {
@@ -182,7 +175,7 @@ namespace Backend.Migrations
                         column: x => x.ClassID,
                         principalTable: "Classes",
                         principalColumn: "ClassID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_QuestProgresses_Quests_QuestID",
                         column: x => x.QuestID,
@@ -198,7 +191,9 @@ namespace Backend.Migrations
                 {
                     StudentID = table.Column<string>(type: "varchar(255)", nullable: false),
                     ClassID = table.Column<string>(type: "varchar(255)", nullable: false),
-                    ParentID = table.Column<string>(type: "varchar(255)", nullable: false)
+                    ParentID = table.Column<string>(type: "longtext", nullable: false),
+                    CurrentPoints = table.Column<int>(type: "int", nullable: false),
+                    TotalPoints = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -210,11 +205,11 @@ namespace Backend.Migrations
                         principalColumn: "ClassID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Students_Parents_ParentID",
-                        column: x => x.ParentID,
-                        principalTable: "Parents",
-                        principalColumn: "ParentID",
-                        onDelete: ReferentialAction.Restrict);
+                        name: "FK_Students_Users_StudentID",
+                        column: x => x.StudentID,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -259,6 +254,31 @@ namespace Backend.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Parents",
+                columns: table => new
+                {
+                    ParentID = table.Column<string>(type: "varchar(255)", nullable: false),
+                    StudentID = table.Column<string>(type: "varchar(255)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Parents", x => x.ParentID);
+                    table.ForeignKey(
+                        name: "FK_Parents_Students_StudentID",
+                        column: x => x.StudentID,
+                        principalTable: "Students",
+                        principalColumn: "StudentID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Parents_Users_ParentID",
+                        column: x => x.ParentID,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Redemptions",
                 columns: table => new
                 {
@@ -294,7 +314,9 @@ namespace Backend.Migrations
                     TaskID = table.Column<string>(type: "varchar(255)", nullable: false),
                     StudentID = table.Column<string>(type: "varchar(255)", nullable: false),
                     Progress = table.Column<int>(type: "int", nullable: true),
-                    TaskVerified = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    TaskVerified = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AssignedTeacherID = table.Column<string>(type: "varchar(255)", nullable: false),
+                    ImageUrls = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -310,7 +332,13 @@ namespace Backend.Migrations
                         column: x => x.TaskID,
                         principalTable: "Tasks",
                         principalColumn: "TaskID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TaskProgresses_Teachers_AssignedTeacherID",
+                        column: x => x.AssignedTeacherID,
+                        principalTable: "Teachers",
+                        principalColumn: "TeacherID",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -323,6 +351,12 @@ namespace Backend.Migrations
                 name: "IX_Inboxes_UserID",
                 table: "Inboxes",
                 column: "UserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Parents_StudentID",
+                table: "Parents",
+                column: "StudentID",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuestProgresses_ClassID",
@@ -345,10 +379,9 @@ namespace Backend.Migrations
                 column: "ClassID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Students_ParentID",
-                table: "Students",
-                column: "ParentID",
-                unique: true);
+                name: "IX_TaskProgresses_AssignedTeacherID",
+                table: "TaskProgresses",
+                column: "AssignedTeacherID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskProgresses_StudentID",
@@ -374,6 +407,9 @@ namespace Backend.Migrations
                 name: "Inboxes");
 
             migrationBuilder.DropTable(
+                name: "Parents");
+
+            migrationBuilder.DropTable(
                 name: "QuestProgresses");
 
             migrationBuilder.DropTable(
@@ -384,9 +420,6 @@ namespace Backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "WeeklyClassPoints");
-
-            migrationBuilder.DropTable(
-                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Quests");
@@ -404,10 +437,10 @@ namespace Backend.Migrations
                 name: "Classes");
 
             migrationBuilder.DropTable(
-                name: "Parents");
+                name: "Teachers");
 
             migrationBuilder.DropTable(
-                name: "Teachers");
+                name: "Users");
         }
     }
 }
