@@ -20,7 +20,8 @@ namespace Backend.Services {
                 "TWILIO_REGISTERED_PHONE_NUMBER",
                 "GOOGLE_APPLICATION_CREDENTIALS",
                 "FIREBASE_APPLICATION_CREDENTIALS",
-                "FIREBASE_STORAGE_BUCKET_URL"
+                "FIREBASE_STORAGE_BUCKET_URL",
+                "CLOUDSQL_CONNECTION_STRING"
             };
 
             missingVariables = environmentVariables
