@@ -26,11 +26,18 @@ namespace Backend {
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-            string? connectionString = Environment.GetEnvironmentVariable("CLOUDSQL_CONNECTION_STRING");
-            if (connectionString != null) {
-                optionsBuilder.UseMySQL(connectionString);
+            string? dbMode = Environment.GetEnvironmentVariable("DB_MODE");
+            if (dbMode == "cloud") {
+                string? connectionString = Environment.GetEnvironmentVariable("CLOUDSQL_CONNECTION_STRING");
+                if (connectionString != null) {
+                    optionsBuilder.UseMySQL(connectionString);
+                }
+            } else if (dbMode == "local") {
+                string sqlitePath = "database.sqlite";
+                optionsBuilder.UseSqlite($"Data Source={sqlitePath}");
             }
         }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             base.OnModelCreating(modelBuilder);

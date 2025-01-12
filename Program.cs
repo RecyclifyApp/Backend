@@ -19,15 +19,31 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope()) {
     var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
 
-    try {
-        var connectedSuccesssfully = await dbContext.Database.CanConnectAsync();
-        if (connectedSuccesssfully) {
-            Console.WriteLine("Successfully connected to CloudSQL.");
-        } else {
-            Console.WriteLine("Failed to connect to CloudSQL.");
+    if (Environment.GetEnvironmentVariable("DB_MODE") == "cloud") {
+        try {
+            var connectedSuccesssfully = await dbContext.Database.CanConnectAsync();
+            if (connectedSuccesssfully) {
+                Console.WriteLine("Successfully connected to CloudSQL.");
+            } else {
+                Console.WriteLine("Failed to connect to CloudSQL.");
+            }
+        } catch (Exception ex) {
+            Console.WriteLine($"Error connecting to CloudSQL: {ex.Message}");
         }
-    } catch (Exception ex) {
-        Console.WriteLine($"Error connecting to CloudSQL: {ex.Message}");
+    } else if (Environment.GetEnvironmentVariable("DB_MODE") == "local") {
+        try {
+            dbContext.Database.EnsureCreated();
+            var connectedSuccesssfully = await dbContext.Database.CanConnectAsync();
+            if (connectedSuccesssfully) {
+                Console.WriteLine("Successfully connected to local SQLite.");
+            } else {
+                Console.WriteLine("Failed to connect to local SQLite.");
+            }
+        } catch (Exception ex) {
+            Console.WriteLine($"Error connecting to local SQLite: {ex.Message}");
+        }
+    } else {
+        Console.WriteLine("Invalid DB_MODE configuration.");
     }
 }
 
