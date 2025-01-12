@@ -1,8 +1,25 @@
 using System.Text;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
     public static class Utilities {
+        public static void SaveToSqlite(MyDbContext context) { // Use this method to save data to local SQLite database, instead of traditionally just using context.SaveChanges()
+            context.SaveChanges();
+            context.Database.ExecuteSqlInterpolated($"PRAGMA wal_checkpoint(FULL)");
+            context.Dispose();
+            RemoveTempFiles();
+        }
+
+        private static void RemoveTempFiles() {
+            if (File.Exists("database.sqlite-shm")) {
+                File.Delete("database.sqlite-shm");
+            }
+            if (File.Exists("database.sqlite-wal")) {
+                File.Delete("database.sqlite-wal");
+            }
+        }
+
         public static string GenerateUniqueID(int customLength = 0) {
             if (customLength == 0) {
                 return Guid.NewGuid().ToString();
