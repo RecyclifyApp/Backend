@@ -7,7 +7,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDBV1 : Migration
+    public partial class CloudDBV2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,7 +66,7 @@ namespace Backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false),
-                    Name = table.Column<string>(type: "longtext", nullable: true),
+                    Name = table.Column<string>(type: "varchar(255)", nullable: false),
                     Email = table.Column<string>(type: "longtext", nullable: false),
                     Password = table.Column<string>(type: "longtext", nullable: false),
                     ContactNumber = table.Column<string>(type: "longtext", nullable: true),
@@ -76,6 +76,7 @@ namespace Backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.UniqueConstraint("AK_Users_Name", x => x.Name);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -124,7 +125,7 @@ namespace Backend.Migrations
                 columns: table => new
                 {
                     TeacherID = table.Column<string>(type: "varchar(255)", nullable: false),
-                    TeacherName = table.Column<string>(type: "longtext", nullable: false)
+                    TeacherName = table.Column<string>(type: "varchar(255)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -134,6 +135,12 @@ namespace Backend.Migrations
                         column: x => x.TeacherID,
                         principalTable: "Users",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Teachers_Users_TeacherName",
+                        column: x => x.TeacherName,
+                        principalTable: "Users",
+                        principalColumn: "Name",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
@@ -387,6 +394,11 @@ namespace Backend.Migrations
                 name: "IX_TaskProgresses_StudentID",
                 table: "TaskProgresses",
                 column: "StudentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teachers_TeacherName",
+                table: "Teachers",
+                column: "TeacherName");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WeeklyClassPoints_ClassID",

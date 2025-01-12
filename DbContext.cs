@@ -155,6 +155,14 @@ namespace Backend {
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Teacher>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.TeacherName)
+                .HasPrincipalKey(u => u.Name)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Teacher>()
                 .HasMany(t => t.Classes)
                 .WithOne(c => c.Teacher)
                 .HasForeignKey(c => c.TeacherID)
