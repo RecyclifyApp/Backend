@@ -22,6 +22,7 @@ using (var scope = app.Services.CreateScope()) {
     if (Environment.GetEnvironmentVariable("DB_MODE") == "cloud") {
         try {
             var connectedSuccesssfully = await dbContext.Database.CanConnectAsync();
+            Utilities.SaveToSqlite(dbContext);
             if (connectedSuccesssfully) {
                 Console.WriteLine("Successfully connected to CloudSQL.");
             } else {
@@ -34,6 +35,7 @@ using (var scope = app.Services.CreateScope()) {
         try {
             dbContext.Database.EnsureCreated();
             var connectedSuccesssfully = await dbContext.Database.CanConnectAsync();
+            Utilities.SaveToSqlite(dbContext);
             if (connectedSuccesssfully) {
                 Console.WriteLine("Successfully connected to local SQLite.");
             } else {
