@@ -30,7 +30,7 @@ namespace Backend {
             if (dbMode == "cloud") {
                 string? connectionString = Environment.GetEnvironmentVariable("CLOUDSQL_CONNECTION_STRING");
                 if (connectionString != null) {
-                    optionsBuilder.UseMySQL(connectionString);
+                    optionsBuilder.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 33)));
                 }
             } else if (dbMode == "local") {
                 string sqlitePath = "database.sqlite";
