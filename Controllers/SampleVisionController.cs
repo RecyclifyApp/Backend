@@ -15,7 +15,7 @@ namespace Backend.Controllers {
                     var recognitionResult = await CompVision.Recognise(file);
                     return Ok(recognitionResult);
                 } catch (Exception ex) {
-                    return StatusCode(500, new { error = ex.Message });
+                    return StatusCode(500, new { error = ex });
                 }
             }
         }
