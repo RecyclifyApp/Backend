@@ -5,3 +5,6 @@ Config
 logs.txt
 labels.txt
 /data
+database.sqlite
+database.sqlite-shm
+database.sqlite-wal
