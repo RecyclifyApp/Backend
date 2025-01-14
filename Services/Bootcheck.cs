@@ -8,6 +8,7 @@ namespace Backend.Services {
         public static void Run() {
             var missingVariables = new List<string>();
             var environmentVariables = new string[] {
+                "DB_MODE",
                 "EMAILER_ENABLED",
                 "SMS_ENABLED",
                 "COMPVISION_ENABLED",
