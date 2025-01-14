@@ -20,6 +20,7 @@ namespace Backend {
         public required DbSet<Admin> Admins { get; set; }
         public required DbSet<User> Users { get; set; }
         public required DbSet<WeeklyClassPoints> WeeklyClassPoints { get; set; }
+        public required DbSet<ContactForm> ContactForms { get; set; }
 
         public MyDbContext(IConfiguration configuration) : base() {
             _configuration = configuration;

@@ -45,7 +45,7 @@ using (var scope = app.Services.CreateScope()) {
         try {
             dbContext.Database.EnsureCreated();
             var connectedSuccesssfully = await dbContext.Database.CanConnectAsync();
-            Utilities.SaveToSqlite(dbContext);
+            DatabaseManager.SaveToSqlite(dbContext);
             if (connectedSuccesssfully) {
                 Console.WriteLine("Successfully connected to local SQLite.");
             } else {

@@ -55,6 +55,31 @@ namespace Backend.Migrations
                     b.ToTable("Classes");
                 });
 
+            modelBuilder.Entity("Backend.Models.ContactForm", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SenderEmail")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactForms");
+                });
+
             modelBuilder.Entity("Backend.Models.DailyStudentPoints", b =>
                 {
                     b.Property<string>("StudentID")
@@ -216,14 +241,12 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("ClassID")
-                        .IsRequired()
                         .HasColumnType("varchar(255)");
 
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
                     b.Property<string>("ParentID")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("TotalPoints")
@@ -459,9 +482,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Models.Class", "Class")
                         .WithMany("Students")
-                        .HasForeignKey("ClassID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ClassID");
 
                     b.HasOne("Backend.Models.User", null)
                         .WithOne()
