@@ -7,12 +7,31 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V3 : Migration
+    public partial class CloudDB_V4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ContactForms",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    SenderName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    SenderEmail = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Message = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactForms", x => x.Id);
+                })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
@@ -225,9 +244,9 @@ namespace Backend.Migrations
                 {
                     StudentID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ClassID = table.Column<string>(type: "varchar(255)", nullable: false)
+                    ClassID = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ParentID = table.Column<string>(type: "longtext", nullable: false)
+                    ParentID = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CurrentPoints = table.Column<int>(type: "int", nullable: false),
                     TotalPoints = table.Column<int>(type: "int", nullable: false)
@@ -239,8 +258,7 @@ namespace Backend.Migrations
                         name: "FK_Students_Classes_ClassID",
                         column: x => x.ClassID,
                         principalTable: "Classes",
-                        principalColumn: "ClassID",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "ClassID");
                     table.ForeignKey(
                         name: "FK_Students_Users_StudentID",
                         column: x => x.StudentID,
@@ -453,6 +471,9 @@ namespace Backend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Admins");
+
+            migrationBuilder.DropTable(
+                name: "ContactForms");
 
             migrationBuilder.DropTable(
                 name: "DailyStudentPoints");
