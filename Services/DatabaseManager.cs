@@ -59,7 +59,7 @@ namespace Backend.Services {
         public static void CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = Guid.NewGuid().ToString(); 
+            string id = Utilities.GenerateUniqueID(); 
             string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
