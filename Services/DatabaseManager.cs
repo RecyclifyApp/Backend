@@ -22,7 +22,7 @@ namespace Backend.Services {
 
         private static string ValidateField(Dictionary<string, object> userDetails, string key, bool required, string errorMessage)
         {
-            string value = userDetails.GetValueOrDefault(key)?.ToString();
+            string value = userDetails.GetValueOrDefault(key)?.ToString() ?? "";
             if (required && string.IsNullOrWhiteSpace(value))
                 throw new ArgumentException(errorMessage);
             return value ?? "";
@@ -40,7 +40,6 @@ namespace Backend.Services {
         {
             if (password.Length < 8)
                 throw new ArgumentException("Password must be at least 8 characters long.");
-            // Additional checks like including numbers, special characters, etc., can be added here
             return password;
         }
 
@@ -48,7 +47,7 @@ namespace Backend.Services {
         {
             if (!string.IsNullOrWhiteSpace(contactNumber))
             {
-                var phoneRegex = new Regex(@"^\+?\d{8,15}$"); // Supports international and local numbers
+                var phoneRegex = new Regex(@"^\+?\d{8}$");
                 if (!phoneRegex.IsMatch(contactNumber))
                     throw new ArgumentException("Invalid contact number format.");
             }
