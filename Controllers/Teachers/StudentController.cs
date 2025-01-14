@@ -58,40 +58,5 @@ namespace Backend.Controllers.Teachers {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
-        // Update Student
-        // [HttpPut("update-student")]
-        // public async Task<IActionResult> UpdateStudent(string studentID, string studentName, string studentEmail, string studentContactNumber, string studentAvatar) {
-        //     if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(studentName) || string.IsNullOrEmpty(studentEmail) || string.IsNullOrEmpty(studentContactNumber) || string.IsNullOrEmpty(studentAvatar)) {
-        //         return BadRequest("Invalid student details. Please provide valid student details.");
-        //     }
-
-        //     var student = await _context.Students
-        //     .Include(s => s.User) 
-        //     .FirstOrDefaultAsync(s => s.StudentID == studentID);
-
-        //     if (student == null) {
-        //         return NotFound("Student not found.");
-        //     }
-
-        //     try {
-        //         if (student.User == null) {
-        //             return NotFound("Associated user for this student not found.");
-        //         }
-
-        //         student.User.Name = studentName;
-        //         student.User.Email = studentEmail;
-        //         student.User.ContactNumber = studentContactNumber;
-        //         student.User.Avatar = studentAvatar;
-
-        //         _context.Students.Update(student);
-        //         await _context.SaveChangesAsync();
-
-        //         return Ok("Student updated successfully.");
-        //     }
-        //     catch (Exception ex) {
-        //         return StatusCode(500, $"An error occurred: {ex.Message}");
-        //     }
-        // }
     }
 }
