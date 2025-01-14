@@ -1,0 +1,88 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|c:\\users\\mrmim\\onedrive\\desktop\\recylicy\\backend\\controllers\\contactmanagament.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|solutionrelative:controllers\\contactmanagament.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|c:\\users\\mrmim\\onedrive\\desktop\\recylicy\\backend\\controllers\\contactformcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|solutionrelative:controllers\\contactformcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|c:\\users\\mrmim\\onedrive\\desktop\\recylicy\\backend\\controllers\\sampleassetscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|solutionrelative:controllers\\sampleassetscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|c:\\users\\mrmim\\onedrive\\desktop\\recylicy\\backend\\models\\contactform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9F7B64B2-E05F-42CA-B296-7C2FCF6525E9}|Backend.csproj|solutionrelative:models\\contactform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SampleAssetsController.cs",
+              "DocumentMoniker": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Controllers\\SampleAssetsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\SampleAssetsController.cs",
+              "ToolTip": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Controllers\\SampleAssetsController.cs",
+              "RelativeToolTip": "Controllers\\SampleAssetsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T09:00:12.744Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ContactForm.cs",
+              "DocumentMoniker": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Models\\ContactForm.cs",
+              "RelativeDocumentMoniker": "Models\\ContactForm.cs",
+              "ToolTip": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Models\\ContactForm.cs",
+              "RelativeToolTip": "Models\\ContactForm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T08:33:24.568Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ContactFormController.cs",
+              "DocumentMoniker": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Controllers\\ContactFormController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ContactFormController.cs",
+              "ToolTip": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Controllers\\ContactFormController.cs",
+              "RelativeToolTip": "Controllers\\ContactFormController.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAYwBAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T08:30:39.913Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ContactManagament.cs",
+              "DocumentMoniker": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Controllers\\ContactManagament.cs",
+              "RelativeDocumentMoniker": "Controllers\\ContactManagament.cs",
+              "ToolTip": "C:\\Users\\mrmim\\OneDrive\\Desktop\\Recylicy\\Backend\\Controllers\\ContactManagament.cs",
+              "RelativeToolTip": "Controllers\\ContactManagament.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAcwAoAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T08:22:34.217Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
