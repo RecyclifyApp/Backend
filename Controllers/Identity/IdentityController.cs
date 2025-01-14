@@ -46,6 +46,87 @@ namespace Backend.Controllers.Identity {
             return tokenHandler.WriteToken(token);
         }
 
+        [HttpGet("getUserDetails")]
+        [Authorize]
+        public IActionResult GetUserDetails()
+        {
+            try
+            {
+                // Extract the token from the Authorization header
+                var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Authorization token is missing or invalid." });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+
+                // Validate the token
+                string? secret = Environment.GetEnvironmentVariable("JWT_KEY");
+                if (string.IsNullOrEmpty(secret))
+                {
+                    throw new Exception("JWT secret is missing.");
+                }
+
+                var key = Encoding.ASCII.GetBytes(secret);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                ClaimsPrincipal principal;
+                try
+                {
+                    principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+                    // Ensure the token has the right signature algorithm
+                    if (validatedToken is not JwtSecurityToken jwtToken || 
+                        !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return Unauthorized(new { message = "Invalid token." });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return Unauthorized(new { message = "Invalid token.", details = ex.Message });
+                }
+
+                // Extract the user ID from the token claims
+                var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { message = "User ID not found in token." });
+                }
+
+                // Retrieve the user details from the database
+                var user = _context.Users.Find(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                // Return user details
+                return Ok(new
+                {
+                    user.Id,
+                    user.Name,
+                    user.Email,
+                    user.ContactNumber,
+                    user.UserRole,
+                    user.Avatar
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving user details.", details = ex.Message });
+            }
+        }
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request) {
             var user = _context.Users.SingleOrDefault(u =>
@@ -97,7 +178,24 @@ namespace Backend.Controllers.Identity {
 
             try {
                 DatabaseManager.CreateUserRecords(_context, request.UserRole, keyValuePairs);
-                return Ok("Account created successfully.");
+                
+                var user = _context.Users.SingleOrDefault(u => u.Email == request.Email);
+                if (user == null) {
+                    return BadRequest(new { message = "User creation failed." });
+                }
+
+                string token = CreateToken(user);
+
+                return Ok(new {
+                    message = "Account created successfully.",
+                    token,
+                    user = new {
+                        user.Id,
+                        user.Name,
+                        user.Email,
+                        user.UserRole
+                    }
+                });
             } catch (ArgumentException ex) {
                 return BadRequest(new { message = ex.Message });
             } catch (Exception ex) {
@@ -105,12 +203,16 @@ namespace Backend.Controllers.Identity {
             }
         }
 
-        [HttpPut("{id}")]
-        public IActionResult EditAccount(string id, [FromBody] EditAccountRequest request)
+        [HttpPut("editDetails")]
+        [Authorize]
+        public IActionResult EditAccount([FromBody] EditAccountRequest request)
         {
             try
             {
-                var user = _context.Users.Find(id);
+                // Extract the user ID from the token claims
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var user = _context.Users.Find(userId);
                 if (user == null)
                 {
                     return NotFound(new { message = "User not found." });
@@ -136,15 +238,25 @@ namespace Backend.Controllers.Identity {
                 return StatusCode(500, new { message = "An error occurred while updating the account.", details = ex.Message });
             }
         }
-
+        
         [HttpDelete("deleteAccount")]
+        [Authorize]
         public IActionResult DeleteAccount([FromQuery] string id)
         {
             try
             {
-                var user = _context.Users.SingleOrDefault(u => u.Id == id);
+                // Extract the user ID from the token claims
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                if (user == null) {
+                // Ensure the token's user is deleting their own account
+                if (userId != id)
+                {
+                    return Unauthorized(new { message = "You can only delete your own account." });
+                }
+
+                var user = _context.Users.SingleOrDefault(u => u.Id == id);
+                if (user == null)
+                {
                     return NotFound(new { message = "User not found." });
                 }
 

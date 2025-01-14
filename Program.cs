@@ -4,6 +4,7 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,22 @@ builder.Services.AddAuthentication(options => {
         ValidateAudience = false,
         ClockSkew = TimeSpan.Zero
     };
+});
+
+builder.Services.AddSwaggerGen(options => { 
+    var securityScheme = new OpenApiSecurityScheme { 
+        In = ParameterLocation.Header, Description = "Token", 
+        Name = "Authorization", Type = SecuritySchemeType.Http, 
+        BearerFormat = "JWT", 
+        Scheme = "Bearer", 
+        Reference = new OpenApiReference { 
+            Type = ReferenceType.SecurityScheme, Id = "Bearer" 
+        } 
+    }; 
+    options.AddSecurityDefinition("Bearer", securityScheme); 
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement { 
+        { securityScheme, new List<string>() } 
+    }); 
 });
 
 
