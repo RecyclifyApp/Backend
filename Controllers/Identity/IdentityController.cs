@@ -220,7 +220,13 @@ namespace Backend.Controllers.Identity {
 
                 var name = string.IsNullOrWhiteSpace(request.Name) ? user.Name : request.Name.Trim();
                 var email = string.IsNullOrWhiteSpace(request.Email) ? user.Email : DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
-                var contactNumber = string.IsNullOrWhiteSpace(request.ContactNumber) ? user.ContactNumber : DatabaseManager.ValidateContactNumber(request.ContactNumber.Trim(), _context);
+
+                // Only validate contact number if it has changed
+                var contactNumber = string.IsNullOrWhiteSpace(request.ContactNumber) ? user.ContactNumber : request.ContactNumber.Trim();
+                if (contactNumber != user.ContactNumber)
+                {
+                    contactNumber = DatabaseManager.ValidateContactNumber(contactNumber, _context);
+                }
 
                 user.Name = name;
                 user.Email = email;
