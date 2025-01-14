@@ -244,8 +244,35 @@ namespace Backend.Controllers.Identity {
                 return StatusCode(500, new { message = "An error occurred while updating the account.", details = ex.Message });
             }
         }
-        
+
         [HttpDelete("deleteAccount")]
+        [Authorize]
+        public IActionResult DeleteAccount()
+        {
+            try
+            {
+                // Extract the user ID from the token claims
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var user = _context.Users.Find(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                // Remove the user from the database
+                _context.Users.Remove(user);
+                _context.SaveChanges();
+
+                return Ok(new { message = "Account deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the account.", details = ex.Message });
+            }
+        }
+        
+        [HttpDelete("deleteTargetedAccount")]
         [Authorize]
         public IActionResult DeleteAccount([FromQuery] string id)
         {
