@@ -20,17 +20,25 @@ namespace Backend {
         public required DbSet<Admin> Admins { get; set; }
         public required DbSet<User> Users { get; set; }
         public required DbSet<WeeklyClassPoints> WeeklyClassPoints { get; set; }
+        public required DbSet<ContactForm> ContactForms { get; set; }
 
         public MyDbContext(IConfiguration configuration) : base() {
             _configuration = configuration;
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-            string? connectionString = Environment.GetEnvironmentVariable("CLOUDSQL_CONNECTION_STRING");
-            if (connectionString != null) {
-                optionsBuilder.UseMySQL(connectionString);
+            string? dbMode = Environment.GetEnvironmentVariable("DB_MODE");
+            if (dbMode == "cloud") {
+                string? connectionString = Environment.GetEnvironmentVariable("CLOUDSQL_CONNECTION_STRING");
+                if (connectionString != null) {
+                    optionsBuilder.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 33)));
+                }
+            } else if (dbMode == "local") {
+                string sqlitePath = "database.sqlite";
+                optionsBuilder.UseSqlite($"Data Source={sqlitePath}");
             }
         }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             base.OnModelCreating(modelBuilder);
