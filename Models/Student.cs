@@ -17,5 +17,8 @@ namespace Backend.Models {
         public ICollection<Redemption>? Redemptions { get; set; }
         public int CurrentPoints { get; set; }
         public int TotalPoints { get; set; }
+        public string? UserID { get; set; }
+        [ForeignKey(nameof(UserID))]
+        public User? User { get; set; }
     }
 }

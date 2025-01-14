@@ -137,10 +137,15 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("ParentID");
 
                     b.HasIndex("StudentID")
                         .IsUnique();
+
+                    b.HasIndex("UserID");
 
                     b.ToTable("Parents");
                 });
@@ -258,9 +263,14 @@ namespace Backend.Migrations
                     b.Property<int>("TotalPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("StudentID");
 
                     b.HasIndex("ClassID");
+
+                    b.HasIndex("UserID");
 
                     b.ToTable("Students");
                 });
@@ -325,6 +335,9 @@ namespace Backend.Migrations
                     b.Property<string>("TeacherName")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("UserID")
+                        .HasColumnType("longtext");
 
                     b.HasKey("TeacherID");
 
@@ -443,7 +456,13 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID");
+
                     b.Navigation("Student");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
@@ -496,7 +515,13 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID");
+
                     b.Navigation("Class");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Models.TaskProgress", b =>
