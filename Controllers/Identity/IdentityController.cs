@@ -1,32 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
-using FirebaseAdmin.Messaging;
 
-namespace Backend.Controllers.Identity
-{
+namespace Backend.Controllers.Identity {
     [ApiController]
     [Route("[controller]")]
-    public class IdentityController : ControllerBase
-    {
-        private readonly MyDbContext _context;
-        private readonly IConfiguration _configuration;
-
-        public IdentityController(MyDbContext context, IConfiguration configuration)
-        {
-            _context = context;
-            _configuration = configuration;
-        }
-
+    public class IdentityController (MyDbContext context) : ControllerBase {
+        private readonly MyDbContext _context = context;
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
-        {
+        public IActionResult Login([FromBody] LoginRequest request) {
             var user = _context.Users.SingleOrDefault(u =>
                 (u.Email == request.Identifier || u.Name == request.Identifier) &&
                 u.Password == Utilities.HashString(request.Password));
 
-            if (user == null)
-            {
+            if (user == null) {
                 return Unauthorized(new { message = "Invalid login credentials." });
             }
 
@@ -35,19 +22,15 @@ namespace Backend.Controllers.Identity
             return Ok(new {message = "Login Successful"});
         }
 
-        public class LoginRequest
-        {
+        public class LoginRequest {
             public required string Identifier { get; set; } // Username or Email
             public required string Password { get; set; }
         }
 
         [HttpPost("create")]
-        public IActionResult CreateAccount([FromBody] CreateAccountRequest request)
-        {
-            var keyValuePairs = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
+        public IActionResult CreateAccount([FromBody] CreateAccountRequest request) {
+            var keyValuePairs = new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
                     { "Name", request.Name },
                     { "Email", request.Email },
                     { "Password", request.Password },
@@ -57,32 +40,24 @@ namespace Backend.Controllers.Identity
                 }
             };
 
-            if (request.UserRole == "parent")
-            {
-                if (string.IsNullOrEmpty(request.StudentID))
-                {
+            if (request.UserRole == "parent") {
+                if (string.IsNullOrEmpty(request.StudentID)) {
                     return BadRequest(new { Error = "StudentID cannot be empty for a user with the 'parent' role." });
                 }
                 keyValuePairs[0].Add("StudentID", request.StudentID);
             }
 
-            try
-            {
+            try {
                 DatabaseManager.CreateUserRecords(_context, request.UserRole, keyValuePairs);
                 return Ok("Account created successfully.");
-            }
-            catch (ArgumentException ex)
-            {
+            } catch (ArgumentException ex) {
                 return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return StatusCode(500, new { message = "An error occurred while creating the account.", details = ex.Message });
             }
         }
 
-        public class CreateAccountRequest
-        {
+        public class CreateAccountRequest {
             public required string Name { get; set; }
             public required string Email { get; set; }
             public required string Password { get; set; }
@@ -93,14 +68,11 @@ namespace Backend.Controllers.Identity
         }
 
         [HttpDelete("delete")]
-        public IActionResult DeleteAccount([FromQuery] string id)
-        {
-            try
-            {
+        public IActionResult DeleteAccount([FromQuery] string id) {
+            try {
                 var user = _context.Users.SingleOrDefault(u => u.Id == id);
 
-                if (user == null)
-                {
+                if (user == null) {
                     return NotFound(new { message = "User not found." });
                 }
 
@@ -108,9 +80,7 @@ namespace Backend.Controllers.Identity
                 _context.SaveChanges();
 
                 return Ok(new { message = "Account deleted successfully." });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return StatusCode(500, new { message = "An error occurred while deleting the account.", details = ex.Message });
             }
         }
