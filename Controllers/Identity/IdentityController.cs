@@ -225,9 +225,16 @@ namespace Backend.Controllers.Identity {
                 var contactNumber = string.IsNullOrWhiteSpace(request.ContactNumber) ? user.ContactNumber : request.ContactNumber.Trim();
                 if (contactNumber != user.ContactNumber)
                 {
-                    contactNumber = DatabaseManager.ValidateContactNumber(contactNumber, _context);
+                    // Check if contactNumber is not null before passing to ValidateContactNumber
+                    if (contactNumber != null)
+                    {
+                        contactNumber = DatabaseManager.ValidateContactNumber(contactNumber, _context);
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = "Contact number cannot be null." });
+                    }
                 }
-
                 user.Name = name;
                 user.Email = email;
                 user.ContactNumber = contactNumber;
