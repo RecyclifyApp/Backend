@@ -38,5 +38,34 @@ namespace Backend.Controllers
 
             return NoContent();
         }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateContactForm(int id, [FromBody] ContactForm updatedContactForm)
+        {
+            if (id != updatedContactForm.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(updatedContactForm).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.ContactForms.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
     }
 }
