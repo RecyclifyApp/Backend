@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V4 : Migration
+    public partial class CloudDB_V5 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -191,7 +191,10 @@ namespace Backend.Migrations
                 {
                     ClassID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ClassName = table.Column<string>(type: "longtext", nullable: false)
+                    ClassName = table.Column<int>(type: "int", nullable: false),
+                    ClassDescription = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ClassImage = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ClassPoints = table.Column<int>(type: "int", nullable: false),
                     TeacherID = table.Column<string>(type: "varchar(255)", nullable: false)

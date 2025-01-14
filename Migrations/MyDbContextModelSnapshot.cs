@@ -37,9 +37,15 @@ namespace Backend.Migrations
                     b.Property<string>("ClassID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("ClassName")
+                    b.Property<string>("ClassDescription")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("ClassImage")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ClassName")
+                        .HasColumnType("int");
 
                     b.Property<int>("ClassPoints")
                         .HasColumnType("int");
