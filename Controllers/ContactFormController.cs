@@ -1,0 +1,41 @@
+using Backend.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Backend.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ContactFormController : ControllerBase
+    {
+        private readonly MyDbContext _context;
+
+        public ContactFormController(MyDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitContactForm([FromBody] ContactForm contactForm)
+        {
+            if (contactForm == null || !ModelState.IsValid)
+            {
+                return BadRequest("Invalid contact form data.");
+            }
+
+            // Validate and sanitize data as required
+            // Example validation
+            if (string.IsNullOrWhiteSpace(contactForm.SenderName)
+                || string.IsNullOrWhiteSpace(contactForm.SenderEmail)
+                || string.IsNullOrWhiteSpace(contactForm.Message))
+            {
+                return BadRequest("All fields are required.");
+            }
+
+            // Save the contact form to the database
+            _context.ContactForms.Add(contactForm);
+            await _context.SaveChangesAsync();
+
+            return Ok("Contact form submitted successfully!");
+        }
+    }
+}
