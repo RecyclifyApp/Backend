@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using System.Text.RegularExpressions;
 
 namespace Backend.Services {
     public static class DatabaseManager {
@@ -19,15 +20,62 @@ namespace Backend.Services {
             }
         }
 
+        public static string ValidateField(Dictionary<string, object> userDetails, string key, bool required, string errorMessage) {
+            string value = userDetails.GetValueOrDefault(key)?.ToString() ?? "";
+            if (required && string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException(errorMessage);
+            return value ?? "";
+        }
+
+        public static string ValidateEmail(string email, MyDbContext context) {
+            var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            if (!emailRegex.IsMatch(email)) {
+                throw new ArgumentException("Invalid email format."); 
+            }
+            if (context.Users.Any(u => u.Email == email)) {
+                throw new ArgumentException("Email must be unique.");
+            }
+            return email;
+        }
+
+        public static string ValidatePassword(string password) {
+            if (password.Length < 8)
+                throw new ArgumentException("Password must be at least 8 characters long.");
+            return password;
+        }
+
+        public static string ValidateContactNumber(string contactNumber, MyDbContext context) {
+            if (!string.IsNullOrWhiteSpace(contactNumber)) {
+                var phoneRegex = new Regex(@"^\+?\d{8}$");
+                if (!phoneRegex.IsMatch(contactNumber))
+                    throw new ArgumentException("Invalid contact number format.");
+
+                if (context.Users.Any(u => u.ContactNumber == contactNumber))
+                    throw new ArgumentException("Contact number must be unique.");
+            }
+            return contactNumber;
+        }
+
         public static void CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
-            var baseUserObj = new User {
-                Id = keyValuePairs[0]["Id"].ToString() ?? "",
-                Name = keyValuePairs[0]["Name"].ToString() ?? "",
-                Email = keyValuePairs[0]["Email"].ToString() ?? "",
-                Password = keyValuePairs[0]["Password"].ToString() ?? "",
-                ContactNumber = keyValuePairs[0]["ContactNumber"].ToString() ?? "",
-                UserRole = keyValuePairs[0]["UserRole"].ToString() ?? "",
-                Avatar = keyValuePairs[0]["Avatar"].ToString() ?? ""
+            var userDetails = keyValuePairs[0];
+
+            string id = Utilities.GenerateUniqueID(); 
+            string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
+            string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
+            string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
+            string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
+            string userRole = ValidateField(userDetails, "UserRole", required: true, "UserRole is required.");
+            string avatar = userDetails.GetValueOrDefault("Avatar")?.ToString() ?? "";
+
+            var baseUserObj = new User
+            {
+                Id = id,
+                Name = name,
+                Email = email,
+                Password = Utilities.HashString(password),
+                ContactNumber = contactNumber,
+                UserRole = userRole,
+                Avatar = avatar
             };
 
             if (baseUser == "student") {
