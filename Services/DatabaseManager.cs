@@ -19,7 +19,7 @@ namespace Backend.Services {
             }
         }
 
-        public static void AfterUserCreate(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
+        public static void CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var baseUserObj = new User {
                 Id = keyValuePairs[0]["Id"].ToString() ?? "",
                 Name = keyValuePairs[0]["Name"].ToString() ?? "",
