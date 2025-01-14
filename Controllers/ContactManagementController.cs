@@ -24,6 +24,19 @@ namespace Backend.Controllers
             return Ok(contactForms);
         }
 
-        // You can add more actions here as needed, for example:
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteContactForm(int id)
+        {
+            var contactForm = await _context.ContactForms.FindAsync(id);
+            if (contactForm == null)
+            {
+                return NotFound();
+            }
+
+            _context.ContactForms.Remove(contactForm);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
