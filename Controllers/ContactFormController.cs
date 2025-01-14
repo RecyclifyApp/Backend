@@ -1,4 +1,5 @@
 using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
@@ -30,7 +31,7 @@ namespace Backend.Controllers
             {
                 return BadRequest("All fields are required.");
             }
-
+            Console.WriteLine(contactForm);
             // Save the contact form to the database
             _context.ContactForms.Add(contactForm);
             await _context.SaveChangesAsync();
