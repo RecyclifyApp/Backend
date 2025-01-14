@@ -3,6 +3,7 @@ using System;
 using Backend;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -11,16 +12,18 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250112035805_CloudDB_V2")]
-    partial class CloudDBV2
+    [Migration("20250114012523_CloudDB_V4")]
+    partial class CloudDB_V4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.0")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("Backend.Models.Admin", b =>
                 {
@@ -55,6 +58,31 @@ namespace Backend.Migrations
                     b.ToTable("Classes");
                 });
 
+            modelBuilder.Entity("Backend.Models.ContactForm", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SenderEmail")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactForms");
+                });
+
             modelBuilder.Entity("Backend.Models.DailyStudentPoints", b =>
                 {
                     b.Property<string>("StudentID")
@@ -76,6 +104,8 @@ namespace Backend.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
@@ -214,14 +244,12 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("ClassID")
-                        .IsRequired()
                         .HasColumnType("varchar(255)");
 
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
                     b.Property<string>("ParentID")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("TotalPoints")
@@ -457,9 +485,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Models.Class", "Class")
                         .WithMany("Students")
-                        .HasForeignKey("ClassID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ClassID");
 
                     b.HasOne("Backend.Models.User", null)
                         .WithOne()
