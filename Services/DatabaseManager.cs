@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using System.Text.RegularExpressions;
 
 namespace Backend.Services {
     public static class DatabaseManager {
@@ -19,15 +20,61 @@ namespace Backend.Services {
             }
         }
 
+        private static string ValidateField(Dictionary<string, object> userDetails, string key, bool required, string errorMessage)
+        {
+            string value = userDetails.GetValueOrDefault(key)?.ToString();
+            if (required && string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException(errorMessage);
+            return value ?? "";
+        }
+
+        private static string ValidateEmail(string email)
+        {
+            var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            if (!emailRegex.IsMatch(email))
+                throw new ArgumentException("Invalid email format.");
+            return email;
+        }
+
+        private static string ValidatePassword(string password)
+        {
+            if (password.Length < 8)
+                throw new ArgumentException("Password must be at least 8 characters long.");
+            // Additional checks like including numbers, special characters, etc., can be added here
+            return password;
+        }
+
+        private static string ValidateContactNumber(string contactNumber)
+        {
+            if (!string.IsNullOrWhiteSpace(contactNumber))
+            {
+                var phoneRegex = new Regex(@"^\+?\d{8,15}$"); // Supports international and local numbers
+                if (!phoneRegex.IsMatch(contactNumber))
+                    throw new ArgumentException("Invalid contact number format.");
+            }
+            return contactNumber;
+        }
+
         public static void CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
-            var baseUserObj = new User {
-                Id = keyValuePairs[0]["Id"].ToString() ?? "",
-                Name = keyValuePairs[0]["Name"].ToString() ?? "",
-                Email = keyValuePairs[0]["Email"].ToString() ?? "",
-                Password = keyValuePairs[0]["Password"].ToString() ?? "",
-                ContactNumber = keyValuePairs[0]["ContactNumber"].ToString() ?? "",
-                UserRole = keyValuePairs[0]["UserRole"].ToString() ?? "",
-                Avatar = keyValuePairs[0]["Avatar"].ToString() ?? ""
+            var userDetails = keyValuePairs[0];
+
+            string id = ValidateField(userDetails, "Id", required: true, "Id is required.");
+            string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
+            string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."));
+            string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
+            string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "");
+            string userRole = ValidateField(userDetails, "UserRole", required: true, "UserRole is required.");
+            string avatar = userDetails.GetValueOrDefault("Avatar")?.ToString() ?? "";
+
+            var baseUserObj = new User
+            {
+                Id = id,
+                Name = name,
+                Email = email,
+                Password = password,
+                ContactNumber = contactNumber,
+                UserRole = userRole,
+                Avatar = avatar
             };
 
             if (baseUser == "student") {
