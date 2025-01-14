@@ -27,10 +27,13 @@ namespace Backend.Controllers.Identity {
             public required string Password { get; set; }
         }
 
-        [HttpPost("create")]
-        public IActionResult CreateAccount([FromBody] CreateAccountRequest request) {
-            var keyValuePairs = new List<Dictionary<string, object>> {
-                new Dictionary<string, object> {
+        [HttpPost("createAccount")]
+        public IActionResult CreateAccount([FromBody] CreateAccountRequest request)
+        {
+            var keyValuePairs = new List<Dictionary<string, object>>
+            {
+                new Dictionary<string, object>
+                {
                     { "Name", request.Name },
                     { "Email", request.Email },
                     { "Password", request.Password },
@@ -67,9 +70,51 @@ namespace Backend.Controllers.Identity {
             public string? StudentID { get; set; } 
         }
 
-        [HttpDelete("delete")]
-        public IActionResult DeleteAccount([FromQuery] string id) {
-            try {
+        [HttpPut("{id}")]
+        public IActionResult EditAccount(string id, [FromBody] EditAccountRequest request)
+        {
+            try
+            {
+                var user = _context.Users.Find(id);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                var name = string.IsNullOrWhiteSpace(request.Name) ? user.Name : request.Name.Trim();
+                var email = string.IsNullOrWhiteSpace(request.Email) ? user.Email : DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
+                var contactNumber = string.IsNullOrWhiteSpace(request.ContactNumber) ? user.ContactNumber : DatabaseManager.ValidateContactNumber(request.ContactNumber.Trim(), _context);
+
+                user.Name = name;
+                user.Email = email;
+                user.ContactNumber = contactNumber;
+
+                _context.SaveChanges();
+                return Ok(new { message = "Account updated successfully." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the account.", details = ex.Message });
+            }
+        }
+
+        public class EditAccountRequest
+        {
+            public string? Name { get; set; }
+            public string? Email { get; set; }
+            public string? ContactNumber { get; set; }
+        }
+
+
+        [HttpDelete("deleteAccount")]
+        public IActionResult DeleteAccount([FromQuery] string id)
+        {
+            try
+            {
                 var user = _context.Users.SingleOrDefault(u => u.Id == id);
 
                 if (user == null) {

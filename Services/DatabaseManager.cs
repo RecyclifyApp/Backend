@@ -20,17 +20,17 @@ namespace Backend.Services {
             }
         }
 
-        private static string ValidateField(Dictionary<string, object> userDetails, string key, bool required, string errorMessage) {
+        public static string ValidateField(Dictionary<string, object> userDetails, string key, bool required, string errorMessage) {
             string value = userDetails.GetValueOrDefault(key)?.ToString() ?? "";
             if (required && string.IsNullOrWhiteSpace(value))
                 throw new ArgumentException(errorMessage);
             return value ?? "";
         }
 
-        private static string ValidateEmail(string email, MyDbContext context) {
+        public static string ValidateEmail(string email, MyDbContext context) {
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
             if (!emailRegex.IsMatch(email)) {
-                throw new ArgumentException("Invalid email format.");
+                throw new ArgumentException("Invalid email format."); 
             }
             if (context.Users.Any(u => u.Email == email)) {
                 throw new ArgumentException("Email must be unique.");
@@ -38,13 +38,13 @@ namespace Backend.Services {
             return email;
         }
 
-        private static string ValidatePassword(string password) {
+        public static string ValidatePassword(string password) {
             if (password.Length < 8)
                 throw new ArgumentException("Password must be at least 8 characters long.");
             return password;
         }
 
-        private static string ValidateContactNumber(string contactNumber, MyDbContext context) {
+        public static string ValidateContactNumber(string contactNumber, MyDbContext context) {
             if (!string.IsNullOrWhiteSpace(contactNumber)) {
                 var phoneRegex = new Regex(@"^\+?\d{8}$");
                 if (!phoneRegex.IsMatch(contactNumber))
