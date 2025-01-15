@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers.Teachers {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
 
     public class ClassController(MyDbContext context) : ControllerBase {
         private readonly MyDbContext _context = context;
-        // Get Class 
-        [HttpGet("get-class")]
-        public async Task<IActionResult> GetClass(string teacherID) {
+        // Get Classes
+        [HttpGet("get-classes")]
+        public async Task<IActionResult> GetClasses(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
                 return BadRequest("Invalid teacher ID. Please provide a valid teacher ID.");
             }
@@ -20,10 +20,11 @@ namespace Backend.Controllers.Teachers {
             try {
                 var classes = await _context.Classes
                 .Where(c => c.TeacherID == teacherID)
+                .OrderBy(c => c.ClassName)
                 .ToListAsync();
 
                 if (classes == null || classes.Count == 0) {
-                    return NotFound("No classes found for the provided teacher ID.");
+                    return Ok("No classes found for the provided teacher ID.");
                 }
 
                 return Ok(classes);
@@ -34,11 +35,32 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
+        // Get Class
+        [HttpGet("get-class")]
+        public async Task<IActionResult> GetClass(string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest("Invalid class ID. Please provide a valid class ID.");
+            }
+
+            try {
+                var result = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+                if (result == null) {
+                    return NotFound("Class not found.");
+                }
+
+                return Ok(result);
+
+            }
+            catch (Exception ex) {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         // Create Class
         [HttpPost("create-class")]
-        public async Task<IActionResult> CreateClass(string className, string classDescription, string classImage, string teacherID) {
-            if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(classImage) || string.IsNullOrEmpty(classDescription)) {
-                return BadRequest("Invalid class details or teacher ID. Please provide valid class details and teacher ID.");
+        public async Task<IActionResult> CreateClass(string className, string classDescription, string teacherID) {
+            if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(classDescription)) {
+                return BadRequest("Invalid class details. Please provide valid class details and teacher ID.");
             }
 
             if (!int.TryParse(className, out int intClassName)) {
@@ -51,12 +73,18 @@ namespace Backend.Controllers.Teachers {
                 return NotFound("Teacher not found.");
             }
 
+            // Find Class Existance
+            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName && c.TeacherID == teacherID);
+            if (classExist != null) {
+                return BadRequest("Class already exists.");
+            }
+
             try {
                 var newClass = new Class {
                     ClassID = Guid.NewGuid().ToString(),
                     ClassName = intClassName,
                     ClassDescription = classDescription,
-                    ClassImage = classImage,
+                    ClassImage = "",
                     ClassPoints = 0,
                     WeeklyClassPoints = [],
                     TeacherID = teacherID,
@@ -86,7 +114,7 @@ namespace Backend.Controllers.Teachers {
             try {
                 var result = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
                 if (result == null) {
-                    return Ok("Class not found.");
+                    return NotFound("Class not found.");
                 }
 
                 _context.Classes.Remove(result);
@@ -100,10 +128,10 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
-        // Update Class 
+        // Update Class, Add Class Image later
         [HttpPut("update-class")]
-        public async Task<IActionResult> UpdateClass(string classId, string className, string classDescription, string classImage) {
-            if (string.IsNullOrEmpty(classId) || string.IsNullOrEmpty(classImage) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(className)) {
+        public async Task<IActionResult> UpdateClass(string classId, string className, string classDescription ) {
+            if (string.IsNullOrEmpty(classId) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(className)) {
                 return BadRequest("Invalid class details. Please provide valid class details.");
             }
 
@@ -119,7 +147,6 @@ namespace Backend.Controllers.Teachers {
 
                 result.ClassName = intClassName;
                 result.ClassDescription = classDescription;
-                result.ClassImage = classImage;
                 _context.Classes.Update(result);
                 await _context.SaveChangesAsync();
 

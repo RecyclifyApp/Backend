@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers.Teachers {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
 
     public class StudentController(MyDbContext context) : ControllerBase {
         private readonly MyDbContext _context = context;
 
         // Get Student
-        [HttpGet("get-student")]
+        [HttpGet("get-students")]
         public async Task<IActionResult> GetStudent(string classId) {
             if (string.IsNullOrEmpty(classId)) {
                 return BadRequest("Invalid class ID. Please provide a valid class ID.");
@@ -25,7 +25,7 @@ namespace Backend.Controllers.Teachers {
                 .ToListAsync();
 
                 if (students == null || students.Count == 0) {
-                    return NotFound("No students found in this class.");
+                    return Ok("No students found in this class.");
                 }
 
                 return Ok(students);
