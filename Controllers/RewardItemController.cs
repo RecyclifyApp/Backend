@@ -6,14 +6,9 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RewardItemController : ControllerBase
+    public class RewardItemController(MyDbContext _context) : ControllerBase
     {
-        private readonly MyDbContext _context;
-
-        public RewardItemController(MyDbContext context)
-        {
-            _context = context;
-        }
+        
 
         // GET: api/RewardItems
         [HttpGet]

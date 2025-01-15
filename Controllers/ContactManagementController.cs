@@ -8,10 +8,8 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ContactManagementController(MyDbContext context) : ControllerBase
+    public class ContactManagementController(MyDbContext _context) : ControllerBase
     {
-        private readonly MyDbContext _context = context;
-
         [HttpGet]
         public async Task<IActionResult> GetContactForms()
         {
