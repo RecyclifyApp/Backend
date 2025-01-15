@@ -8,14 +8,9 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ContactManagementController : ControllerBase
+    public class ContactManagementController(MyDbContext context) : ControllerBase
     {
-        private readonly MyDbContext _context;
-
-        public ContactManagementController(MyDbContext context)
-        {
-            _context = context;
-        }
+        private readonly MyDbContext _context = context;
 
         [HttpGet]
         public async Task<IActionResult> GetContactForms()
@@ -38,7 +33,7 @@ namespace Backend.Controllers
 
             return NoContent();
         }
-        
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateContactForm(int id, [FromBody] ContactForm updatedContactForm)
         {

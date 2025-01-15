@@ -6,14 +6,9 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ContactFormController : ControllerBase
+    public class ContactFormController(MyDbContext context) : ControllerBase
     {
-        private readonly MyDbContext _context;
-
-        public ContactFormController(MyDbContext context)
-        {
-            _context = context;
-        }
+        private readonly MyDbContext _context = context;
 
         [HttpPost]
         public async Task<IActionResult> SubmitContactForm([FromBody] ContactForm contactForm)
