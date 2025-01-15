@@ -9,5 +9,8 @@ namespace Backend.Models {
 
         public required string StudentID { get; set; }
         public required Student Student { get; set; }
+        public string? UserID { get; set; }
+        [ForeignKey(nameof(UserID))]
+        public User? User { get; set; }
     }
 }
