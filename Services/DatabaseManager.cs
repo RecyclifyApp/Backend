@@ -265,7 +265,7 @@ namespace Backend.Services {
                 TaskPoints = 300
             };
 
-            AfterUserCreate(context, "teacher", new List<Dictionary<string, object>> {
+            CreateUserRecords(context, "teacher", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", teacher1.TeacherID },
                     { "Name", teacher1.TeacherName },
@@ -277,7 +277,7 @@ namespace Backend.Services {
                 }
             });
 
-            AfterUserCreate(context, "student", new List<Dictionary<string, object>> {
+            CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student1.StudentID },
                     { "Name", "Student 1" },
@@ -289,7 +289,7 @@ namespace Backend.Services {
                 }
             });
 
-            AfterUserCreate(context, "student", new List<Dictionary<string, object>> {
+            CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student2.StudentID },
                     { "Name", "Student 2" },
