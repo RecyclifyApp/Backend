@@ -48,14 +48,11 @@ namespace Backend.Controllers.Identity {
 
         [HttpGet("getUserDetails")]
         [Authorize]
-        public IActionResult GetUserDetails()
-        {
-            try
-            {
+        public IActionResult GetUserDetails() {
+            try {
                 // Extract the token from the Authorization header
                 var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-                if (authHeader == null || !authHeader.StartsWith("Bearer "))
-                {
+                if (authHeader == null || !authHeader.StartsWith("Bearer ")) {
                     return Unauthorized(new { message = "Authorization token is missing or invalid." });
                 }
 
@@ -63,15 +60,13 @@ namespace Backend.Controllers.Identity {
 
                 // Validate the token
                 string? secret = Environment.GetEnvironmentVariable("JWT_KEY");
-                if (string.IsNullOrEmpty(secret))
-                {
+                if (string.IsNullOrEmpty(secret)) {
                     throw new Exception("JWT secret is missing.");
                 }
 
                 var key = Encoding.ASCII.GetBytes(secret);
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var validationParameters = new TokenValidationParameters
-                {
+                var validationParameters = new TokenValidationParameters {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
@@ -80,39 +75,31 @@ namespace Backend.Controllers.Identity {
                 };
 
                 ClaimsPrincipal principal;
-                try
-                {
+                try {
                     principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
 
                     // Ensure the token has the right signature algorithm
-                    if (validatedToken is not JwtSecurityToken jwtToken || 
-                        !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                    {
+                    if (validatedToken is not JwtSecurityToken jwtToken || !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)) {
                         return Unauthorized(new { message = "Invalid token." });
                     }
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     return Unauthorized(new { message = "Invalid token.", details = ex.Message });
                 }
 
                 // Extract the user ID from the token claims
                 var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
+                if (string.IsNullOrEmpty(userId)) {
                     return Unauthorized(new { message = "User ID not found in token." });
                 }
 
                 // Retrieve the user details from the database
                 var user = _context.Users.Find(userId);
-                if (user == null)
-                {
+                if (user == null) {
                     return NotFound(new { message = "User not found." });
                 }
 
                 // Return user details
-                return Ok(new
-                {
+                return Ok(new {
                     user.Id,
                     user.Name,
                     user.Email,
@@ -120,9 +107,7 @@ namespace Backend.Controllers.Identity {
                     user.UserRole,
                     user.Avatar
                 });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return StatusCode(500, new { message = "An error occurred while retrieving user details.", details = ex.Message });
             }
         }
@@ -154,12 +139,9 @@ namespace Backend.Controllers.Identity {
         }
 
         [HttpPost("createAccount")]
-        public IActionResult CreateAccount([FromBody] CreateAccountRequest request)
-        {
-            var keyValuePairs = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
+        public IActionResult CreateAccount([FromBody] CreateAccountRequest request) {
+            var keyValuePairs = new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
                     { "Name", request.Name },
                     { "Email", request.Email },
                     { "Password", request.Password },
@@ -205,16 +187,13 @@ namespace Backend.Controllers.Identity {
 
         [HttpPut("editDetails")]
         [Authorize]
-        public IActionResult EditAccount([FromBody] EditAccountRequest request)
-        {
-            try
-            {
+        public IActionResult EditAccount([FromBody] EditAccountRequest request) {
+            try {
                 // Extract the user ID from the token claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 var user = _context.Users.Find(userId);
-                if (user == null)
-                {
+                if (user == null) {
                     return NotFound(new { message = "User not found." });
                 }
 
@@ -222,15 +201,13 @@ namespace Backend.Controllers.Identity {
 
                 // Validate email only if it has changed
                 var email = user.Email; // Default to the current email
-                if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email)
-                {
+                if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email) {
                     email = DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
                 }
 
                 // Validate contact number only if it has changed
                 var contactNumber = user.ContactNumber; // Default to the current contact number
-                if (!string.IsNullOrWhiteSpace(request.ContactNumber) && request.ContactNumber.Trim() != user.ContactNumber)
-                {
+                if (!string.IsNullOrWhiteSpace(request.ContactNumber) && request.ContactNumber.Trim() != user.ContactNumber) {
                     contactNumber = DatabaseManager.ValidateContactNumber(request.ContactNumber.Trim(), _context);
                 }
 
@@ -240,29 +217,22 @@ namespace Backend.Controllers.Identity {
 
                 _context.SaveChanges();
                 return Ok(new { message = "Account updated successfully." });
-            }
-            catch (ArgumentException ex)
-            {
+            } catch (ArgumentException ex) {
                 return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return StatusCode(500, new { message = "An error occurred while updating the account.", details = ex.Message });
             }
         }
 
         [HttpDelete("deleteAccount")]
         [Authorize]
-        public IActionResult DeleteAccount()
-        {
-            try
-            {
+        public IActionResult DeleteAccount() {
+            try {
                 // Extract the user ID from the token claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 var user = _context.Users.Find(userId);
-                if (user == null)
-                {
+                if (user == null) {
                     return NotFound(new { message = "User not found." });
                 }
 
@@ -271,31 +241,25 @@ namespace Backend.Controllers.Identity {
                 _context.SaveChanges();
 
                 return Ok(new { message = "Account deleted successfully." });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return StatusCode(500, new { message = "An error occurred while deleting the account.", details = ex.Message });
             }
         }
         
         [HttpDelete("deleteTargetedAccount")]
         [Authorize]
-        public IActionResult DeleteAccount([FromQuery] string id)
-        {
-            try
-            {
+        public IActionResult DeleteAccount([FromQuery] string id) {
+            try {
                 // Extract the user ID from the token claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 // Ensure the token's user is deleting their own account
-                if (userId != id)
-                {
+                if (userId != id) {
                     return Unauthorized(new { message = "You can only delete your own account." });
                 }
 
                 var user = _context.Users.SingleOrDefault(u => u.Id == id);
-                if (user == null)
-                {
+                if (user == null){
                     return NotFound(new { message = "User not found." });
                 }
 
