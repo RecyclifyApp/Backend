@@ -219,22 +219,21 @@ namespace Backend.Controllers.Identity {
                 }
 
                 var name = string.IsNullOrWhiteSpace(request.Name) ? user.Name : request.Name.Trim();
-                var email = string.IsNullOrWhiteSpace(request.Email) ? user.Email : DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
 
-                // Only validate contact number if it has changed
-                var contactNumber = string.IsNullOrWhiteSpace(request.ContactNumber) ? user.ContactNumber : request.ContactNumber.Trim();
-                if (contactNumber != user.ContactNumber)
+                // Validate email only if it has changed
+                var email = user.Email; // Default to the current email
+                if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email)
                 {
-                    // Check if contactNumber is not null before passing to ValidateContactNumber
-                    if (contactNumber != null)
-                    {
-                        contactNumber = DatabaseManager.ValidateContactNumber(contactNumber, _context);
-                    }
-                    else
-                    {
-                        return BadRequest(new { message = "Contact number cannot be null." });
-                    }
+                    email = DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
                 }
+
+                // Validate contact number only if it has changed
+                var contactNumber = user.ContactNumber; // Default to the current contact number
+                if (!string.IsNullOrWhiteSpace(request.ContactNumber) && request.ContactNumber.Trim() != user.ContactNumber)
+                {
+                    contactNumber = DatabaseManager.ValidateContactNumber(request.ContactNumber.Trim(), _context);
+                }
+
                 user.Name = name;
                 user.Email = email;
                 user.ContactNumber = contactNumber;
