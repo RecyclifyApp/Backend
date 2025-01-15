@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers.Identity {
     [ApiController]
-    [Route("[controller]")]
+    [Route("/api/[controller]")]
     public class IdentityController (MyDbContext context, IConfiguration configuration) : ControllerBase {
         private readonly MyDbContext _context = context;
         private readonly IConfiguration _configuration = configuration;
