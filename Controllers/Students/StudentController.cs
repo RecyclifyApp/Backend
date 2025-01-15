@@ -51,7 +51,8 @@ namespace Backend.Controllers {
 
                         return Ok(new { message = "Task submitted successfully" });
                     } catch (Exception ex) {
-                        return StatusCode(500, new { error = "Failed to upload image file, " + ex.Message });
+                        var innerException = ex.InnerException?.Message;
+                        return StatusCode(500, new { error = "Failed to save changes. Inner exception: " + innerException });
                     }
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });

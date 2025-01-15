@@ -335,14 +335,14 @@ namespace Backend.Migrations
 
                     b.Property<string>("TeacherName")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("UserID")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("TeacherID");
 
-                    b.HasIndex("TeacherName");
+                    b.HasIndex("UserID");
 
                     b.ToTable("Teachers");
                 });
@@ -363,8 +363,7 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -562,10 +561,7 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("TeacherName")
-                        .HasPrincipalKey("Name")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserID");
 
                     b.Navigation("User");
                 });

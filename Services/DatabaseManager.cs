@@ -248,30 +248,6 @@ namespace Backend.Services {
             context.Classes.Add(class1);
             context.Classes.Add(class2);
 
-            // Add tasks
-            var tasks = new[] {
-                new Models.Task {
-                    TaskID = "1",
-                    TaskTitle = "Recycle 1 plastic bottle",
-                    TaskDescription = "Bring 1 plastic bottle to school and dispose it in the recycling bin.",
-                    TaskPoints = 100
-                },
-                new Models.Task {
-                    TaskID = "2",
-                    TaskTitle = "Bring a set of newspapers to recycle",
-                    TaskDescription = "Bring a set of newspapers to school and dispose it in the recycling bin.",
-                    TaskPoints = 200
-                },
-                new Models.Task {
-                    TaskID = "3",
-                    TaskTitle = "Bring reusable food containers",
-                    TaskDescription = "Bring reusable food containers to school and use them during recess.",
-                    TaskPoints = 300
-                }
-            };
-
-            context.Tasks.AddRange(tasks);
-
             // Save all changes
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {

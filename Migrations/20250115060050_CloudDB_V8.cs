@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V7 : Migration
+    public partial class CloudDB_V8 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -95,7 +95,7 @@ namespace Backend.Migrations
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Name = table.Column<string>(type: "varchar(255)", nullable: false)
+                    Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -111,7 +111,6 @@ namespace Backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
-                    table.UniqueConstraint("AK_Users_Name", x => x.Name);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -164,9 +163,9 @@ namespace Backend.Migrations
                 {
                     TeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TeacherName = table.Column<string>(type: "varchar(255)", nullable: false)
+                    TeacherName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    UserID = table.Column<string>(type: "longtext", nullable: true)
+                    UserID = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -179,11 +178,10 @@ namespace Backend.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Teachers_Users_TeacherName",
-                        column: x => x.TeacherName,
+                        name: "FK_Teachers_Users_UserID",
+                        column: x => x.UserID,
                         principalTable: "Users",
-                        principalColumn: "Name",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -486,9 +484,9 @@ namespace Backend.Migrations
                 column: "StudentID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Teachers_TeacherName",
+                name: "IX_Teachers_UserID",
                 table: "Teachers",
-                column: "TeacherName");
+                column: "UserID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WeeklyClassPoints_ClassID",
