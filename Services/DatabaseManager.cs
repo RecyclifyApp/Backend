@@ -80,19 +80,13 @@ namespace Backend.Services {
                 Avatar = avatar
             };
 
-            Console.WriteLine("Base User created: " + baseUserObj.Id);
-
             context.Users.Add(baseUserObj);
             await context.SaveChangesAsync();
-
-            Console.WriteLine("Base User saved to database.");
 
             if (baseUser == "student") {
                 var specificStudentObj = new Student {
                     StudentID = baseUserObj.Id
                 };
-
-                Console.WriteLine("Student created: " + specificStudentObj.StudentID);
 
                 context.Students.Add(specificStudentObj);
             } else if (baseUser == "admin") {
@@ -101,8 +95,6 @@ namespace Backend.Services {
                     User = baseUserObj
                 };
 
-                Console.WriteLine("Admin created: " + specificAdminObj.AdminID);
-
                 context.Admins.Add(specificAdminObj);
             } else if (baseUser == "teacher") {
                 var specificTeacherObj = new Teacher {
@@ -110,8 +102,6 @@ namespace Backend.Services {
                     TeacherName = baseUserObj.Name,
                     User = baseUserObj
                 };
-
-                Console.WriteLine("Teacher created: " + specificTeacherObj.TeacherID);
 
                 context.Teachers.Add(specificTeacherObj);
             } else if (baseUser == "parent") {
@@ -124,8 +114,6 @@ namespace Backend.Services {
                         StudentID = keyValuePairs[0]["StudentID"].ToString() ?? "",
                         Student = studentFound
                     };
-
-                    Console.WriteLine("Parent created: " + specificParentObj.ParentID);
 
                     context.Parents.Add(specificParentObj);
                 }
