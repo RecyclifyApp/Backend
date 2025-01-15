@@ -8,3 +8,4 @@ labels.txt
 database.sqlite
 database.sqlite-shm
 database.sqlite-wal
+GlobalSuppressions.cs
