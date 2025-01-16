@@ -8,6 +8,20 @@ namespace Backend.Controllers {
     public class studentController(MyDbContext context) : ControllerBase {
         private readonly MyDbContext _context = context;
 
+        [HttpGet("get-student")]
+        public IActionResult GetStudent([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Student ID is required" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "Student not found" });
+                } else {
+                    return Ok(matchedStudent);
+                }
+            }
+        }
+
         [HttpGet("get-student-tasks")]
         public IActionResult GetStudentTasks([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
