@@ -13,7 +13,7 @@ namespace Backend.Models {
         public required string StudentID { get; set; }
         public required Student Student { get; set; }
 
-        public int? Progress { get; set; }
+        public required string Progress { get; set; } = "Incomplete";
         public required bool TaskVerified { get; set; } = false;
 
         [ForeignKey("AssignedTeacherID")]
