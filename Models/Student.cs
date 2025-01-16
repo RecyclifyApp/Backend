@@ -20,5 +20,7 @@ namespace Backend.Models {
         public string? UserID { get; set; }
         [ForeignKey(nameof(UserID))]
         public User? User { get; set; }
+
+        public ICollection<Task>? Tasks { get; set; }
     }
 }

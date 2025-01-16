@@ -5,30 +5,55 @@ using Microsoft.AspNetCore.Mvc;
 namespace Backend.Controllers {
     [Route("api/[controller]")]
     [ApiController]
-    public class StudentController(MyDbContext context) : ControllerBase {
+    public class studentController(MyDbContext context) : ControllerBase {
         private readonly MyDbContext _context = context;
 
+        [HttpGet("get-student-tasks")]
+        public IActionResult GetStudentTasks([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Student ID is required" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "Student not found" });
+                } else {
+                    if (matchedStudent.Tasks == null || matchedStudent.Tasks.Count == 0) {
+                        var tasks = _context.Tasks.ToList();
+                        var randomTasks = tasks.OrderBy(t => Guid.NewGuid()).Take(3).ToList();
+                        matchedStudent.Tasks = randomTasks;
+                        _context.SaveChanges();
+                        return Ok(randomTasks);
+                    } else {
+                        return Ok(matchedStudent.Tasks);
+                    }
+                }
+            }
+        }
+
         [HttpPost("submit-task")]
-        public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string taskTitle, [FromForm] string taskDescription, [FromForm] int taskPoints) {
+        public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
                 return BadRequest(new { error = "No file uploaded" });
             } else {
                 try {
-                    var task = new Models.Task {
-                        TaskID = taskID,
-                        TaskTitle = taskTitle,
-                        TaskDescription = taskDescription,
-                        TaskPoints = taskPoints
-                    };
+                    var task = _context.Tasks.FirstOrDefault(t => t.TaskID == taskID);
+                    if (task == null) {
+                        return NotFound(new { error = "Associated task not found" });
+                    }
 
-                    var student = _context.Students.FirstOrDefault(s => s.StudentID == "3f9056b0-06e1-487a-8901-586bafd1e492"); // Student record 1
+                    var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                     if (student == null) {
                         return NotFound(new { error = "Student not found" });
                     }
 
-                    var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == "c1f76fc4-c99b-4517-9eac-c5ae54bb8808"); // Teacher 1
+                    var studentClass = _context.Classes.FirstOrDefault(c => c.ClassID == student.ClassID);
+                    if (studentClass == null) {
+                        return NotFound(new { error = "Student's class not found" });
+                    }
+
+                    var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == studentClass.TeacherID);
                     if (assignedTeacher == null) {
-                        return NotFound(new { error = "Teacher not found" });
+                        return NotFound(new { error = "Class's teacher not found" });
                     }
 
                     var taskProgress = new TaskProgress {
@@ -37,7 +62,6 @@ namespace Backend.Controllers {
                         Student = student,
                         TaskID = task.TaskID,
                         StudentID = student.StudentID,
-                        Progress = "Completed",
                         TaskVerified = false,
                         AssignedTeacherID = assignedTeacher.TeacherID
                     };
@@ -46,16 +70,33 @@ namespace Backend.Controllers {
                         await AssetsManager.UploadFileAsync(file);
                         taskProgress.ImageUrls = await AssetsManager.GetFileUrlAsync(file.FileName);
 
-                        _context.TaskProgresses.Add(taskProgress);
-                        await _context.SaveChangesAsync();
-
-                        return Ok(new { message = "Task submitted successfully" });
+                        try {
+                            _context.TaskProgresses.Add(taskProgress);
+                            await _context.SaveChangesAsync();
+                            return Ok(new { message = "Task submitted successfully" });
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = "Failed to save changes: " + ex.Message });
+                        }
                     } catch (Exception ex) {
                         var innerException = ex.InnerException?.Message;
-                        return StatusCode(500, new { error = "Failed to save changes. Inner exception: " + innerException });
+                        return StatusCode(500, new { error = "Failed to upload image: " + innerException });
                     }
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
+                }
+            }
+        }
+
+        [HttpPost("recognise-image")]
+        public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
+            if (file == null || file.Length == 0) {
+                return BadRequest(new { error = "No file uploaded" });
+            } else {
+                try {
+                    var recognitionResult = await CompVision.Recognise(file);
+                    return Ok(recognitionResult);
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = ex });
                 }
             }
         }

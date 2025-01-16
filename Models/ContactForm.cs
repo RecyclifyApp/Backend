@@ -7,5 +7,6 @@ namespace Backend.Models {
         public required string SenderName { get; set; }
         public required string SenderEmail { get; set; }
         public required string Message { get; set; }
+        public required bool HasReplied { get; set; } = false;
     }
 }

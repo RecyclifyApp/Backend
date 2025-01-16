@@ -69,6 +69,9 @@ namespace Backend.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("HasReplied")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -227,6 +230,9 @@ namespace Backend.Migrations
                     b.Property<string>("RewardID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("RequiredPoints")
                         .HasColumnType("int");
 
@@ -280,6 +286,9 @@ namespace Backend.Migrations
                     b.Property<string>("TaskID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("TaskDescription")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -292,6 +301,8 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("TaskID");
+
+                    b.HasIndex("StudentID");
 
                     b.ToTable("Tasks");
                 });
@@ -307,10 +318,6 @@ namespace Backend.Migrations
 
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
-
-                    b.Property<string>("Progress")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<string>("StudentID")
                         .IsRequired()
@@ -339,9 +346,6 @@ namespace Backend.Migrations
 
                     b.Property<string>("UserID")
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("UserID")
-                        .HasColumnType("longtext");
 
                     b.HasKey("TeacherID");
 
@@ -527,6 +531,13 @@ namespace Backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Backend.Models.Task", b =>
+                {
+                    b.HasOne("Backend.Models.Student", null)
+                        .WithMany("Tasks")
+                        .HasForeignKey("StudentID");
+                });
+
             modelBuilder.Entity("Backend.Models.TaskProgress", b =>
                 {
                     b.HasOne("Backend.Models.Teacher", "AssignedTeacher")
@@ -594,6 +605,8 @@ namespace Backend.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("Redemptions");
+
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("Backend.Models.Teacher", b =>
