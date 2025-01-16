@@ -139,7 +139,7 @@ namespace Backend.Controllers.Identity {
         }
 
         [HttpPost("createAccount")]
-        public IActionResult CreateAccount([FromBody] CreateAccountRequest request) {
+        public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request) {
             var keyValuePairs = new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Name", request.Name },
@@ -159,7 +159,7 @@ namespace Backend.Controllers.Identity {
             }
 
             try {
-                DatabaseManager.CreateUserRecords(_context, request.UserRole, keyValuePairs);
+                await DatabaseManager.CreateUserRecords(_context, request.UserRole, keyValuePairs);
                 
                 var user = _context.Users.SingleOrDefault(u => u.Email == request.Email);
                 if (user == null) {
