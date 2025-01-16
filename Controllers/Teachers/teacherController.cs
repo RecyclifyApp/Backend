@@ -143,7 +143,7 @@ namespace Backend.Controllers.Teachers {
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
                 if (classData == null) {
-                    return Ok("Class not found.");
+                    return NotFound("Class not found.");
                 }
 
                 classData.ClassName = intClassName;
