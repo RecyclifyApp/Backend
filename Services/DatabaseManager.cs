@@ -60,7 +60,7 @@ namespace Backend.Services {
         public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = baseUser != "teacher" ? ValidateField(userDetails, "Id", required: true, "ID is required.") : "c1f76fc4-c99b-4517-9eac-c5ae54bb8808"; 
+            string id = keyValuePairs[0]["Id"].ToString() ?? Utilities.GenerateUniqueID();
             string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
@@ -98,7 +98,7 @@ namespace Backend.Services {
                 context.Admins.Add(specificAdminObj);
             } else if (baseUser == "teacher") {
                 var specificTeacherObj = new Teacher {
-                    TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                    TeacherID = baseUserObj.Id,
                     TeacherName = baseUserObj.Name,
                     User = baseUserObj
                 };
@@ -171,7 +171,7 @@ namespace Backend.Services {
                 ClassName = 101,
                 ClassDescription = "Class 101 Description",
                 ClassPoints = 1000,
-                TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 WeeklyClassPoints = new List<WeeklyClassPoints>()
             };
@@ -181,7 +181,7 @@ namespace Backend.Services {
                 ClassName = 202,
                 ClassDescription = "Class 202 Description",
                 ClassPoints = 2000,
-                TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 WeeklyClassPoints = new List<WeeklyClassPoints>()
             };
