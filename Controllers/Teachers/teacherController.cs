@@ -24,7 +24,7 @@ namespace Backend.Controllers.Teachers {
                 .ToListAsync();
 
                 if (classes == null || classes.Count == 0) {
-                    return Ok("No classes found for the provided teacher ID.");
+                    return Ok("No classes found.");
                 }
 
                 return Ok(classes);
@@ -43,12 +43,12 @@ namespace Backend.Controllers.Teachers {
             }
 
             try {
-                var result = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
-                if (result == null) {
+                var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+                if (classData == null) {
                     return NotFound("Class not found.");
                 }
 
-                return Ok(result);
+                return Ok(classData);
 
             }
             catch (Exception ex) {
@@ -56,13 +56,14 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
-        // Create Class
+        // Create Class, (Add Class Image later)
         [HttpPost("create-class")]
         public async Task<IActionResult> CreateClass(string className, string classDescription, string teacherID) {
-            if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(classDescription)) {
+            if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(teacherID)) {
                 return BadRequest("Invalid class details. Please provide valid class details and teacher ID.");
             }
 
+            // Check if class name is an integer (E.g. 101)
             if (!int.TryParse(className, out int intClassName)) {
                 return BadRequest("Class name must be an integer.");
             }
@@ -81,7 +82,7 @@ namespace Backend.Controllers.Teachers {
 
             try {
                 var newClass = new Class {
-                    ClassID = Guid.NewGuid().ToString(),
+                    ClassID = Utilities.GenerateUniqueID(),
                     ClassName = intClassName,
                     ClassDescription = classDescription,
                     ClassImage = "",
@@ -112,12 +113,12 @@ namespace Backend.Controllers.Teachers {
             }
 
             try {
-                var result = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
-                if (result == null) {
+                var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
+                if (classData == null) {
                     return NotFound("Class not found.");
                 }
 
-                _context.Classes.Remove(result);
+                _context.Classes.Remove(classData);
                 await _context.SaveChangesAsync();
 
                 return Ok("Class deleted successfully.");
@@ -140,14 +141,14 @@ namespace Backend.Controllers.Teachers {
             }
 
             try {
-                var result = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
-                if (result == null) {
+                var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
+                if (classData == null) {
                     return Ok("Class not found.");
                 }
 
-                result.ClassName = intClassName;
-                result.ClassDescription = classDescription;
-                _context.Classes.Update(result);
+                classData.ClassName = intClassName;
+                classData.ClassDescription = classDescription;
+                _context.Classes.Update(classData);
                 await _context.SaveChangesAsync();
 
                 return Ok("Class updated successfully.");
@@ -165,13 +166,19 @@ namespace Backend.Controllers.Teachers {
                 return BadRequest("Invalid class ID. Please provide a valid class ID.");
             }
 
+            // Find class existance
+            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
+            if (classExist == null) {
+                return NotFound("Class not found.");
+            }
+
             try {
                 var students = await _context.Students
                 .Where(s => s.ClassID == classId)
                 .Include(s => s.User)
                 .ToListAsync();
 
-                // Return a good response even if there are no students found in the class
+                // Return a blank list if there are no students found in the class
                 return Ok(students);
 
             }
@@ -210,11 +217,12 @@ namespace Backend.Controllers.Teachers {
                 return BadRequest("Invalid student details. Please provide valid student details.");
             }
 
+            // Find student and student user details
             var student = await _context.Students
             .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.StudentID == studentID);
 
-            // Collate all in one if clause
+            // Collated if clause to check student and student user details
             if (student == null || student.User == null) {
                 return NotFound("Student not found.");
             }
