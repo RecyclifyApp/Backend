@@ -166,12 +166,6 @@ namespace Backend.Controllers.Teachers {
                 return BadRequest("Invalid class ID. Please provide a valid class ID.");
             }
 
-            // Find class existance
-            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
-            if (classExist == null) {
-                return NotFound("Class not found.");
-            }
-
             try {
                 var students = await _context.Students
                 .Where(s => s.ClassID == classId)
