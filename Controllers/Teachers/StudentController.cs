@@ -24,10 +24,7 @@ namespace Backend.Controllers.Teachers {
                 .Include(s => s.User)
                 .ToListAsync();
 
-                if (students == null || students.Count == 0) {
-                    return Ok("No students found in this class.");
-                }
-
+                // Return a good response even if there are no students found in the class
                 return Ok(students);
 
             }
