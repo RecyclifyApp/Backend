@@ -4,6 +4,7 @@ using Backend;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250114181530_CloudDB_V6")]
+    partial class CloudDB_V6
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -308,9 +311,8 @@ namespace Backend.Migrations
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
 
-                    b.Property<string>("Progress")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<int?>("Progress")
+                        .HasColumnType("int");
 
                     b.Property<string>("StudentID")
                         .IsRequired()
@@ -335,9 +337,6 @@ namespace Backend.Migrations
 
                     b.Property<string>("TeacherName")
                         .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("UserID")
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("UserID")
@@ -345,7 +344,7 @@ namespace Backend.Migrations
 
                     b.HasKey("TeacherID");
 
-                    b.HasIndex("UserID");
+                    b.HasIndex("TeacherName");
 
                     b.ToTable("Teachers");
                 });
@@ -366,7 +365,8 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -564,7 +564,10 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserID");
+                        .HasForeignKey("TeacherName")
+                        .HasPrincipalKey("Name")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

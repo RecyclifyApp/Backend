@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250115051254_CloudDB_V7")]
-    partial class CloudDB_V7
+    [Migration("20250115060050_CloudDB_V8")]
+    partial class CloudDB_V8
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -338,14 +338,14 @@ namespace Backend.Migrations
 
                     b.Property<string>("TeacherName")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("UserID")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("TeacherID");
 
-                    b.HasIndex("TeacherName");
+                    b.HasIndex("UserID");
 
                     b.ToTable("Teachers");
                 });
@@ -366,8 +366,7 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -565,10 +564,7 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("TeacherName")
-                        .HasPrincipalKey("Name")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserID");
 
                     b.Navigation("User");
                 });

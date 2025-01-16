@@ -1,6 +1,10 @@
 using Backend;
 using Backend.Services;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,43 @@ builder.Services.AddCors(options => {
         }
     });
 });
+
+builder.Services.AddAuthentication(options => {
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options => {
+    var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+    
+    if (string.IsNullOrEmpty(jwtKey)) {
+        throw new Exception("JWT secret key is missing.");
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddSwaggerGen(options => { 
+    var securityScheme = new OpenApiSecurityScheme { 
+        In = ParameterLocation.Header, Description = "Token", 
+        Name = "Authorization", Type = SecuritySchemeType.Http, 
+        BearerFormat = "JWT", 
+        Scheme = "Bearer", 
+        Reference = new OpenApiReference { 
+            Type = ReferenceType.SecurityScheme, Id = "Bearer" 
+        } 
+    }; 
+    options.AddSecurityDefinition("Bearer", securityScheme); 
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement { 
+        { securityScheme, new List<string>() } 
+    }); 
+});
+
 
 var app = builder.Build();
 
@@ -69,6 +110,9 @@ if (app.Environment.IsDevelopment()) {
 app.UseCors("AllowSpecificOrigins");
 app.UseHttpsRedirection();
 app.MapControllers();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 Console.WriteLine("");
 Console.WriteLine($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}" + "/swagger/index.html");
