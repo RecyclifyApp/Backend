@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Backend.Services {
-    public static class DatabaseManager {
+    public class DatabaseManager {
         public static void SaveToSqlite(MyDbContext context) { // Use this method to save data to local SQLite database, instead of traditionally just using context.SaveChanges()
-            context.SaveChanges();
-            context.Database.ExecuteSqlInterpolated($"PRAGMA wal_checkpoint(FULL)");
-            context.Dispose();
+            context.SaveChangesAsync();
+            context.Database.ExecuteSqlInterpolatedAsync($"PRAGMA wal_checkpoint(FULL)");
+            context.DisposeAsync();
             RemoveTempFiles();
         }
 
@@ -56,10 +58,10 @@ namespace Backend.Services {
             return contactNumber;
         }
 
-        public static void CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
+        public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = Utilities.GenerateUniqueID(); 
+            string id = baseUser != "teacher" ? ValidateField(userDetails, "Id", required: true, "ID is required.") : "c1f76fc4-c99b-4517-9eac-c5ae54bb8808"; 
             string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
@@ -78,12 +80,14 @@ namespace Backend.Services {
                 Avatar = avatar
             };
 
+            context.Users.Add(baseUserObj);
+            await context.SaveChangesAsync();
+
             if (baseUser == "student") {
                 var specificStudentObj = new Student {
                     StudentID = baseUserObj.Id
                 };
 
-                context.Users.Add(baseUserObj);
                 context.Students.Add(specificStudentObj);
             } else if (baseUser == "admin") {
                 var specificAdminObj = new Admin {
@@ -91,16 +95,15 @@ namespace Backend.Services {
                     User = baseUserObj
                 };
 
-                context.Users.Add(baseUserObj);
                 context.Admins.Add(specificAdminObj);
             } else if (baseUser == "teacher") {
-                var specificTeacehrObj = new Teacher {
-                    TeacherID = baseUserObj.Id,
-                    TeacherName = baseUserObj.Name
+                var specificTeacherObj = new Teacher {
+                    TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                    TeacherName = baseUserObj.Name,
+                    User = baseUserObj
                 };
 
-                context.Users.Add(baseUserObj);
-                context.Teachers.Add(specificTeacehrObj);
+                context.Teachers.Add(specificTeacherObj);
             } else if (baseUser == "parent") {
                 var studentFound = context.Students.Find(keyValuePairs[0]["StudentID"].ToString());
                 if (studentFound == null) {
@@ -112,7 +115,6 @@ namespace Backend.Services {
                         Student = studentFound
                     };
 
-                    context.Users.Add(baseUserObj);
                     context.Parents.Add(specificParentObj);
                 }
             } else {
@@ -121,7 +123,123 @@ namespace Backend.Services {
 
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {
-                context.SaveChanges();
+                await context.SaveChangesAsync();
+            } else if (dbMode == "local") {
+                SaveToSqlite(context);
+            } else {
+                throw new ArgumentException("Invalid DB_MODE configuration.");
+            }
+        }
+
+        public static async Task CleanAndPopulateDatabase(MyDbContext context) {
+            // Clear existing data
+            context.Teachers.RemoveRange(context.Teachers);
+            context.Classes.RemoveRange(context.Classes);
+            context.Students.RemoveRange(context.Students);
+            context.Parents.RemoveRange(context.Parents);
+            context.DailyStudentPoints.RemoveRange(context.DailyStudentPoints);
+            context.Quests.RemoveRange(context.Quests);
+            context.QuestProgresses.RemoveRange(context.QuestProgresses);
+            context.Tasks.RemoveRange(context.Tasks);
+            context.TaskProgresses.RemoveRange(context.TaskProgresses);
+            context.RewardItems.RemoveRange(context.RewardItems);
+            context.Redemptions.RemoveRange(context.Redemptions);
+            context.Inboxes.RemoveRange(context.Inboxes);
+            context.Admins.RemoveRange(context.Admins);
+            context.Users.RemoveRange(context.Users);
+            context.WeeklyClassPoints.RemoveRange(context.WeeklyClassPoints);
+            context.ContactForms.RemoveRange(context.ContactForms);
+            
+            await context.SaveChangesAsync();
+
+            await CreateUserRecords(context, "teacher", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", "c1f76fc4-c99b-4517-9eac-c5ae54bb8808" },
+                    { "Name", "Teacher 1" },
+                    { "Email", "teacher1@example.com" },
+                    { "Password", "teacherPassword" },
+                    { "ContactNumber", "11111111" },
+                    { "UserRole", "teacher" },
+                    { "Avatar", "teacher_avatar.jpg" }
+                }
+            });
+
+            // Then create students
+            var student1Id = "73ecc6b8-805e-46ff-bbc3-bec52073e25d";
+            var student2Id = "3f9056b0-06e1-487a-8901-586bafd1e492";
+            
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student1Id },
+                    { "Name", "Student 1" },
+                    { "Email", "student1@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "22222222" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student2Id },
+                    { "Name", "Student 2" },
+                    { "Email", "student2@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "33333333" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            var teacher1 = context.Teachers.FirstOrDefault(t => t.TeacherID == "c1f76fc4-c99b-4517-9eac-c5ae54bb8808");
+            
+            var class1 = new Class {
+                ClassID = "ca4daece-c27c-46a1-99d5-1c8fd650165e",
+                ClassName = 101,
+                ClassDescription = "Class 202 Description",
+                ClassPoints = 1000,
+                TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                Teacher = teacher1,
+                WeeklyClassPoints = new List<WeeklyClassPoints>()
+            };
+
+            var class2 = new Class {
+                ClassID = "013e1876-281a-4db6-b0c8-3263ffbd0fd7",
+                ClassName = 202,
+                ClassDescription = "Class 202 Description",
+                ClassPoints = 2000,
+                TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                Teacher = teacher1,
+                WeeklyClassPoints = new List<WeeklyClassPoints>()
+            };
+
+            // Add weekly points after classes are created
+            class1.WeeklyClassPoints = new List<WeeklyClassPoints> {
+                new WeeklyClassPoints {
+                    ClassID = class1.ClassID,
+                    Date = DateTime.Now.AddDays(new Random().Next((DateTime.Now - new DateTime(2020, 1, 1)).Days)),
+                    PointsGained = 1000,
+                    Class = class1
+                },
+            };
+
+            class2.WeeklyClassPoints = new List<WeeklyClassPoints> {
+                new WeeklyClassPoints {
+                    ClassID = class2.ClassID,
+                    Date = DateTime.Now.AddDays(new Random().Next((DateTime.Now - new DateTime(2020, 1, 1)).Days)),
+                    PointsGained = 1000,
+                    Class = class2
+                },
+            };
+
+            context.Classes.Add(class1);
+            context.Classes.Add(class2);
+
+            // Save all changes
+            string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
+            if (dbMode == "cloud") {
+                await context.SaveChangesAsync();
             } else if (dbMode == "local") {
                 SaveToSqlite(context);
             } else {

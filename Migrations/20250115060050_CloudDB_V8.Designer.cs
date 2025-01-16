@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250114012523_CloudDB_V4")]
-    partial class CloudDB_V4
+    [Migration("20250115060050_CloudDB_V8")]
+    partial class CloudDB_V8
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,9 +40,15 @@ namespace Backend.Migrations
                     b.Property<string>("ClassID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("ClassName")
+                    b.Property<string>("ClassDescription")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("ClassImage")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ClassName")
+                        .HasColumnType("int");
 
                     b.Property<int>("ClassPoints")
                         .HasColumnType("int");
@@ -134,10 +140,15 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("ParentID");
 
                     b.HasIndex("StudentID")
                         .IsUnique();
+
+                    b.HasIndex("UserID");
 
                     b.ToTable("Parents");
                 });
@@ -255,9 +266,14 @@ namespace Backend.Migrations
                     b.Property<int>("TotalPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("StudentID");
 
                     b.HasIndex("ClassID");
+
+                    b.HasIndex("UserID");
 
                     b.ToTable("Students");
                 });
@@ -295,8 +311,9 @@ namespace Backend.Migrations
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
 
-                    b.Property<int?>("Progress")
-                        .HasColumnType("int");
+                    b.Property<string>("Progress")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("StudentID")
                         .IsRequired()
@@ -321,11 +338,14 @@ namespace Backend.Migrations
 
                     b.Property<string>("TeacherName")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserID")
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("TeacherID");
 
-                    b.HasIndex("TeacherName");
+                    b.HasIndex("UserID");
 
                     b.ToTable("Teachers");
                 });
@@ -346,8 +366,7 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -440,7 +459,13 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID");
+
                     b.Navigation("Student");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
@@ -493,7 +518,13 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID");
+
                     b.Navigation("Class");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Models.TaskProgress", b =>
@@ -533,10 +564,7 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("TeacherName")
-                        .HasPrincipalKey("Name")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserID");
 
                     b.Navigation("User");
                 });
