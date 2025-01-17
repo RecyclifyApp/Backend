@@ -1,19 +1,12 @@
-using System;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace Backend.Services
-{
-    public class OpenAIChatService
-    {
-        public async Task<string> PromptAsync(string messagePrompt)
-        {
+namespace Backend.Services {
+    public class OpenAIChatService {
+        public async Task<string> PromptAsync(string messagePrompt) {
             var _apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? string.Empty;
 
-            if (string.IsNullOrEmpty(_apiKey))
-            {
+            if (string.IsNullOrEmpty(_apiKey)) {
                 throw new InvalidOperationException("OpenAI API key is missing. Please check your .env file.");
             }
 
@@ -21,9 +14,8 @@ namespace Backend.Services
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
             // Correct request body for OpenAI Chat Completions API
-            var requestBody = new
-            {
-                model = "gpt-3.5-turbo", // or "gpt-4" if you're using GPT-4
+            var requestBody = new {
+                model = "gpt-3.5-turbo",
                 messages = new[]
                 {
                     new { role = "user", content = messagePrompt }
@@ -34,8 +26,7 @@ namespace Backend.Services
 
             var response = await httpClient.PostAsJsonAsync("https://api.openai.com/v1/chat/completions", requestBody);
 
-            if (!response.IsSuccessStatusCode)
-            {
+            if (!response.IsSuccessStatusCode) {
                 var error = await response.Content.ReadAsStringAsync();
                 throw new Exception($"OpenAI API error: {error}");
             }
