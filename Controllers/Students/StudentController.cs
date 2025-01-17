@@ -38,8 +38,9 @@ namespace Backend.Controllers {
                     return NotFound(new { error = "Student not found" });
                 } else {
                     var studentTaskProgresses = _context.TaskProgresses.Where(tp => tp.StudentID == matchedStudent.StudentID).ToList();
-
-                    if (studentTaskProgresses.Count == 0) {
+                    var todayTaskProgresses = studentTaskProgresses.Where(tp => DateTime.Parse(tp.DateAssigned) == DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"))).ToList();
+                    
+                    if (todayTaskProgresses.Count == 0) {
                         var allTasks = _context.Tasks.ToList();
                         var randomTasks = allTasks.OrderBy(t => Utilities.GenerateUniqueID()).Take(3).ToList();
                         foreach (var task in randomTasks) {
@@ -71,7 +72,7 @@ namespace Backend.Controllers {
                         return Ok(new { message = "SUCCESS: Student tasks assigned", data = randomTasks });       
                     } else {
                         var studentTasks = new List<Models.Task>();
-                        foreach (var task in studentTaskProgresses) {
+                        foreach (var task in todayTaskProgresses) {
                             var foundTask = _context.Tasks.FirstOrDefault(t => t.TaskID == task.TaskID);
                             if (foundTask != null) {
                                 studentTasks.Add(foundTask);

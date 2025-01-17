@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250117132542_CloudDB_V21")]
-    partial class CloudDB_V21
+    [Migration("20250117143538_CloudDB_V22")]
+    partial class CloudDB_V22
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -324,12 +324,12 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnOrder(2);
 
+                    b.Property<string>("DateAssigned")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("AssignedTeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("DateAssigned")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
@@ -340,7 +340,7 @@ namespace Backend.Migrations
                     b.Property<bool>("VerificationPending")
                         .HasColumnType("tinyint(1)");
 
-                    b.HasKey("TaskID", "StudentID");
+                    b.HasKey("TaskID", "StudentID", "DateAssigned");
 
                     b.HasIndex("AssignedTeacherID");
 

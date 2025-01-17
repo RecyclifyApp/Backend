@@ -113,7 +113,7 @@ namespace Backend {
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TaskProgress>()
-                .HasKey(tp => new { tp.TaskID, tp.StudentID });
+                .HasKey(tp => new { tp.TaskID, tp.StudentID, tp.DateAssigned });
 
             modelBuilder.Entity<TaskProgress>()
                 .HasOne(tp => tp.Task)

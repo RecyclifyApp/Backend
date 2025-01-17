@@ -321,12 +321,12 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnOrder(2);
 
+                    b.Property<string>("DateAssigned")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("AssignedTeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("DateAssigned")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
@@ -337,7 +337,7 @@ namespace Backend.Migrations
                     b.Property<bool>("VerificationPending")
                         .HasColumnType("tinyint(1)");
 
-                    b.HasKey("TaskID", "StudentID");
+                    b.HasKey("TaskID", "StudentID", "DateAssigned");
 
                     b.HasIndex("AssignedTeacherID");
 
