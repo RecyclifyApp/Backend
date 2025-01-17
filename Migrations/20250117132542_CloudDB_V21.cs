@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V11 : Migration
+    public partial class CloudDB_V21 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -70,6 +70,24 @@ namespace Backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RewardItems", x => x.RewardID);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Tasks",
+                columns: table => new
+                {
+                    TaskID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaskTitle = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaskDescription = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaskPoints = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tasks", x => x.TaskID);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -235,10 +253,14 @@ namespace Backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ParentID = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    League = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LeagueRank = table.Column<int>(type: "int", nullable: true),
                     CurrentPoints = table.Column<int>(type: "int", nullable: false),
                     TotalPoints = table.Column<int>(type: "int", nullable: false),
                     UserID = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaskLastSet = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -372,31 +394,6 @@ namespace Backend.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Tasks",
-                columns: table => new
-                {
-                    TaskID = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaskTitle = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaskDescription = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaskPoints = table.Column<int>(type: "int", nullable: false),
-                    StudentID = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tasks", x => x.TaskID);
-                    table.ForeignKey(
-                        name: "FK_Tasks_Students_StudentID",
-                        column: x => x.StudentID,
-                        principalTable: "Students",
-                        principalColumn: "StudentID");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "TaskProgresses",
                 columns: table => new
                 {
@@ -405,14 +402,17 @@ namespace Backend.Migrations
                     StudentID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TaskVerified = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    VerificationPending = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AssignedTeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ImageUrls = table.Column<string>(type: "text", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DateAssigned = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskProgresses", x => x.TaskID);
+                    table.PrimaryKey("PK_TaskProgresses", x => new { x.TaskID, x.StudentID });
                     table.ForeignKey(
                         name: "FK_TaskProgresses_Students_StudentID",
                         column: x => x.StudentID,
@@ -491,11 +491,6 @@ namespace Backend.Migrations
                 column: "StudentID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_StudentID",
-                table: "Tasks",
-                column: "StudentID");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Teachers_UserID",
                 table: "Teachers",
                 column: "UserID");
@@ -543,10 +538,10 @@ namespace Backend.Migrations
                 name: "RewardItems");
 
             migrationBuilder.DropTable(
-                name: "Tasks");
+                name: "Students");
 
             migrationBuilder.DropTable(
-                name: "Students");
+                name: "Tasks");
 
             migrationBuilder.DropTable(
                 name: "Classes");

@@ -1,6 +1,7 @@
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace Backend.Controllers {
     [Route("api/[controller]")]
@@ -16,9 +17,14 @@ namespace Backend.Controllers {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
                     return NotFound(new { error = "Student not found" });
-                } else {
-                    return Ok(matchedStudent);
                 }
+
+                var classStudents = _context.Students.Where(s => s.ClassID == matchedStudent.ClassID).ToList() ?? new List<Student>();
+                var classStudentsRanked = classStudents.OrderByDescending(s => s.TotalPoints).ToList();
+                matchedStudent.LeagueRank = classStudentsRanked.FindIndex(s => s.StudentID == studentID) + 1;
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Student details retrieved", data = matchedStudent });
             }
         }
 
@@ -31,14 +37,47 @@ namespace Backend.Controllers {
                 if (matchedStudent == null) {
                     return NotFound(new { error = "Student not found" });
                 } else {
-                    if (matchedStudent.Tasks == null || matchedStudent.Tasks.Count == 0) {
-                        var tasks = _context.Tasks.ToList();
-                        var randomTasks = tasks.OrderBy(t => Guid.NewGuid()).Take(3).ToList();
-                        matchedStudent.Tasks = randomTasks;
-                        _context.SaveChanges();
-                        return Ok(randomTasks);
+                    var studentTaskProgresses = _context.TaskProgresses.Where(tp => tp.StudentID == matchedStudent.StudentID).ToList();
+
+                    if (studentTaskProgresses.Count == 0) {
+                        var allTasks = _context.Tasks.ToList();
+                        var randomTasks = allTasks.OrderBy(t => Utilities.GenerateUniqueID()).Take(3).ToList();
+                        foreach (var task in randomTasks) {
+                            var studentClass = _context.Classes.FirstOrDefault(c => c.ClassID == matchedStudent.ClassID);
+                            if (studentClass == null) {
+                                return NotFound(new { error = "Student's class not found" });
+                            }
+
+                            var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == studentClass.TeacherID);
+                            if (assignedTeacher == null) {
+                                return NotFound(new { error = "Class's teacher not found" });
+                            }
+
+                            var taskProgress = new TaskProgress {
+                                Task = task,
+                                AssignedTeacher = assignedTeacher,
+                                Student = matchedStudent,
+                                TaskID = task.TaskID,
+                                StudentID = matchedStudent.StudentID,
+                                TaskVerified = false,
+                                VerificationPending = true,
+                                AssignedTeacherID = assignedTeacher.TeacherID,
+                                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
+                            };
+
+                            _context.TaskProgresses.Add(taskProgress);
+                            _context.SaveChanges();
+                        }
+                        return Ok(new { message = "SUCCESS: Student tasks assigned", data = randomTasks });       
                     } else {
-                        return Ok(matchedStudent.Tasks);
+                        var studentTasks = new List<Models.Task>();
+                        foreach (var task in studentTaskProgresses) {
+                            var foundTask = _context.Tasks.FirstOrDefault(t => t.TaskID == task.TaskID);
+                            if (foundTask != null) {
+                                studentTasks.Add(foundTask);
+                            }
+                        }
+                        return Ok(new { message = "SUCCESS: Student tasks retrieved", data = studentTasks });
                     }
                 }
             }
@@ -77,6 +116,7 @@ namespace Backend.Controllers {
                         TaskID = task.TaskID,
                         StudentID = student.StudentID,
                         TaskVerified = false,
+                        VerificationPending = true,
                         AssignedTeacherID = assignedTeacher.TeacherID
                     };
 
