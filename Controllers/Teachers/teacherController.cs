@@ -94,7 +94,7 @@ namespace Backend.Controllers.Teachers
             var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
             if (classExist != null)
             {
-                return BadRequest("Class already exists.");
+                return BadRequest("Classname already exists.");
             }
 
             try
