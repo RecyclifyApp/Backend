@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250116085651_CloudDB_V11")]
-    partial class CloudDB_V11
+    [Migration("20250117143538_CloudDB_V22")]
+    partial class CloudDB_V22
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -266,8 +266,17 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("League")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("LeagueRank")
+                        .HasColumnType("int");
+
                     b.Property<string>("ParentID")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("TaskLastSet")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("TotalPoints")
                         .HasColumnType("int");
@@ -289,9 +298,6 @@ namespace Backend.Migrations
                     b.Property<string>("TaskID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("StudentID")
-                        .HasColumnType("varchar(255)");
-
                     b.Property<string>("TaskDescription")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -305,14 +311,20 @@ namespace Backend.Migrations
 
                     b.HasKey("TaskID");
 
-                    b.HasIndex("StudentID");
-
                     b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("Backend.Models.TaskProgress", b =>
                 {
                     b.Property<string>("TaskID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
+
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(2);
+
+                    b.Property<string>("DateAssigned")
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("AssignedTeacherID")
@@ -322,14 +334,13 @@ namespace Backend.Migrations
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
 
-                    b.Property<string>("StudentID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
                     b.Property<bool>("TaskVerified")
                         .HasColumnType("tinyint(1)");
 
-                    b.HasKey("TaskID");
+                    b.Property<bool>("VerificationPending")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("TaskID", "StudentID", "DateAssigned");
 
                     b.HasIndex("AssignedTeacherID");
 
@@ -534,13 +545,6 @@ namespace Backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Backend.Models.Task", b =>
-                {
-                    b.HasOne("Backend.Models.Student", null)
-                        .WithMany("Tasks")
-                        .HasForeignKey("StudentID");
-                });
-
             modelBuilder.Entity("Backend.Models.TaskProgress", b =>
                 {
                     b.HasOne("Backend.Models.Teacher", "AssignedTeacher")
@@ -550,7 +554,7 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("Backend.Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("TaskProgresses")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -609,7 +613,7 @@ namespace Backend.Migrations
 
                     b.Navigation("Redemptions");
 
-                    b.Navigation("Tasks");
+                    b.Navigation("TaskProgresses");
                 });
 
             modelBuilder.Entity("Backend.Models.Teacher", b =>
