@@ -125,6 +125,8 @@ namespace Backend.Controllers.Identity {
             // Generate JWT Token
             string token = CreateToken(user);
 
+            Logger.Log($"IDENTITY LOGIN: User {user.Id} logged in.");
+
             // Return the token and user details
             return Ok(new {
                 message = "SUCCESS: Login successful",
@@ -143,6 +145,8 @@ namespace Backend.Controllers.Identity {
             var keyValuePairs = new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Name", request.Name },
+                    { "FName", request.FName},
+                    { "LName", request.LName},
                     { "Email", request.Email },
                     { "Password", request.Password },
                     { "ContactNumber", request.ContactNumber },
@@ -168,12 +172,16 @@ namespace Backend.Controllers.Identity {
 
                 string token = CreateToken(user);
 
+                Logger.Log($"IDENTITY CREATEACCOUNT: User {user.Id} created.");
+
                 return Ok(new {
                     message = "SUCCESS: Account created successfully.",
                     token,
                     user = new {
                         user.Id,
                         user.Name,
+                        user.FName,
+                        user.LName,
                         user.Email,
                         user.UserRole
                     }
@@ -248,7 +256,7 @@ namespace Backend.Controllers.Identity {
         
         [HttpDelete("deleteTargetedAccount")]
         [Authorize]
-        public IActionResult DeleteAccount([FromQuery] string id) {
+        public IActionResult DeleteTargetedAccount([FromQuery] string id) {
             try {
                 // Extract the user ID from the token claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -274,6 +282,8 @@ namespace Backend.Controllers.Identity {
 
         public class CreateAccountRequest {
             public required string Name { get; set; }
+            public required string FName { get; set; }
+            public required string LName { get; set; }
             public required string Email { get; set; }
             public required string Password { get; set; }
             public required string ContactNumber { get; set; }

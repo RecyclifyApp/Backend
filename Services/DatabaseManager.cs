@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Routing.Constraints;
 
 namespace Backend.Services {
     public class DatabaseManager {
@@ -60,8 +61,10 @@ namespace Backend.Services {
         public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = keyValuePairs[0]["Id"].ToString() ?? Utilities.GenerateUniqueID();
+            string id = Utilities.GenerateUniqueID();
             string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
+            string fname = ValidateField(userDetails, "FName", required: true, "FName is required.");
+            string lname = ValidateField(userDetails, "LName", required: true, "LName is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
             string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
@@ -72,6 +75,8 @@ namespace Backend.Services {
             {
                 Id = id,
                 Name = name,
+                FName = fname,
+                LName = lname,
                 Email = email,
                 Password = Utilities.HashString(password),
                 ContactNumber = contactNumber,
@@ -156,6 +161,8 @@ namespace Backend.Services {
                 new Dictionary<string, object> {
                     { "Id", "c1f76fc4-c99b-4517-9eac-c5ae54bb8808" },
                     { "Name", "Teacher 1" },
+                    { "FName", "Susie" },
+                    { "LName", "Jones" },
                     { "Email", "teacher1@example.com" },
                     { "Password", "teacherPassword" },
                     { "ContactNumber", "11111111" },
@@ -216,6 +223,8 @@ namespace Backend.Services {
                     { "Id", student1Id },
                     { "ClassID", class1.ClassID },
                     { "Name", "Student 1" },
+                    { "FName", "John" },
+                    { "LName", "Doe" },
                     { "Email", "student1@example.com" },
                     { "Password", "studentPassword" },
                     { "ContactNumber", "22222222" },
@@ -229,6 +238,8 @@ namespace Backend.Services {
                     { "Id", student2Id },
                     { "ClassID", class2.ClassID },
                     { "Name", "Student 2" },
+                    { "FName", "Lincoln" },
+                    { "LName", "Lim" },
                     { "Email", "student2@example.com" },
                     { "Password", "studentPassword" },
                     { "ContactNumber", "33333333" },
