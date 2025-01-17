@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Backend.Services {
     public class DatabaseManager {
@@ -61,7 +60,7 @@ namespace Backend.Services {
         public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = baseUser != "teacher" ? ValidateField(userDetails, "Id", required: true, "ID is required.") : "c1f76fc4-c99b-4517-9eac-c5ae54bb8808"; 
+            string id = keyValuePairs[0]["Id"].ToString() ?? Utilities.GenerateUniqueID();
             string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
@@ -85,7 +84,8 @@ namespace Backend.Services {
 
             if (baseUser == "student") {
                 var specificStudentObj = new Student {
-                    StudentID = baseUserObj.Id
+                    StudentID = baseUserObj.Id,
+                    ClassID = keyValuePairs[0]["ClassID"].ToString() ?? null,
                 };
 
                 context.Students.Add(specificStudentObj);
@@ -98,7 +98,7 @@ namespace Backend.Services {
                 context.Admins.Add(specificAdminObj);
             } else if (baseUser == "teacher") {
                 var specificTeacherObj = new Teacher {
-                    TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
+                    TeacherID = baseUserObj.Id,
                     TeacherName = baseUserObj.Name,
                     User = baseUserObj
                 };
@@ -164,57 +164,28 @@ namespace Backend.Services {
                 }
             });
 
-            // Then create students
-            var student1Id = "73ecc6b8-805e-46ff-bbc3-bec52073e25d";
-            var student2Id = "3f9056b0-06e1-487a-8901-586bafd1e492";
-            
-            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
-                new Dictionary<string, object> {
-                    { "Id", student1Id },
-                    { "Name", "Student 1" },
-                    { "Email", "student1@example.com" },
-                    { "Password", "studentPassword" },
-                    { "ContactNumber", "22222222" },
-                    { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
-                }
-            });
-
-            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
-                new Dictionary<string, object> {
-                    { "Id", student2Id },
-                    { "Name", "Student 2" },
-                    { "Email", "student2@example.com" },
-                    { "Password", "studentPassword" },
-                    { "ContactNumber", "33333333" },
-                    { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
-                }
-            });
-
             var teacher1 = context.Teachers.FirstOrDefault(t => t.TeacherID == "c1f76fc4-c99b-4517-9eac-c5ae54bb8808");
             
             var class1 = new Class {
-                ClassID = "ca4daece-c27c-46a1-99d5-1c8fd650165e",
+                ClassID = Utilities.GenerateUniqueID(),
                 ClassName = 101,
-                ClassDescription = "Class 202 Description",
+                ClassDescription = "Class 101 Description",
                 ClassPoints = 1000,
-                TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
-                Teacher = teacher1,
+                TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
+                Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 WeeklyClassPoints = new List<WeeklyClassPoints>()
             };
 
             var class2 = new Class {
-                ClassID = "013e1876-281a-4db6-b0c8-3263ffbd0fd7",
+                ClassID = Utilities.GenerateUniqueID(),
                 ClassName = 202,
                 ClassDescription = "Class 202 Description",
                 ClassPoints = 2000,
-                TeacherID = "c1f76fc4-c99b-4517-9eac-c5ae54bb8808",
-                Teacher = teacher1,
+                TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
+                Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 WeeklyClassPoints = new List<WeeklyClassPoints>()
             };
 
-            // Add weekly points after classes are created
             class1.WeeklyClassPoints = new List<WeeklyClassPoints> {
                 new WeeklyClassPoints {
                     ClassID = class1.ClassID,
@@ -235,6 +206,48 @@ namespace Backend.Services {
 
             context.Classes.Add(class1);
             context.Classes.Add(class2);
+            await context.SaveChangesAsync();
+
+            var student1Id = "73ecc6b8-805e-46ff-bbc3-bec52073e25d";
+            var student2Id = "3f9056b0-06e1-487a-8901-586bafd1e492";
+            
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student1Id },
+                    { "ClassID", class1.ClassID },
+                    { "Name", "Student 1" },
+                    { "Email", "student1@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "22222222" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student2Id },
+                    { "ClassID", class2.ClassID },
+                    { "Name", "Student 2" },
+                    { "Email", "student2@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "33333333" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            // loop through 10 times to create 10 tasks
+            for (int i = 0; i < 10; i++) {
+                var task = new Models.Task {
+                    TaskID = Utilities.GenerateUniqueID(),
+                    TaskTitle = $"Task {i + 1}",
+                    TaskDescription = $"Task {i + 1} Description",
+                    TaskPoints = 100,
+                };
+
+                context.Tasks.Add(task);
+            }
 
             // Save all changes
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
