@@ -113,16 +113,19 @@ namespace Backend {
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TaskProgress>()
-                .HasOne(t => t.Task)
+                .HasKey(tp => new { tp.TaskID, tp.StudentID, tp.DateAssigned });
+
+            modelBuilder.Entity<TaskProgress>()
+                .HasOne(tp => tp.Task)
                 .WithMany()
-                .HasForeignKey(t => t.TaskID)
+                .HasForeignKey(tp => tp.TaskID)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TaskProgress>()
-                .HasOne(t => t.Student)
-                .WithMany()
-                .HasForeignKey(t => t.StudentID)
+                .HasOne(tp => tp.Student)
+                .WithMany(s => s.TaskProgresses)
+                .HasForeignKey(tp => tp.StudentID)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
