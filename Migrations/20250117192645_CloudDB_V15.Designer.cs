@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250117143538_CloudDB_V22")]
-    partial class CloudDB_V22
+    [Migration("20250117192645_CloudDB_V15")]
+    partial class CloudDB_V15
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -62,6 +62,25 @@ namespace Backend.Migrations
                     b.HasIndex("TeacherID");
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassPoints", b =>
+                {
+                    b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("QuestID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DateCompleted")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.HasKey("ClassID", "QuestID", "DateCompleted");
+
+                    b.ToTable("ClassPoints");
                 });
 
             modelBuilder.Entity("Backend.Models.ContactForm", b =>
@@ -293,6 +312,25 @@ namespace Backend.Migrations
                     b.ToTable("Students");
                 });
 
+            modelBuilder.Entity("Backend.Models.StudentPoints", b =>
+                {
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("TaskID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DateCompleted")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.HasKey("StudentID", "TaskID", "DateCompleted");
+
+                    b.ToTable("StudentPoints");
+                });
+
             modelBuilder.Entity("Backend.Models.Task", b =>
                 {
                     b.Property<string>("TaskID")
@@ -325,7 +363,8 @@ namespace Backend.Migrations
                         .HasColumnOrder(2);
 
                     b.Property<string>("DateAssigned")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(3);
 
                     b.Property<string>("AssignedTeacherID")
                         .IsRequired()
@@ -377,13 +416,23 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactNumber")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("FName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Password")

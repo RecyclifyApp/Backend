@@ -83,6 +83,31 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-chart-statistics")]
+        public IActionResult GetStudentChartStatistics([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Student ID is required" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "Student not found" });
+                } else {
+                    var studentPointRecords = _context.StudentPoints.Where(sp => sp.StudentID == studentID).ToList();
+                    var studentPointsObj = new Dictionary<string, int> {
+                        { "Monday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Monday").Sum(sp => sp.PointsAwarded) },
+                        { "Tuesday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Tuesday").Sum(sp => sp.PointsAwarded) },
+                        { "Wednesday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Wednesday").Sum(sp => sp.PointsAwarded) },
+                        { "Thursday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Thursday").Sum(sp => sp.PointsAwarded) },
+                        { "Friday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Friday").Sum(sp => sp.PointsAwarded) },
+                        { "Saturday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Saturday").Sum(sp => sp.PointsAwarded) },
+                        { "Sunday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Sunday").Sum(sp => sp.PointsAwarded) }
+                    };
+
+                    return Ok(new { message = "SUCCESS: Student chart statistics retrieved", data = studentPointsObj });
+                }
+            }
+        }
+
         [HttpPost("submit-task")]
         public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
@@ -117,7 +142,8 @@ namespace Backend.Controllers {
                         StudentID = student.StudentID,
                         TaskVerified = false,
                         VerificationPending = true,
-                        AssignedTeacherID = assignedTeacher.TeacherID
+                        AssignedTeacherID = assignedTeacher.TeacherID,
+                        DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
                     };
 
                     try {
