@@ -6,7 +6,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims; 
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
 
 namespace Backend.Controllers.Identity {
     [ApiController]
