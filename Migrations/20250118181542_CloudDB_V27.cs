@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V15 : Migration
+    public partial class CloudDB_V27 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -300,7 +300,10 @@ namespace Backend.Migrations
                     TotalPoints = table.Column<int>(type: "int", nullable: false),
                     UserID = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaskLastSet = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    TaskLastSet = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Streak = table.Column<int>(type: "int", nullable: false),
+                    LastClaimedStreak = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {

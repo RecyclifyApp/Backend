@@ -86,9 +86,14 @@ namespace Backend.Services {
             await context.SaveChangesAsync();
 
             if (baseUser == "student") {
+                var generateCurrentPoints = Utilities.GenerateRandomInt(0, 500);
                 var specificStudentObj = new Student {
                     StudentID = baseUserObj.Id,
                     ClassID = keyValuePairs[0]["ClassID"].ToString() ?? null,
+                    Streak = Utilities.GenerateRandomInt(0, 10),
+                    League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
+                    CurrentPoints = generateCurrentPoints,
+                    TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000)
                 };
 
                 context.Students.Add(specificStudentObj);

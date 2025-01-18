@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250117192645_CloudDB_V15")]
-    partial class CloudDB_V15
+    [Migration("20250118181542_CloudDB_V27")]
+    partial class CloudDB_V27
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -285,6 +285,9 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("LastClaimedStreak")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("League")
                         .HasColumnType("longtext");
 
@@ -293,6 +296,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("ParentID")
                         .HasColumnType("longtext");
+
+                    b.Property<int>("Streak")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("TaskLastSet")
                         .HasColumnType("datetime(6)");

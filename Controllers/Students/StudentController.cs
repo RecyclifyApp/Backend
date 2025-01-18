@@ -167,6 +167,29 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpPost("award-gift")]
+        public IActionResult AwardGift([FromBody] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Student ID is required" });
+            } else {
+                var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "Student not found" });
+                }
+
+                var randomPoints = Utilities.GenerateRandomInt(10, 100);
+
+                try {
+                    student.TotalPoints += randomPoints;
+                    student.LastClaimedStreak = DateTime.Now.ToString("yyyy-MM-dd");
+                    _context.SaveChanges();
+                    return Ok(new { message = "Gift awarded successfully", data = new { pointsAwarded = randomPoints, currentPoints = student.CurrentPoints } });
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = ex.Message });
+                }
+            }
+        }
+            
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
             if (file == null || file.Length == 0) {

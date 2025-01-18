@@ -282,6 +282,9 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("LastClaimedStreak")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("League")
                         .HasColumnType("longtext");
 
@@ -290,6 +293,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("ParentID")
                         .HasColumnType("longtext");
+
+                    b.Property<int>("Streak")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("TaskLastSet")
                         .HasColumnType("datetime(6)");
