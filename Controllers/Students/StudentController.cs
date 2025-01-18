@@ -1,6 +1,7 @@
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers {
     [Route("api/[controller]")]
@@ -60,7 +61,7 @@ namespace Backend.Controllers {
                                 TaskID = task.TaskID,
                                 StudentID = matchedStudent.StudentID,
                                 TaskVerified = false,
-                                VerificationPending = true,
+                                VerificationPending = false,
                                 AssignedTeacherID = assignedTeacher.TeacherID,
                                 DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
                             };
@@ -112,6 +113,10 @@ namespace Backend.Controllers {
         public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
                 return BadRequest(new { error = "No file uploaded" });
+            } 
+
+            if (string.IsNullOrEmpty(taskID) || string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Task ID and Student ID are required" });
             } else {
                 try {
                     var task = _context.Tasks.FirstOrDefault(t => t.TaskID == taskID);
@@ -134,24 +139,18 @@ namespace Backend.Controllers {
                         return NotFound(new { error = "Class's teacher not found" });
                     }
 
-                    var taskProgress = new TaskProgress {
-                        Task = task,
-                        AssignedTeacher = assignedTeacher,
-                        Student = student,
-                        TaskID = task.TaskID,
-                        StudentID = student.StudentID,
-                        TaskVerified = false,
-                        VerificationPending = true,
-                        AssignedTeacherID = assignedTeacher.TeacherID,
-                        DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
-                    };
+                    var taskProgress = await _context.TaskProgresses.Where(tp => tp.TaskID == taskID && tp.StudentID == studentID).ToListAsync();
+                    var selectedTaskProgress = taskProgress.OrderByDescending(tp => tp.DateAssigned).FirstOrDefault();
+                    if (selectedTaskProgress == null) {
+                        return NotFound(new { error = "Task progress not found", data = taskProgress });
+                    }
 
                     try {
                         await AssetsManager.UploadFileAsync(file);
-                        taskProgress.ImageUrls = await AssetsManager.GetFileUrlAsync(file.FileName);
+                        selectedTaskProgress.ImageUrls = await AssetsManager.GetFileUrlAsync(file.FileName);
+                        selectedTaskProgress.VerificationPending = true;
 
                         try {
-                            _context.TaskProgresses.Add(taskProgress);
                             await _context.SaveChangesAsync();
                             return Ok(new { message = "Task submitted successfully" });
                         } catch (Exception ex) {
@@ -180,6 +179,7 @@ namespace Backend.Controllers {
                 var randomPoints = Utilities.GenerateRandomInt(10, 100);
 
                 try {
+                    student.CurrentPoints += randomPoints;
                     student.TotalPoints += randomPoints;
                     student.LastClaimedStreak = DateTime.Now.ToString("yyyy-MM-dd");
                     _context.SaveChanges();
