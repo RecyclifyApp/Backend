@@ -13,6 +13,9 @@ namespace Backend.Models {
         [Key, Column(Order = 2)]
         public required string StudentID { get; set; }
 
+        [Key, Column(Order = 3)]
+        public required string DateAssigned { get; set; }
+
         [JsonIgnore]
         [ForeignKey("StudentID")]
         public Student? Student { get; set; }
@@ -26,6 +29,5 @@ namespace Backend.Models {
         public required virtual Teacher AssignedTeacher { get; set; }
 
         public string? ImageUrls { get; set; }
-        public string? DateAssigned { get; set; }
     }
 } 

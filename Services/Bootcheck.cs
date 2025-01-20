@@ -22,7 +22,9 @@ namespace Backend.Services {
                 "GOOGLE_APPLICATION_CREDENTIALS",
                 "FIREBASE_APPLICATION_CREDENTIALS",
                 "FIREBASE_STORAGE_BUCKET_URL",
-                "CLOUDSQL_CONNECTION_STRING"
+                "CLOUDSQL_CONNECTION_STRING",
+                "JWT_KEY",
+                "OPENAI_API_KEY"
             };
 
             missingVariables = environmentVariables

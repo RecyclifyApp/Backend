@@ -26,5 +26,7 @@ namespace Backend.Models {
 
         public ICollection<TaskProgress>? TaskProgresses { get; set; }
         public DateTime? TaskLastSet { get; set; }
+        public required int Streak { get; set; } = 0;
+        public string? LastClaimedStreak { get; set; }
     }
 }

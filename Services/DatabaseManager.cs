@@ -62,16 +62,19 @@ namespace Backend.Services {
 
             string id = keyValuePairs[0]["Id"].ToString() ?? Utilities.GenerateUniqueID();
             string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
+            string fname = ValidateField(userDetails, "FName", required: true, "First name is required.");
+            string lname = ValidateField(userDetails, "LName", required: true, "Last name is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
             string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
             string userRole = ValidateField(userDetails, "UserRole", required: true, "UserRole is required.");
             string avatar = userDetails.GetValueOrDefault("Avatar")?.ToString() ?? "";
 
-            var baseUserObj = new User
-            {
+            var baseUserObj = new User {
                 Id = id,
                 Name = name,
+                FName = fname,
+                LName = lname,
                 Email = email,
                 Password = Utilities.HashString(password),
                 ContactNumber = contactNumber,
@@ -83,9 +86,14 @@ namespace Backend.Services {
             await context.SaveChangesAsync();
 
             if (baseUser == "student") {
+                var generateCurrentPoints = Utilities.GenerateRandomInt(0, 500);
                 var specificStudentObj = new Student {
                     StudentID = baseUserObj.Id,
                     ClassID = keyValuePairs[0]["ClassID"].ToString() ?? null,
+                    Streak = Utilities.GenerateRandomInt(0, 10),
+                    League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
+                    CurrentPoints = generateCurrentPoints,
+                    TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000)
                 };
 
                 context.Students.Add(specificStudentObj);
@@ -132,7 +140,6 @@ namespace Backend.Services {
         }
 
         public static async Task CleanAndPopulateDatabase(MyDbContext context) {
-            // Clear existing data
             context.Teachers.RemoveRange(context.Teachers);
             context.Classes.RemoveRange(context.Classes);
             context.Students.RemoveRange(context.Students);
@@ -152,11 +159,27 @@ namespace Backend.Services {
             
             await context.SaveChangesAsync();
 
+            await CreateUserRecords(context, "admin", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", Utilities.GenerateUniqueID() },
+                    { "Name", "John Appleseed" },
+                    { "FName", "John" },
+                    { "LName", "Appleseed" },
+                    { "Email", "johnappleseed@example.com" },
+                    { "Password", "adminPassword" },
+                    { "ContactNumber", "00000000" },
+                    { "UserRole", "admin" },
+                    { "Avatar", "admin_avatar.jpg" }
+                }
+            });
+
             await CreateUserRecords(context, "teacher", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", "c1f76fc4-c99b-4517-9eac-c5ae54bb8808" },
-                    { "Name", "Teacher 1" },
-                    { "Email", "teacher1@example.com" },
+                    { "Name", "Lincoln Lim" },
+                    { "FName", "Lincoln" },
+                    { "LName", "Lim" },
+                    { "Email", "lincolnlim@example.com" },
                     { "Password", "teacherPassword" },
                     { "ContactNumber", "11111111" },
                     { "UserRole", "teacher" },
@@ -215,8 +238,10 @@ namespace Backend.Services {
                 new Dictionary<string, object> {
                     { "Id", student1Id },
                     { "ClassID", class1.ClassID },
-                    { "Name", "Student 1" },
-                    { "Email", "student1@example.com" },
+                    { "Name", "Lana Ng" },
+                    { "FName", "Lana" },
+                    { "LName", "Ng" },
+                    { "Email", "lanang@example.com" },
                     { "Password", "studentPassword" },
                     { "ContactNumber", "22222222" },
                     { "UserRole", "student" },
@@ -228,8 +253,10 @@ namespace Backend.Services {
                 new Dictionary<string, object> {
                     { "Id", student2Id },
                     { "ClassID", class2.ClassID },
-                    { "Name", "Student 2" },
-                    { "Email", "student2@example.com" },
+                    { "Name", "Kate Gibson" },
+                    { "FName", "Kate" },
+                    { "LName", "Gibson" },
+                    { "Email", "kategibson@example.com" },
                     { "Password", "studentPassword" },
                     { "ContactNumber", "33333333" },
                     { "UserRole", "student" },
@@ -237,8 +264,7 @@ namespace Backend.Services {
                 }
             });
 
-            // loop through 10 times to create 10 tasks
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 20; i++) {
                 var task = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = $"Task {i + 1}",
@@ -249,7 +275,70 @@ namespace Backend.Services {
                 context.Tasks.Add(task);
             }
 
-            // Save all changes
+            for (int i = 0; i < 20; i++) {
+                var quest = new Quest {
+                    QuestID = Utilities.GenerateUniqueID(),
+                    QuestTitle = $"Quest {i + 1}",
+                    QuestDescription = $"Quest {i + 1} Description",
+                    QuestPoints = 100,
+                };
+
+                context.Quests.Add(quest);
+            }
+
+            await context.SaveChangesAsync();
+
+            for (int i = 0; i < 10; i++) {
+                var student1Points = new StudentPoints {
+                    StudentID = student1Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student2Points = new StudentPoints {
+                    StudentID = student2Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                context.StudentPoints.Add(student1Points);
+                context.StudentPoints.Add(student2Points);
+            }
+
+            for (int i = 0; i < 10; i++) {
+                var class1Points = new ClassPoints {
+                    ClassID = class1.ClassID,
+                    QuestID = context.Quests.ToList()[i].QuestID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var class2Points = new ClassPoints {
+                    ClassID = class2.ClassID,
+                    QuestID = context.Quests.ToList()[i].QuestID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                context.ClassPoints.Add(class1Points);
+                context.ClassPoints.Add(class2Points);
+            }
+
+            for (int i = 0; i < 10; i++) {
+                var rewardItem = new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = $"Reward {i + 1}",
+                    RewardDescription = $"Reward {i + 1} Description",
+                    RequiredPoints = Utilities.GenerateRandomInt(100, 1000),
+                    RewardQuantity = Utilities.GenerateRandomInt(1, 10),
+                    IsAvailable = true
+                };
+
+                context.RewardItems.Add(rewardItem);
+            }
+
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {
                 await context.SaveChangesAsync();
