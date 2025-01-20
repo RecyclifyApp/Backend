@@ -143,6 +143,8 @@ namespace Backend.Controllers.Identity {
             var keyValuePairs = new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Name", request.Name },
+                    { "FName", request.FName },
+                    { "LName", request.LName },
                     { "Email", request.Email },
                     { "Password", request.Password },
                     { "ContactNumber", request.ContactNumber },
@@ -174,6 +176,8 @@ namespace Backend.Controllers.Identity {
                     user = new {
                         user.Id,
                         user.Name,
+                        user.FName,
+                        user.LName,
                         user.Email,
                         user.UserRole
                     }
@@ -274,6 +278,8 @@ namespace Backend.Controllers.Identity {
 
         public class CreateAccountRequest {
             public required string Name { get; set; }
+            public required string FName { get; set; }
+            public required string LName { get; set; }
             public required string Email { get; set; }
             public required string Password { get; set; }
             public required string ContactNumber { get; set; }

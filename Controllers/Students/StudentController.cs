@@ -1,6 +1,7 @@
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers {
     [Route("api/[controller]")]
@@ -60,7 +61,7 @@ namespace Backend.Controllers {
                                 TaskID = task.TaskID,
                                 StudentID = matchedStudent.StudentID,
                                 TaskVerified = false,
-                                VerificationPending = true,
+                                VerificationPending = false,
                                 AssignedTeacherID = assignedTeacher.TeacherID,
                                 DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
                             };
@@ -83,10 +84,39 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-chart-statistics")]
+        public IActionResult GetStudentChartStatistics([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Student ID is required" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "Student not found" });
+                } else {
+                    var studentPointRecords = _context.StudentPoints.Where(sp => sp.StudentID == studentID).ToList();
+                    var studentPointsObj = new Dictionary<string, int> {
+                        { "Monday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Monday").Sum(sp => sp.PointsAwarded) },
+                        { "Tuesday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Tuesday").Sum(sp => sp.PointsAwarded) },
+                        { "Wednesday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Wednesday").Sum(sp => sp.PointsAwarded) },
+                        { "Thursday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Thursday").Sum(sp => sp.PointsAwarded) },
+                        { "Friday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Friday").Sum(sp => sp.PointsAwarded) },
+                        { "Saturday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Saturday").Sum(sp => sp.PointsAwarded) },
+                        { "Sunday", studentPointRecords.Where(sp => DateTime.Parse(sp.DateCompleted).DayOfWeek.ToString() == "Sunday").Sum(sp => sp.PointsAwarded) }
+                    };
+
+                    return Ok(new { message = "SUCCESS: Student chart statistics retrieved", data = studentPointsObj });
+                }
+            }
+        }
+
         [HttpPost("submit-task")]
         public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
                 return BadRequest(new { error = "No file uploaded" });
+            } 
+
+            if (string.IsNullOrEmpty(taskID) || string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Task ID and Student ID are required" });
             } else {
                 try {
                     var task = _context.Tasks.FirstOrDefault(t => t.TaskID == taskID);
@@ -109,23 +139,18 @@ namespace Backend.Controllers {
                         return NotFound(new { error = "Class's teacher not found" });
                     }
 
-                    var taskProgress = new TaskProgress {
-                        Task = task,
-                        AssignedTeacher = assignedTeacher,
-                        Student = student,
-                        TaskID = task.TaskID,
-                        StudentID = student.StudentID,
-                        TaskVerified = false,
-                        VerificationPending = true,
-                        AssignedTeacherID = assignedTeacher.TeacherID
-                    };
+                    var taskProgress = await _context.TaskProgresses.Where(tp => tp.TaskID == taskID && tp.StudentID == studentID).ToListAsync();
+                    var selectedTaskProgress = taskProgress.OrderByDescending(tp => tp.DateAssigned).FirstOrDefault();
+                    if (selectedTaskProgress == null) {
+                        return NotFound(new { error = "Task progress not found", data = taskProgress });
+                    }
 
                     try {
                         await AssetsManager.UploadFileAsync(file);
-                        taskProgress.ImageUrls = await AssetsManager.GetFileUrlAsync(file.FileName);
+                        selectedTaskProgress.ImageUrls = await AssetsManager.GetFileUrlAsync(file.FileName);
+                        selectedTaskProgress.VerificationPending = true;
 
                         try {
-                            _context.TaskProgresses.Add(taskProgress);
                             await _context.SaveChangesAsync();
                             return Ok(new { message = "Task submitted successfully" });
                         } catch (Exception ex) {
@@ -141,6 +166,30 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpPost("award-gift")]
+        public IActionResult AwardGift([FromBody] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "Student ID is required" });
+            } else {
+                var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "Student not found" });
+                }
+
+                var randomPoints = Utilities.GenerateRandomInt(10, 100);
+
+                try {
+                    student.CurrentPoints += randomPoints;
+                    student.TotalPoints += randomPoints;
+                    student.LastClaimedStreak = DateTime.Now.ToString("yyyy-MM-dd");
+                    _context.SaveChanges();
+                    return Ok(new { message = "Gift awarded successfully", data = new { pointsAwarded = randomPoints, currentPoints = student.CurrentPoints } });
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = ex.Message });
+                }
+            }
+        }
+            
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
             if (file == null || file.Length == 0) {

@@ -14,6 +14,8 @@ namespace Backend {
         public required DbSet<QuestProgress> QuestProgresses { get; set; }
         public required DbSet<Models.Task> Tasks { get; set; }
         public required DbSet<TaskProgress> TaskProgresses { get; set; }
+        public required DbSet<StudentPoints> StudentPoints { get; set; }
+        public required DbSet<ClassPoints> ClassPoints { get; set; }
         public required DbSet<RewardItem> RewardItems { get; set; }
         public required DbSet<Redemption> Redemptions { get; set; }
         public required DbSet<Inbox> Inboxes { get; set; }
@@ -91,6 +93,12 @@ namespace Backend {
                 .HasForeignKey(d => d.StudentID)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StudentPoints>()
+                .HasKey(sp => new { sp.StudentID, sp.TaskID, sp.DateCompleted });
+
+            modelBuilder.Entity<ClassPoints>()
+                .HasKey(cp => new { cp.ClassID, cp.QuestID, cp.DateCompleted });
 
             modelBuilder.Entity<Inbox>()
                 .HasOne(i => i.User)
