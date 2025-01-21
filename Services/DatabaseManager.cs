@@ -386,18 +386,21 @@ namespace Backend.Services {
 
             for (int i = 1; i <= 10; i++) {
                 var studentId = context.Students.ToList()[i - 1].StudentID;
-                var class1Students = new ClassStudents {
-                    ClassID = class1.ClassID,
-                    StudentID = studentId
-                };
+                if (i <= 5) {
+                    var class1Students = new ClassStudents {
+                        ClassID = class1.ClassID,
+                        StudentID = studentId
+                    };
 
-                var class2Students = new ClassStudents {
-                    ClassID = class2.ClassID,
-                    StudentID = studentId
-                };
+                    context.ClassStudents.Add(class1Students);
+                } else {
+                    var class2Students = new ClassStudents {
+                        ClassID = class2.ClassID,
+                        StudentID = studentId
+                    };
 
-                context.ClassStudents.Add(class1Students);
-                context.ClassStudents.Add(class2Students);
+                    context.ClassStudents.Add(class2Students);
+                }
             }
 
             for (int i = 0; i < 20; i++) {
