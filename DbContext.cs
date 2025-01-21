@@ -23,6 +23,7 @@ namespace Backend {
         public required DbSet<User> Users { get; set; }
         public required DbSet<WeeklyClassPoints> WeeklyClassPoints { get; set; }
         public required DbSet<ContactForm> ContactForms { get; set; }
+        public required DbSet<ClassStudents> ClassStudents { get; set; }
 
         public MyDbContext(IConfiguration configuration) : base() {
             _configuration = configuration;
@@ -188,6 +189,10 @@ namespace Backend {
                 .HasForeignKey(c => c.TeacherID)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ClassStudents>()
+                .HasKey(cs => new { cs.ClassID, cs.StudentID });
+
         }
     }
 }

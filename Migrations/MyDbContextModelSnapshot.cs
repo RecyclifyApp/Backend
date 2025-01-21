@@ -80,6 +80,23 @@ namespace Backend.Migrations
                     b.ToTable("ClassPoints");
                 });
 
+            modelBuilder.Entity("Backend.Models.ClassStudents", b =>
+                {
+                    b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(0);
+
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
+
+                    b.HasKey("ClassID", "StudentID");
+
+                    b.HasIndex("StudentID");
+
+                    b.ToTable("ClassStudents");
+                });
+
             modelBuilder.Entity("Backend.Models.ContactForm", b =>
                 {
                     b.Property<int>("Id")
@@ -493,6 +510,25 @@ namespace Backend.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("Backend.Models.ClassStudents", b =>
+                {
+                    b.HasOne("Backend.Models.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("Backend.Models.DailyStudentPoints", b =>
                 {
                     b.HasOne("Backend.Models.Student", "Student")
@@ -578,7 +614,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Student", b =>
                 {
-                    b.HasOne("Backend.Models.Class", "Class")
+                    b.HasOne("Backend.Models.Class", null)
                         .WithMany("Students")
                         .HasForeignKey("ClassID");
 
@@ -591,8 +627,6 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID");
-
-                    b.Navigation("Class");
 
                     b.Navigation("User");
                 });

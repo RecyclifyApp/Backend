@@ -155,22 +155,21 @@ namespace Backend.Controllers.Teachers {
 
         // Get Student
         [HttpGet("get-students")]
-        public async Task<IActionResult> GetStudent(string classId) {
+        public async Task<IActionResult> GetStudents([FromQuery] string classId) {
             if (string.IsNullOrEmpty(classId)) {
-                return BadRequest("Invalid class ID. Please provide a valid class ID.");
+                return BadRequest(new { error = "Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
-                var students = await _context.Students
-                .Where(s => s.ClassID == classId)
-                .Include(s => s.User)
-                .ToListAsync();
+                var students = await _context.ClassStudents
+                    .Where(cs => cs.ClassID == classId)
+                    .Join(_context.Students, cs => cs.StudentID, s => s.StudentID, (cs, s) => s)
+                    .Include(s => s.User)
+                    .ToListAsync();
 
-                // Return a blank list if there are no students found in the class
-                return Ok(students);
-
+                return Ok(new { message = "SUCCESS: Students retrieved", data = students });
             } catch (Exception ex) {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
             }
         }
 
