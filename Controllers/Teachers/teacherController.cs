@@ -45,7 +45,7 @@ namespace Backend.Controllers.Teachers {
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
                 if (classData == null) {
-                    return NotFound(new { error = "Class not found." });
+                    return Ok( new {message = "Class not found.", data = classData });
                 }
 
                 return Ok(new { message = "Class found.", data = classData });
