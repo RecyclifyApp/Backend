@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250117143538_CloudDB_V22")]
-    partial class CloudDB_V22
+    [Migration("20250121182707_CloudDB_V28_Alpha")]
+    partial class CloudDB_V28_Alpha
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -62,6 +62,42 @@ namespace Backend.Migrations
                     b.HasIndex("TeacherID");
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassPoints", b =>
+                {
+                    b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("QuestID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DateCompleted")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.HasKey("ClassID", "QuestID", "DateCompleted");
+
+                    b.ToTable("ClassPoints");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassStudents", b =>
+                {
+                    b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(0);
+
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
+
+                    b.HasKey("ClassID", "StudentID");
+
+                    b.HasIndex("StudentID");
+
+                    b.ToTable("ClassStudents");
                 });
 
             modelBuilder.Entity("Backend.Models.ContactForm", b =>
@@ -266,6 +302,9 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("LastClaimedStreak")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("League")
                         .HasColumnType("longtext");
 
@@ -274,6 +313,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("ParentID")
                         .HasColumnType("longtext");
+
+                    b.Property<int>("Streak")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("TaskLastSet")
                         .HasColumnType("datetime(6)");
@@ -291,6 +333,25 @@ namespace Backend.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("Students");
+                });
+
+            modelBuilder.Entity("Backend.Models.StudentPoints", b =>
+                {
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("TaskID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DateCompleted")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.HasKey("StudentID", "TaskID", "DateCompleted");
+
+                    b.ToTable("StudentPoints");
                 });
 
             modelBuilder.Entity("Backend.Models.Task", b =>
@@ -325,7 +386,8 @@ namespace Backend.Migrations
                         .HasColumnOrder(2);
 
                     b.Property<string>("DateAssigned")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(3);
 
                     b.Property<string>("AssignedTeacherID")
                         .IsRequired()
@@ -377,13 +439,23 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactNumber")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("FName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Password")
@@ -439,6 +511,25 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassStudents", b =>
+                {
+                    b.HasOne("Backend.Models.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Backend.Models.DailyStudentPoints", b =>
@@ -526,7 +617,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Student", b =>
                 {
-                    b.HasOne("Backend.Models.Class", "Class")
+                    b.HasOne("Backend.Models.Class", null)
                         .WithMany("Students")
                         .HasForeignKey("ClassID");
 
@@ -539,8 +630,6 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID");
-
-                    b.Navigation("Class");
 
                     b.Navigation("User");
                 });

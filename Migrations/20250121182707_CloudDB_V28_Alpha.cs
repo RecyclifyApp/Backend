@@ -7,12 +7,30 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V22 : Migration
+    public partial class CloudDB_V28_Alpha : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ClassPoints",
+                columns: table => new
+                {
+                    ClassID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    QuestID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DateCompleted = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PointsAwarded = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClassPoints", x => new { x.ClassID, x.QuestID, x.DateCompleted });
+                })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
@@ -74,6 +92,24 @@ namespace Backend.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "StudentPoints",
+                columns: table => new
+                {
+                    StudentID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaskID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DateCompleted = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PointsAwarded = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentPoints", x => new { x.StudentID, x.TaskID, x.DateCompleted });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Tasks",
                 columns: table => new
                 {
@@ -97,13 +133,17 @@ namespace Backend.Migrations
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    FName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Password = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ContactNumber = table.Column<string>(type: "longtext", nullable: true)
+                    ContactNumber = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     UserRole = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -249,8 +289,6 @@ namespace Backend.Migrations
                 {
                     StudentID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ClassID = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     ParentID = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     League = table.Column<string>(type: "longtext", nullable: true)
@@ -260,7 +298,12 @@ namespace Backend.Migrations
                     TotalPoints = table.Column<int>(type: "int", nullable: false),
                     UserID = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaskLastSet = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    TaskLastSet = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Streak = table.Column<int>(type: "int", nullable: false),
+                    LastClaimedStreak = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ClassID = table.Column<string>(type: "varchar(255)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -301,6 +344,33 @@ namespace Backend.Migrations
                         column: x => x.ClassID,
                         principalTable: "Classes",
                         principalColumn: "ClassID",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ClassStudents",
+                columns: table => new
+                {
+                    ClassID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    StudentID = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClassStudents", x => new { x.ClassID, x.StudentID });
+                    table.ForeignKey(
+                        name: "FK_ClassStudents_Classes_ClassID",
+                        column: x => x.ClassID,
+                        principalTable: "Classes",
+                        principalColumn: "ClassID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ClassStudents_Students_StudentID",
+                        column: x => x.StudentID,
+                        principalTable: "Students",
+                        principalColumn: "StudentID",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -440,6 +510,11 @@ namespace Backend.Migrations
                 column: "TeacherID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ClassStudents_StudentID",
+                table: "ClassStudents",
+                column: "StudentID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Inboxes_UserID",
                 table: "Inboxes",
                 column: "UserID");
@@ -508,6 +583,12 @@ namespace Backend.Migrations
                 name: "Admins");
 
             migrationBuilder.DropTable(
+                name: "ClassPoints");
+
+            migrationBuilder.DropTable(
+                name: "ClassStudents");
+
+            migrationBuilder.DropTable(
                 name: "ContactForms");
 
             migrationBuilder.DropTable(
@@ -524,6 +605,9 @@ namespace Backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "Redemptions");
+
+            migrationBuilder.DropTable(
+                name: "StudentPoints");
 
             migrationBuilder.DropTable(
                 name: "TaskProgresses");
