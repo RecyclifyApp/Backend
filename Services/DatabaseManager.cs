@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Routing.Constraints;
 
 namespace Backend.Services {
     public class DatabaseManager {
@@ -27,6 +28,14 @@ namespace Backend.Services {
                 throw new ArgumentException(errorMessage);
             return value ?? "";
         }
+
+        public static string ValidateUsername(string username, MyDbContext context) {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username is required.");
+            if (context.Users.Any(u => u.Name == username))
+                throw new ArgumentException("Username must be unique.");
+            return username;
+        } 
 
         public static string ValidateEmail(string email, MyDbContext context) {
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
@@ -60,10 +69,10 @@ namespace Backend.Services {
         public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = keyValuePairs[0]["Id"].ToString() ?? Utilities.GenerateUniqueID();
-            string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
-            string fname = ValidateField(userDetails, "FName", required: true, "First name is required.");
-            string lname = ValidateField(userDetails, "LName", required: true, "Last name is required.");
+            string id = Utilities.GenerateUniqueID();
+            string name = ValidateUsername(userDetails.GetValueOrDefault("Name")?.ToString() ?? throw new ArgumentException("Username is required."), context);
+            string fname = ValidateField(userDetails, "FName", required: true, "FName is required.");
+            string lname = ValidateField(userDetails, "LName", required: true, "LName is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
             string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
@@ -81,9 +90,6 @@ namespace Backend.Services {
                 UserRole = userRole,
                 Avatar = avatar
             };
-
-            context.Users.Add(baseUserObj);
-            await context.SaveChangesAsync();
 
             if (baseUser == "student") {
                 var generateCurrentPoints = Utilities.GenerateRandomInt(0, 500);
@@ -128,6 +134,9 @@ namespace Backend.Services {
             } else {
                 throw new ArgumentException("Invalid user role.");
             }
+
+            context.Users.Add(baseUserObj);
+            await context.SaveChangesAsync();
 
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {
