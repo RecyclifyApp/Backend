@@ -90,7 +90,6 @@ namespace Backend.Services {
                 var specificStudentObj = new Student {
                     UserID = baseUserObj.Id,
                     StudentID = baseUserObj.Id,
-                    ClassID = keyValuePairs[0]["ClassID"].ToString() ?? null,
                     Streak = Utilities.GenerateRandomInt(0, 10),
                     League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
                     CurrentPoints = generateCurrentPoints,
@@ -246,7 +245,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student1Id },
-                    { "ClassID", class1.ClassID },
                     { "Name", "Lana Ng" },
                     { "FName", "Lana" },
                     { "LName", "Ng" },
@@ -261,7 +259,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student2Id },
-                    { "ClassID", class1.ClassID },
                     { "Name", "Kate Gibson" },
                     { "FName", "Kate" },
                     { "LName", "Gibson" },
@@ -276,7 +273,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student3Id },
-                    { "ClassID", class1.ClassID },
                     { "Name", "Peter Parker" },
                     { "FName", "Peter" },
                     { "LName", "Parker" },
@@ -291,7 +287,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student4Id },
-                    { "ClassID", class1.ClassID },
                     { "Name", "Ethan Carter" },
                     { "FName", "Ethan" },
                     { "LName", "Carter" },
@@ -306,7 +301,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student5Id },
-                    { "ClassID", class1.ClassID },
                     { "Name", "Olivia Bennett" },
                     { "FName", "Olivia" },
                     { "LName", "Bennett" },
@@ -321,7 +315,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student6Id },
-                    { "ClassID", class2.ClassID },
                     { "Name", "Noah Mitchell" },
                     { "FName", "Noah" },
                     { "LName", "Mitchell" },
@@ -336,7 +329,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student7Id },
-                    { "ClassID", class2.ClassID },
                     { "Name", "Emma Robinson" },
                     { "FName", "Emma" },
                     { "LName", "Robinson" },
@@ -351,7 +343,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student8Id },
-                    { "ClassID", class2.ClassID },
                     { "Name", "Liam Turner" },
                     { "FName", "Liam" },
                     { "LName", "Turner" },
@@ -366,7 +357,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student9Id },
-                    { "ClassID", class2.ClassID },
                     { "Name", "Ava Parker" },
                     { "FName", "Ava" },
                     { "LName", "Parker" },
@@ -381,7 +371,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student10Id },
-                    { "ClassID", class2.ClassID },
                     { "Name", "Sophia Ramirez" },
                     { "FName", "Sophia" },
                     { "LName", "Ramirez" },
@@ -392,6 +381,24 @@ namespace Backend.Services {
                     { "Avatar", "student_avatar.jpg" }
                 }
             });
+
+            await context.SaveChangesAsync();
+
+            for (int i = 1; i <= 10; i++) {
+                var studentId = context.Students.ToList()[i - 1].StudentID;
+                var class1Students = new ClassStudents {
+                    ClassID = class1.ClassID,
+                    StudentID = studentId
+                };
+
+                var class2Students = new ClassStudents {
+                    ClassID = class2.ClassID,
+                    StudentID = studentId
+                };
+
+                context.ClassStudents.Add(class1Students);
+                context.ClassStudents.Add(class2Students);
+            }
 
             for (int i = 0; i < 20; i++) {
                 var task = new Models.Task {
