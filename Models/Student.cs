@@ -6,10 +6,6 @@ namespace Backend.Models {
     public class Student {
         [Key]
         public required string StudentID { get; set; }
-        public string? ClassID { get; set; }
-
-        [ForeignKey(nameof(ClassID))]
-        public virtual Class? Class { get; set; }
         public string? ParentID { get; set; }
 
         [ForeignKey(nameof(ParentID))]

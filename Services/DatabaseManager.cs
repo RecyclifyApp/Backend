@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Routing.Constraints;
 
 namespace Backend.Services {
     public class DatabaseManager {
@@ -27,6 +28,14 @@ namespace Backend.Services {
                 throw new ArgumentException(errorMessage);
             return value ?? "";
         }
+
+        public static string ValidateUsername(string username, MyDbContext context) {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username is required.");
+            if (context.Users.Any(u => u.Name == username))
+                throw new ArgumentException("Username must be unique.");
+            return username;
+        } 
 
         public static string ValidateEmail(string email, MyDbContext context) {
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
@@ -60,10 +69,10 @@ namespace Backend.Services {
         public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = keyValuePairs[0]["Id"].ToString() ?? Utilities.GenerateUniqueID();
-            string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
-            string fname = ValidateField(userDetails, "FName", required: true, "First name is required.");
-            string lname = ValidateField(userDetails, "LName", required: true, "Last name is required.");
+            string id = Utilities.GenerateUniqueID();
+            string name = ValidateUsername(userDetails.GetValueOrDefault("Name")?.ToString() ?? throw new ArgumentException("Username is required."), context);
+            string fname = ValidateField(userDetails, "FName", required: true, "FName is required.");
+            string lname = ValidateField(userDetails, "LName", required: true, "LName is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
             string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
@@ -82,14 +91,11 @@ namespace Backend.Services {
                 Avatar = avatar
             };
 
-            context.Users.Add(baseUserObj);
-            await context.SaveChangesAsync();
-
             if (baseUser == "student") {
                 var generateCurrentPoints = Utilities.GenerateRandomInt(0, 500);
                 var specificStudentObj = new Student {
+                    UserID = baseUserObj.Id,
                     StudentID = baseUserObj.Id,
-                    ClassID = keyValuePairs[0]["ClassID"].ToString() ?? null,
                     Streak = Utilities.GenerateRandomInt(0, 10),
                     League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
                     CurrentPoints = generateCurrentPoints,
@@ -129,6 +135,9 @@ namespace Backend.Services {
             } else {
                 throw new ArgumentException("Invalid user role.");
             }
+
+            context.Users.Add(baseUserObj);
+            await context.SaveChangesAsync();
 
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {
@@ -232,13 +241,20 @@ namespace Backend.Services {
             context.Classes.Add(class2);
             await context.SaveChangesAsync();
 
-            var student1Id = "73ecc6b8-805e-46ff-bbc3-bec52073e25d";
-            var student2Id = "3f9056b0-06e1-487a-8901-586bafd1e492";
+            var student1Id = Utilities.GenerateUniqueID();
+            var student2Id = Utilities.GenerateUniqueID();
+            var student3Id = Utilities.GenerateUniqueID();
+            var student4Id = Utilities.GenerateUniqueID();
+            var student5Id = Utilities.GenerateUniqueID();
+            var student6Id = Utilities.GenerateUniqueID();
+            var student7Id = Utilities.GenerateUniqueID();
+            var student8Id = Utilities.GenerateUniqueID();
+            var student9Id = Utilities.GenerateUniqueID();
+            var student10Id = Utilities.GenerateUniqueID();
             
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student1Id },
-                    { "ClassID", class1.ClassID },
                     { "Name", "Lana Ng" },
                     { "FName", "Lana" },
                     { "LName", "Ng" },
@@ -253,7 +269,6 @@ namespace Backend.Services {
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Id", student2Id },
-                    { "ClassID", class2.ClassID },
                     { "Name", "Kate Gibson" },
                     { "FName", "Kate" },
                     { "LName", "Gibson" },
@@ -264,6 +279,136 @@ namespace Backend.Services {
                     { "Avatar", "student_avatar.jpg" }
                 }
             });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student3Id },
+                    { "Name", "Peter Parker" },
+                    { "FName", "Peter" },
+                    { "LName", "Parker" },
+                    { "Email", "peterparker@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "44444444" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student4Id },
+                    { "Name", "Ethan Carter" },
+                    { "FName", "Ethan" },
+                    { "LName", "Carter" },
+                    { "Email", "ethancarter@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "55555555" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student5Id },
+                    { "Name", "Olivia Bennett" },
+                    { "FName", "Olivia" },
+                    { "LName", "Bennett" },
+                    { "Email", "oliviabennett@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "66666666" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student6Id },
+                    { "Name", "Noah Mitchell" },
+                    { "FName", "Noah" },
+                    { "LName", "Mitchell" },
+                    { "Email", "noahmitchell@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "77777777" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student7Id },
+                    { "Name", "Emma Robinson" },
+                    { "FName", "Emma" },
+                    { "LName", "Robinson" },
+                    { "Email", "emmarobinson@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "88888888" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student8Id },
+                    { "Name", "Liam Turner" },
+                    { "FName", "Liam" },
+                    { "LName", "Turner" },
+                    { "Email", "liamturner@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "99999999" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student9Id },
+                    { "Name", "Ava Parker" },
+                    { "FName", "Ava" },
+                    { "LName", "Parker" },
+                    { "Email", "avaparker@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "10101010" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Id", student10Id },
+                    { "Name", "Sophia Ramirez" },
+                    { "FName", "Sophia" },
+                    { "LName", "Ramirez" },
+                    { "Email", "sophiaramirez@example.com" },
+                    { "Password", "studentPassword" },
+                    { "ContactNumber", "12121212" },
+                    { "UserRole", "student" },
+                    { "Avatar", "student_avatar.jpg" }
+                }
+            });
+
+            await context.SaveChangesAsync();
+
+            for (int i = 1; i <= 10; i++) {
+                var studentId = context.Students.ToList()[i - 1].StudentID;
+                var class1Students = new ClassStudents {
+                    ClassID = class1.ClassID,
+                    StudentID = studentId
+                };
+
+                var class2Students = new ClassStudents {
+                    ClassID = class2.ClassID,
+                    StudentID = studentId
+                };
+
+                context.ClassStudents.Add(class1Students);
+                context.ClassStudents.Add(class2Students);
+            }
 
             for (int i = 0; i < 20; i++) {
                 var task = new Models.Task {
@@ -304,8 +449,72 @@ namespace Backend.Services {
                     PointsAwarded = Utilities.GenerateRandomInt(10, 100)
                 };
 
+                var student3Points = new StudentPoints {
+                    StudentID = student3Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student4Points = new StudentPoints {
+                    StudentID = student4Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student5Points = new StudentPoints {
+                    StudentID = student5Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student6Points = new StudentPoints {
+                    StudentID = student6Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student7Points = new StudentPoints {
+                    StudentID = student7Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student8Points = new StudentPoints {
+                    StudentID = student8Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student9Points = new StudentPoints {
+                    StudentID = student9Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
+                var student10Points = new StudentPoints {
+                    StudentID = student10Id,
+                    TaskID = context.Tasks.ToList()[i].TaskID,
+                    DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
+                    PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                };
+
                 context.StudentPoints.Add(student1Points);
                 context.StudentPoints.Add(student2Points);
+                context.StudentPoints.Add(student3Points);
+                context.StudentPoints.Add(student4Points);
+                context.StudentPoints.Add(student5Points);
+                context.StudentPoints.Add(student6Points);
+                context.StudentPoints.Add(student7Points);
+                context.StudentPoints.Add(student8Points);
+                context.StudentPoints.Add(student9Points);
+                context.StudentPoints.Add(student10Points);
             }
 
             for (int i = 0; i < 10; i++) {
