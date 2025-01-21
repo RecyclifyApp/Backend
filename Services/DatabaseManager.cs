@@ -29,6 +29,14 @@ namespace Backend.Services {
             return value ?? "";
         }
 
+        public static string ValidateUsername(string username, MyDbContext context) {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username is required.");
+            if (context.Users.Any(u => u.Name == username))
+                throw new ArgumentException("Username must be unique.");
+            return username;
+        } 
+
         public static string ValidateEmail(string email, MyDbContext context) {
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
             if (!emailRegex.IsMatch(email)) {
@@ -62,7 +70,7 @@ namespace Backend.Services {
             var userDetails = keyValuePairs[0];
 
             string id = Utilities.GenerateUniqueID();
-            string name = ValidateField(userDetails, "Name", required: true, "Name is required.");
+            string name = ValidateUsername(userDetails.GetValueOrDefault("Name")?.ToString() ?? throw new ArgumentException("Username is required."), context);
             string fname = ValidateField(userDetails, "FName", required: true, "FName is required.");
             string lname = ValidateField(userDetails, "LName", required: true, "LName is required.");
             string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
@@ -83,9 +91,6 @@ namespace Backend.Services {
                 UserRole = userRole,
                 Avatar = avatar
             };
-
-            context.Users.Add(baseUserObj);
-            await context.SaveChangesAsync();
 
             if (baseUser == "student") {
                 var specificStudentObj = new Student {
@@ -125,6 +130,9 @@ namespace Backend.Services {
             } else {
                 throw new ArgumentException("Invalid user role.");
             }
+
+            context.Users.Add(baseUserObj);
+            await context.SaveChangesAsync();
 
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {

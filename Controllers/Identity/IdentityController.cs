@@ -53,7 +53,7 @@ namespace Backend.Controllers.Identity {
                 // Extract the token from the Authorization header
                 var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
                 if (authHeader == null || !authHeader.StartsWith("Bearer ")) {
-                    return Unauthorized(new { message = "ERROR: Authorization token is missing or invalid." });
+                    return Unauthorized(new { error = "ERROR: Authorization token is missing or invalid." });
                 }
 
                 var token = authHeader.Substring("Bearer ".Length).Trim();
@@ -80,22 +80,22 @@ namespace Backend.Controllers.Identity {
 
                     // Ensure the token has the right signature algorithm
                     if (validatedToken is not JwtSecurityToken jwtToken || !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)) {
-                        return Unauthorized(new { message = "ERROR: Invalid token." });
+                        return Unauthorized(new { error = "ERROR: Invalid token." });
                     }
                 } catch (Exception ex) {
-                    return Unauthorized(new { message = "ERROR: Invalid token.", details = ex.Message });
+                    return Unauthorized(new { error = "ERROR: Invalid token.", details = ex.Message });
                 }
 
                 // Extract the user ID from the token claims
                 var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId)) {
-                    return Unauthorized(new { message = "ERROR: User ID not found in token." });
+                    return Unauthorized(new { error = "ERROR: User ID not found in token." });
                 }
 
                 // Retrieve the user details from the database
                 var user = _context.Users.Find(userId);
                 if (user == null) {
-                    return NotFound(new { message = "ERROR: User not found." });
+                    return NotFound(new { error = "ERROR: User not found." });
                 }
 
                 // Return user details
@@ -108,7 +108,7 @@ namespace Backend.Controllers.Identity {
                     user.Avatar
                 });
             } catch (Exception ex) {
-                return StatusCode(500, new { message = "ERROR: An error occurred while retrieving user details.", details = ex.Message });
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving user details.", details = ex.Message });
             }
         }
 
@@ -119,7 +119,7 @@ namespace Backend.Controllers.Identity {
                 u.Password == Utilities.HashString(request.Password));
 
             if (user == null) {
-                return Unauthorized(new { message = "UERROR: Invalid login credentials." });
+                return Unauthorized(new { error = "UERROR: Invalid login credentials." });
             }
 
             // Generate JWT Token
@@ -157,7 +157,7 @@ namespace Backend.Controllers.Identity {
 
             if (request.UserRole == "parent") {
                 if (string.IsNullOrEmpty(request.StudentID)) {
-                    return BadRequest(new { Error = "UERROR: StudentID cannot be empty for a user with the 'parent' role." });
+                    return BadRequest(new { error = "UERROR: StudentID cannot be empty for a user with the 'parent' role." });
                 }
                 keyValuePairs[0].Add("StudentID", request.StudentID);
             }
@@ -167,7 +167,7 @@ namespace Backend.Controllers.Identity {
                 
                 var user = _context.Users.SingleOrDefault(u => u.Email == request.Email);
                 if (user == null) {
-                    return BadRequest(new { message = "ERROR: User creation failed." });
+                    return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
                 string token = CreateToken(user);
@@ -187,9 +187,9 @@ namespace Backend.Controllers.Identity {
                     }
                 });
             } catch (ArgumentException ex) {
-                return BadRequest(new { message = "ERROR: " + ex.Message });
+                return BadRequest(new { error = "UERROR: " + ex.Message });
             } catch (Exception ex) {
-                return StatusCode(500, new { message = "ERROR: An error occurred while creating the account.", details = ex.Message });
+                return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
             }
         }
 
@@ -202,7 +202,7 @@ namespace Backend.Controllers.Identity {
 
                 var user = _context.Users.Find(userId);
                 if (user == null) {
-                    return NotFound(new { message = "ERROR: User not found." });
+                    return NotFound(new { error = "ERROR: User not found." });
                 }
 
                 var name = string.IsNullOrWhiteSpace(request.Name) ? user.Name : request.Name.Trim();
@@ -226,9 +226,9 @@ namespace Backend.Controllers.Identity {
                 _context.SaveChanges();
                 return Ok(new { message = "SUCCESS: Account updated successfully." });
             } catch (ArgumentException ex) {
-                return BadRequest(new { message = "ERROR: " + ex.Message });
+                return BadRequest(new { error = "ERROR: " + ex.Message });
             } catch (Exception ex) {
-                return StatusCode(500, new { message = "ERROR: An error occurred while updating the account.", details = ex.Message });
+                return StatusCode(500, new { error = "ERROR: An error occurred while updating the account.", details = ex.Message });
             }
         }
 
@@ -241,7 +241,7 @@ namespace Backend.Controllers.Identity {
 
                 var user = _context.Users.Find(userId);
                 if (user == null) {
-                    return NotFound(new { message = "ERROR: User not found." });
+                    return NotFound(new { error = "ERROR: User not found." });
                 }
 
                 // Remove the user from the database
@@ -250,12 +250,11 @@ namespace Backend.Controllers.Identity {
 
                 return Ok(new { message = "SUCCESS: Account deleted successfully." });
             } catch (Exception ex) {
-                return StatusCode(500, new { message = "ERROR: An error occurred while deleting the account.", details = ex.Message });
+                return StatusCode(500, new { error = "ERROR: An error occurred while deleting the account.", details = ex.Message });
             }
         }
         
         [HttpDelete("deleteTargetedAccount")]
-        [Authorize]
         public IActionResult DeleteTargetedAccount([FromQuery] string id) {
             try {
                 // Extract the user ID from the token claims
@@ -263,7 +262,7 @@ namespace Backend.Controllers.Identity {
 
                 var user = _context.Users.SingleOrDefault(u => u.Id == id);
                 if (user == null){
-                    return NotFound(new { message = "ERROR: User not found." });
+                    return NotFound(new { error = "ERROR: User not found." });
                 }
 
                 _context.Users.Remove(user);
@@ -271,7 +270,7 @@ namespace Backend.Controllers.Identity {
 
                 return Ok(new { message = "SUCCESS: Account deleted successfully." });
             } catch (Exception ex) {
-                return StatusCode(500, new { message = "ERROR: An error occurred while deleting the account.", details = ex.Message });
+                return StatusCode(500, new { error = "ERROR: An error occurred while deleting the account.", details = ex.Message });
             }
         }
                                 
