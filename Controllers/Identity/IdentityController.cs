@@ -142,12 +142,13 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("createAccount")]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request) {
+            string email = request.UserRole == "student" ? request.Email + "@mymail.nyp.edu.sg" : request.Email;
             var keyValuePairs = new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
                     { "Name", request.Name },
                     { "FName", request.FName},
                     { "LName", request.LName},
-                    { "Email", request.Email },
+                    { "Email", email },
                     { "Password", request.Password },
                     { "ContactNumber", request.ContactNumber },
                     { "UserRole", request.UserRole },
@@ -162,10 +163,15 @@ namespace Backend.Controllers.Identity {
                 keyValuePairs[0].Add("StudentID", request.StudentID);
             }
 
+            if (request.UserRole == "student") {
+                keyValuePairs[0].Add("ClassID", "");
+                keyValuePairs[0].Add("Streak", 0);
+            }
+
             try {
                 await DatabaseManager.CreateUserRecords(_context, request.UserRole, keyValuePairs);
                 
-                var user = _context.Users.SingleOrDefault(u => u.Email == request.Email);
+                var user = _context.Users.SingleOrDefault(u => u.Email == email);
                 if (user == null) {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
@@ -189,6 +195,7 @@ namespace Backend.Controllers.Identity {
             } catch (ArgumentException ex) {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
             } catch (Exception ex) {
+                Console.WriteLine(ex);
                 return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
             }
         }
@@ -289,6 +296,7 @@ namespace Backend.Controllers.Identity {
             public required string UserRole { get; set; }
             public required string Avatar { get; set; }
             public string? StudentID { get; set; } 
+            // public string? ClassID { get; set; } 
         }
 
         public class EditAccountRequest {

@@ -95,7 +95,8 @@ namespace Backend.Services {
             if (baseUser == "student") {
                 var specificStudentObj = new Student {
                     StudentID = baseUserObj.Id,
-                    ClassID = keyValuePairs[0]["ClassID"].ToString() ?? null,
+                    ClassID = "",
+                    Streak = 0
                 };
 
                 context.Students.Add(specificStudentObj);
