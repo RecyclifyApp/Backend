@@ -266,6 +266,9 @@ namespace Backend.Migrations
                     b.Property<string>("RewardID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("tinyint(1)");
 

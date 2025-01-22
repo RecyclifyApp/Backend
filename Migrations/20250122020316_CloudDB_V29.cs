@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V28_Alpha : Migration
+    public partial class CloudDB_V29 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -83,7 +83,9 @@ namespace Backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RequiredPoints = table.Column<int>(type: "int", nullable: false),
                     RewardQuantity = table.Column<int>(type: "int", nullable: false),
-                    IsAvailable = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    IsAvailable = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ImageUrl = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {

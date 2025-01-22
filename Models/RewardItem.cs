@@ -9,5 +9,6 @@ namespace Backend.Models {
         public required int RequiredPoints { get; set; } = 0;
         public required int RewardQuantity { get; set; } = 0;
         public required bool IsAvailable { get; set; } = true;
+        public string? ImageUrl { get; set; }
     }
 }
