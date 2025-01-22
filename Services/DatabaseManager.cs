@@ -130,7 +130,10 @@ namespace Backend.Services {
                         Student = studentFound
                     };
 
+                    studentFound.ParentID = baseUserObj.Id;
+
                     context.Parents.Add(specificParentObj);
+                    context.Students.Update(studentFound);
                 }
             } else {
                 throw new ArgumentException("Invalid user role.");
