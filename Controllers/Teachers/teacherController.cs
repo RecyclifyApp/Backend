@@ -137,6 +137,12 @@ namespace Backend.Controllers.Teachers {
                 return BadRequest(new { error = "UERROR: Class name must be an integer." });
             }
 
+            // Check if other class with same name exists
+            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
+            if (classExist != null) {
+                return BadRequest(new { error = "UERROR: Class already exists." });
+            }
+
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
                 if (classData == null) {
