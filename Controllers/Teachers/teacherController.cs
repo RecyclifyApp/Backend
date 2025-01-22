@@ -167,7 +167,7 @@ namespace Backend.Controllers.Teachers {
                     .Where(cs => cs.ClassID == classId)
                     .Join(_context.Students, cs => cs.StudentID, s => s.StudentID, (cs, s) => s)
                     .Include(s => s.User)
-                    .ToListAsync();
+                    .ToListAsync(); 
 
                 return Ok(new { message = "SUCCESS: Students retrieved", data = students });
             } catch (Exception ex) {

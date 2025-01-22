@@ -99,8 +99,7 @@ namespace Backend.Services {
                     Streak = Utilities.GenerateRandomInt(0, 10),
                     League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
                     CurrentPoints = generateCurrentPoints,
-                    TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000),
-                    UserID = baseUserObj.Id
+                    TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000)
                 };
 
                 context.Students.Add(specificStudentObj);
