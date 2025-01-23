@@ -57,8 +57,8 @@ namespace Backend.Controllers
             return NoContent();
         }
 
-        // PATCH: api/RewardItems/{rewardID}/toggle-availability
-        [HttpPatch("{rewardID}/toggle-availability")]
+        // PUT: api/RewardItems/{rewardID}/toggle-availability
+        [HttpPut("{rewardID}/toggle-availability")]
         public async Task<IActionResult> ToggleAvailability(string rewardID)
         {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
@@ -71,7 +71,7 @@ namespace Backend.Controllers
             rewardItem.IsAvailable = !rewardItem.IsAvailable;
             _context.Entry(rewardItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok( new { message = "SUCCESS: Availability toggled successfully.", data = rewardItem });
         }
     }
 }
