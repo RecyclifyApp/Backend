@@ -315,6 +315,37 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-rewards")]
+        public async Task<IActionResult> GetStudentRewards([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Student ID is required" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentRedemptions = await _context.Redemptions.Where(r => r.StudentID == studentID).ToListAsync();
+                var studentRewards = new List<dynamic>();
+                foreach (var redemption in studentRedemptions) {
+                    var reward = await _context.RewardItems.FirstOrDefaultAsync(r => r.RewardID == redemption.RewardID);
+                    if (reward != null) {
+                        studentRewards.Add(new {
+                            RedemptionStatus = redemption.RedemptionStatus,
+                            RewardID = reward.RewardID,
+                            RewardTitle = reward.RewardTitle,
+                            RewardDescription = reward.RewardDescription,
+                            RequiredPoints = reward.RequiredPoints,
+                            ImageUrl = reward.ImageUrl,
+                            ClaimedOn = redemption.ClaimedOn
+                        });
+                    }
+                }
+
+                return Ok(new { message = "SUCCESS: Student rewards retrieved", data = studentRewards });
+            }
+        }
+
         [HttpGet("claim-reward")]
         public async Task<IActionResult> ClaimReward([FromQuery] string studentID, [FromQuery] string redemptionID) {
             if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(redemptionID)) {
