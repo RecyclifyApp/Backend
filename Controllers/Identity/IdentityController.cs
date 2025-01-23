@@ -176,6 +176,12 @@ namespace Backend.Controllers.Identity {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
+                var result = await Emailer.SendEmailAsync(
+                    user.Email,
+                    "Welcome to Recyclify",
+                    "WelcomeEmail"
+                );
+
                 string token = CreateToken(user);
 
                 Logger.Log($"IDENTITY CREATEACCOUNT: User {user.Id} created.");
