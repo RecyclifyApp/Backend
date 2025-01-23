@@ -35,6 +35,23 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
+        // Get Overall Classes Data
+        [HttpGet("get-overall-classes-data")]
+        public async Task<IActionResult> GetOverallClassesData() {
+            try {
+                var classes = await _context.Classes.ToListAsync();
+                if (classes == null || classes.Count == 0) {
+                    classes = [];
+                    return Ok( new { message = "SUCCESS: No classes found.", data = classes });
+                }
+
+                return Ok( new { message = "SUCCESS: Classes found.", data = classes });
+
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
         // Get Class
         [HttpGet("get-class")]
         public async Task<IActionResult> GetClass(string classID) {
