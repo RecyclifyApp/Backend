@@ -69,7 +69,13 @@ namespace Backend.Services {
         public static async Task CreateUserRecords(MyDbContext context, string baseUser, List<Dictionary<string, object>> keyValuePairs) {
             var userDetails = keyValuePairs[0];
 
-            string id = Utilities.GenerateUniqueID();
+            // string id = baseUser == "teacher" ? "c1f76fc4-c99b-4517-9eac-c5ae54bb8808" : Utilities.GenerateUniqueID();
+            string id;
+            if (userDetails.ContainsKey("Id")) {
+                id = keyValuePairs[0]["Id"].ToString() ?? "";
+            } else {
+                id = Utilities.GenerateUniqueID();
+            }
             string name = ValidateUsername(userDetails.GetValueOrDefault("Name")?.ToString() ?? throw new ArgumentException("Username is required."), context);
             string fname = ValidateField(userDetails, "FName", required: true, "FName is required.");
             string lname = ValidateField(userDetails, "LName", required: true, "LName is required.");
@@ -88,7 +94,8 @@ namespace Backend.Services {
                 Password = Utilities.HashString(password),
                 ContactNumber = contactNumber,
                 UserRole = userRole,
-                Avatar = avatar
+                Avatar = avatar,
+                EmailVerified = false
             };
 
             if (baseUser == "student") {
@@ -100,7 +107,6 @@ namespace Backend.Services {
                     League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
                     CurrentPoints = generateCurrentPoints,
                     TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000),
-                    UserID = baseUserObj.Id
                 };
 
                 context.Students.Add(specificStudentObj);
@@ -174,7 +180,6 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "admin", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", Utilities.GenerateUniqueID() },
                     { "Name", "John Appleseed" },
                     { "FName", "John" },
                     { "LName", "Appleseed" },
@@ -182,7 +187,8 @@ namespace Backend.Services {
                     { "Password", "adminPassword" },
                     { "ContactNumber", "00000000" },
                     { "UserRole", "admin" },
-                    { "Avatar", "admin_avatar.jpg" }
+                    { "Avatar", "admin_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
@@ -196,7 +202,8 @@ namespace Backend.Services {
                     { "Password", "teacherPassword" },
                     { "ContactNumber", "11111111" },
                     { "UserRole", "teacher" },
-                    { "Avatar", "teacher_avatar.jpg" }
+                    { "Avatar", "teacher_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
@@ -257,7 +264,6 @@ namespace Backend.Services {
             
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student1Id },
                     { "Name", "Lana Ng" },
                     { "FName", "Lana" },
                     { "LName", "Ng" },
@@ -265,13 +271,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "22222222" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student2Id },
                     { "Name", "Kate Gibson" },
                     { "FName", "Kate" },
                     { "LName", "Gibson" },
@@ -279,13 +285,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "33333333" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student3Id },
                     { "Name", "Peter Parker" },
                     { "FName", "Peter" },
                     { "LName", "Parker" },
@@ -293,13 +299,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "44444444" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student4Id },
                     { "Name", "Ethan Carter" },
                     { "FName", "Ethan" },
                     { "LName", "Carter" },
@@ -307,13 +313,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "55555555" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student5Id },
                     { "Name", "Olivia Bennett" },
                     { "FName", "Olivia" },
                     { "LName", "Bennett" },
@@ -321,13 +327,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "66666666" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student6Id },
                     { "Name", "Noah Mitchell" },
                     { "FName", "Noah" },
                     { "LName", "Mitchell" },
@@ -335,13 +341,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "77777777" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student7Id },
                     { "Name", "Emma Robinson" },
                     { "FName", "Emma" },
                     { "LName", "Robinson" },
@@ -349,13 +355,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "88888888" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student8Id },
                     { "Name", "Liam Turner" },
                     { "FName", "Liam" },
                     { "LName", "Turner" },
@@ -363,13 +369,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "99999999" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student9Id },
                     { "Name", "Ava Parker" },
                     { "FName", "Ava" },
                     { "LName", "Parker" },
@@ -377,13 +383,13 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "10101010" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
-                    { "Id", student10Id },
                     { "Name", "Sophia Ramirez" },
                     { "FName", "Sophia" },
                     { "LName", "Ramirez" },
@@ -391,7 +397,8 @@ namespace Backend.Services {
                     { "Password", "studentPassword" },
                     { "ContactNumber", "12121212" },
                     { "UserRole", "student" },
-                    { "Avatar", "student_avatar.jpg" }
+                    { "Avatar", "student_avatar.jpg" },
+                    { "EmailVerified", false }
                 }
             });
 
