@@ -40,7 +40,7 @@ namespace Backend.Services {
                 email.To.Add(MailboxAddress.Parse(to));
                 email.Subject = subject;
 
-                var templatePath = "../Backend/templates/emails/" + template + ".html";
+                var templatePath = "templates/emails/" + template + ".html";
 
                 if (!File.Exists(templatePath)) {
                     return $"ERROR: Template file '{template}' not found.";
