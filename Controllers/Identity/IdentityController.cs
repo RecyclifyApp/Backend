@@ -281,106 +281,86 @@ namespace Backend.Controllers.Identity {
             }
         }
 
-        // [HttpPost("emailVerification")]
-        // [Authorize]
-        // public async Task<IActionResult> SendVerificationCode()
-        // {
-        //     try
-        //     {
-        //         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //         var user = _context.Users.Find(userId);
+        [HttpPost("emailVerification")]
+        [Authorize]
+        public async Task<IActionResult> SendVerificationCode() {
+            try {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = _context.Users.Find(userId);
                 
-        //         if (user == null)
-        //         {
-        //             return NotFound(new { error = "ERROR: User not found." });
-        //         }
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
 
-        //         // Generate 6-digit code
-        //         var code = GenerateSixDigitCode();
-        //         var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+                // Generate 6-digit code
+                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
 
-        //         // Store in database
-        //         user.EmailVerificationToken = code;
-        //         user.EmailVerificationTokenExpiry = expiry;
-        //         _context.SaveChanges();
+                // Store in database
+                user.EmailVerificationToken = code;
+                user.EmailVerificationTokenExpiry = expiry;
+                _context.SaveChanges();
 
-        //         // Send email with code
-        //         var result = await Emailer.SendEmailAsync(
-        //             user.Email,
-        //             "Your Verification Code",
-        //             "emailVerification",
-        //             new Dictionary<string, string> {
-        //                 { "verificationCode", code }
-        //             }
-        //         );
+                // Send email with code
+                var result = await Emailer.SendEmailAsync(
+                    user.Email,
+                    "Email Verification",
+                    "EmailVerification"
+                );
 
-        //         return result.StartsWith("SUCCESS") 
-        //             ? Ok(new { message = "SUCCESS: Verification code sent" })
-        //             : BadRequest(new { error = result });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new { 
-        //             error = "ERROR: Failed to process verification request", 
-        //             details = ex.Message 
-        //         });
-        //     }
-        // }
+                return result.StartsWith("SUCCESS") 
+                    ? Ok(new { message = "SUCCESS: Verification code sent" })
+                    : BadRequest(new { error = result });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: Failed to process verification request", details = ex.Message });
+            }
+        }
 
-        // [HttpPost("verifyEmail")]
-        // [Authorize]
-        // public IActionResult VerifyEmail([FromBody] VerifyCodeRequest request)
-        // {
-        //     try
-        //     {
-        //         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //         var user = _context.Users.Find(userId);
+        [HttpPost("verifyEmail")]
+        [Authorize]
+        public IActionResult VerifyEmail([FromBody] VerifyCodeRequest request) {
+            try {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = _context.Users.Find(userId);
                 
-        //         if (user == null)
-        //         {
-        //             return NotFound(new { error = "ERROR: User not found." });
-        //         }
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
 
-        //         if (string.IsNullOrEmpty(user.EmailVerificationToken) || 
-        //             string.IsNullOrEmpty(user.EmailVerificationTokenExpiry))
-        //         {
-        //             return BadRequest(new { error = "ERROR: No verification code issued" });
-        //         }
+                if (string.IsNullOrEmpty(user.EmailVerificationToken) || string.IsNullOrEmpty(user.EmailVerificationTokenExpiry)) {
+                    return BadRequest(new { error = "ERROR: No verification code issued" });
+                }
 
-        //         // Check code match
-        //         if (user.EmailVerificationToken != request.Code)
-        //         {
-        //             return BadRequest(new { error = "ERROR: Invalid verification code" });
-        //         }
+                // Check code match
+                if (user.EmailVerificationToken != request.Code) {
+                    return BadRequest(new { error = "ERROR: Invalid verification code" });
+                }
 
-        //         // Check expiration
-        //         if (!DateTime.TryParse(user.EmailVerificationTokenExpiry, out var expiryDate) || 
-        //             expiryDate < DateTime.UtcNow)
-        //         {
-        //             return BadRequest(new { error = "ERROR: Verification code expired" });
-        //         }
+                // Check expiration
+                if (!DateTime.TryParse(user.EmailVerificationTokenExpiry, out var expiryDate) || expiryDate < DateTime.UtcNow) {
+                    return BadRequest(new { error = "ERROR: Verification code expired" });
+                }
 
-        //         // Mark email as verified
-        //         user.EmailVerified = true;
-        //         user.EmailVerificationToken = null;
-        //         user.EmailVerificationTokenExpiry = null;
-        //         _context.SaveChanges();
+                // Mark email as verified
+                user.EmailVerified = true;
+                user.EmailVerificationToken = null;
+                user.EmailVerificationTokenExpiry = null;
+                _context.SaveChanges();
 
-        //         return Ok(new { message = "SUCCESS: Email verified successfully" });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new { 
-        //             error = "ERROR: Failed to verify email", 
-        //             details = ex.Message 
-        //         });
-        //     }
-        // }
+                return Ok(new { message = "SUCCESS: Email verified successfully" });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { 
+                    error = "ERROR: Failed to verify email", 
+                    details = ex.Message 
+                });
+            }
+        }
 
-        // public class VerifyCodeRequest
-        // {
-        //     public required string Code { get; set; }
-        // }
+        public class VerifyCodeRequest {
+            public required string Code { get; set; }
+        }
                                 
         public class LoginRequest {
             public required string Identifier { get; set; }
