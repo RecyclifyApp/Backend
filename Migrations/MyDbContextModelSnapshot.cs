@@ -266,6 +266,9 @@ namespace Backend.Migrations
                     b.Property<string>("RewardID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("tinyint(1)");
 
@@ -442,6 +445,15 @@ namespace Backend.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("FName")
                         .IsRequired()
