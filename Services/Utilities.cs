@@ -19,6 +19,11 @@ namespace Backend.Services {
             }
         }
 
+        public static int GenerateRandomInt(int min, int max) {
+            var random = new Random();
+            return random.Next(min, max);
+        }
+
         public static string HashString(string input) {
             if (string.IsNullOrEmpty(input)) {
                 throw new ArgumentException("Invalid input. Please provide a valid string to hash.");

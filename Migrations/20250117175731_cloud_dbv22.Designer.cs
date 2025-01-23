@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250117143538_CloudDB_V22")]
-    partial class CloudDB_V22
+    [Migration("20250117175731_cloud_dbv22")]
+    partial class cloud_dbv22
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -377,13 +377,23 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactNumber")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("FName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Password")

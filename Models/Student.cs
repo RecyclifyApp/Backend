@@ -6,10 +6,6 @@ namespace Backend.Models {
     public class Student {
         [Key]
         public required string StudentID { get; set; }
-        public string? ClassID { get; set; }
-
-        [ForeignKey(nameof(ClassID))]
-        public virtual Class? Class { get; set; }
         public string? ParentID { get; set; }
 
         [ForeignKey(nameof(ParentID))]
@@ -26,5 +22,7 @@ namespace Backend.Models {
 
         public ICollection<TaskProgress>? TaskProgresses { get; set; }
         public DateTime? TaskLastSet { get; set; }
+        public required int Streak { get; set; } = 0;
+        public string? LastClaimedStreak { get; set; }
     }
 }
