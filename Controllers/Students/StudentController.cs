@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -259,7 +260,7 @@ namespace Backend.Controllers {
         }
 
         [HttpPost("redeem-reward")]
-        public IActionResult RedeemReward([FromForm] string studentID, [FromForm] string rewardID) {
+        public async Task<IActionResult> RedeemReward([FromForm] string studentID, [FromForm] string rewardID) {
             if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(rewardID)) {
                 return BadRequest(new { error = "UERROR: Student ID and Reward ID are required" });
             } else {
@@ -290,6 +291,15 @@ namespace Backend.Controllers {
                     _context.Redemptions.Add(redemption);
                     student.CurrentPoints -= reward.RequiredPoints;
                     _context.SaveChanges();
+
+                    var studentName = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Name ?? "Student";
+                    var studentEmail = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Email ?? "student@mymail.nyp.edu.sg";
+
+                    var emailVars = new Dictionary<string, string> {
+                        { "username", studentName }
+                    };
+
+                    await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RedeemedReward", emailVars);
                     return Ok(new { message = "SUCCESS: Reward redeemed successfully", data = student.CurrentPoints });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
