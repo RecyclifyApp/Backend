@@ -9,8 +9,12 @@ namespace Backend.Controllers {
     public class SampleEmailController : ControllerBase {
         [HttpPost("send-email")]
         public async Task<IActionResult> SendEmail(string recipientEmail, string title, string template) {
+            var emailVars = new Dictionary<string, string> {
+                { "username", "Susie Jones" }
+            };
+
             try {
-                var emailResult = await Emailer.SendEmailAsync(recipientEmail, title, template);
+                var emailResult = await Emailer.SendEmailAsync(recipientEmail, title, template, emailVars);
 
                 if (emailResult.StartsWith("ERROR"))
                     return StatusCode(500, "Failed to send email. " + emailResult.Substring("ERROR".Length));

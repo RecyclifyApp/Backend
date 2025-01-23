@@ -176,10 +176,25 @@ namespace Backend.Controllers.Identity {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
+                // Generate 6-digit code
+                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+
+                // Store in database
+                user.EmailVerificationToken = code;
+                user.EmailVerificationTokenExpiry = expiry;
+                _context.SaveChanges();
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", user.Name },
+                    { "emailVerificationToken", code }
+                };
+
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Welcome to Recyclify",
-                    "WelcomeEmail"
+                    "WelcomeEmail",
+                    emailVars
                 );
 
                 string token = CreateToken(user);
@@ -311,11 +326,16 @@ namespace Backend.Controllers.Identity {
                 user.EmailVerificationTokenExpiry = expiry;
                 _context.SaveChanges();
 
-                // Send email with code
+                var emailVars = new Dictionary<string, string> {
+                    { "username", user.Name },
+                    { "emailVerificationToken", code }
+                };
+
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Email Verification",
-                    "EmailVerification"
+                    "EmailVerification",
+                    emailVars
                 );
 
                 return result.StartsWith("SUCCESS") 
