@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250122020316_CloudDB_V29")]
-    partial class CloudDB_V29
+    [Migration("20250123080642_CloudDB_V30")]
+    partial class CloudDB_V30
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -448,6 +448,15 @@ namespace Backend.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("FName")
                         .IsRequired()

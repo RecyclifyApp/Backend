@@ -446,6 +446,15 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("FName")
                         .IsRequired()
                         .HasColumnType("longtext");
