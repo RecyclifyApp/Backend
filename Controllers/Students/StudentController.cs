@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -295,14 +296,60 @@ namespace Backend.Controllers {
                     var studentName = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Name ?? "Student";
                     var studentEmail = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Email ?? "student@mymail.nyp.edu.sg";
 
+                    var frontendUrl = Environment.GetEnvironmentVariable("VITE_FRONTEND_URL");
+                    if (string.IsNullOrEmpty(frontendUrl)) {
+                        return StatusCode(500, new { error = "ERROR: Environment not ready to generate QR Code for redemption" });
+                    }
+                    string apiPath = $"/student/claimReward?studentID={student.StudentID}&redemptionID={redemption.RedemptionID}";
+                    string fullUrl = $"{frontendUrl}{apiPath}";
+
+                    string qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={Uri.EscapeDataString(fullUrl)}";
+
                     var emailVars = new Dictionary<string, string> {
-                        { "username", studentName }
+                        { "username", studentName },
+                        { "qrcode", qrCodeUrl }
                     };
 
-                    await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RedeemedReward", emailVars);
+                    await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RewardRedemption", emailVars);
                     return Ok(new { message = "SUCCESS: Reward redeemed successfully", data = student.CurrentPoints });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
+                }
+            }
+        }
+
+        [HttpGet("claim-reward")]
+        public async Task<IActionResult> ClaimReward([FromQuery] string studentID, [FromQuery] string redemptionID) {
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(redemptionID)) {
+                return BadRequest(new { error = "UERROR: StudentID and RedemptionID are required" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var redemption = await _context.Redemptions.FirstOrDefaultAsync(r => r.RedemptionID == redemptionID);
+                if (redemption == null) {
+                    return NotFound(new { error = "ERROR: Redemption not found" });
+                }
+
+                var reward = await _context.RewardItems.FirstOrDefaultAsync(r => r.RewardID == redemption.RewardID);
+                if (reward == null) {
+                    return NotFound(new { error = "ERROR: Reward not found" });
+                }
+
+                if (redemption.RedemptionStatus == "Claimed") {
+                    return BadRequest(new { error = "UERROR: Reward has already been claimed" });
+                }
+
+                try {
+                    redemption.ClaimedOn = DateTime.Now;
+                    redemption.RedemptionStatus = "Claimed";
+                    _context.SaveChanges();
+
+                    return Ok(new { message = "SUCCESS: Reward claimed successfully" });
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = "ERROR: ", ex.Message });
                 }
             }
         }
