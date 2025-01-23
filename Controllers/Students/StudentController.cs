@@ -42,6 +42,20 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-leafs")]
+        public IActionResult GetStudentLeafs([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Student ID is required" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                return Ok(new { message = "SUCCESS: Student leafs retrieved", data = matchedStudent.CurrentPoints });
+            }
+        }
+
         [HttpGet("get-all-students")]
         public async Task<IActionResult> GetAllStudents([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -53,25 +67,6 @@ namespace Backend.Controllers {
             if (studentClass == null) {
                 return NotFound(new { error = "Student's class not found" });
             }
-
-            
-            // var allStudents = await _context.Students
-            //     .Where(s => s.ClassID == studentClass)
-            //     .OrderByDescending(s => s.TotalPoints)
-            //     .Select(s => new {
-            //         s.StudentID,
-            //         s.ClassID,
-            //         s.ParentID,
-            //         s.League,
-            //         s.LeagueRank,
-            //         s.CurrentPoints,
-            //         s.TotalPoints,
-            //         s.UserID,
-            //         s.TaskLastSet,
-            //         s.Streak,
-            //         s.LastClaimedStreak,
-            //         Name = _context.Users.FirstOrDefault(u => u.Id == s.StudentID).Name
-            //     }).ToListAsync();
 
             var allStudents = await _context.ClassStudents
                 .Where(cs => cs.ClassID == studentClass.ClassID)
@@ -196,6 +191,12 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-all-rewards")]
+        public async Task<IActionResult> GetAllRewards() {
+            var allRewards = await _context.RewardItems.ToListAsync();
+            return Ok(new { message = "SUCCESS: All rewards retrieved", data = allRewards });
+        }
+
         [HttpPost("submit-task")]
         public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
@@ -251,6 +252,45 @@ namespace Backend.Controllers {
                         var innerException = ex.InnerException?.Message;
                         return StatusCode(500, new { error = "Failed to upload image: " + innerException });
                     }
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = ex.Message });
+                }
+            }
+        }
+
+        [HttpPost("redeem-reward")]
+        public IActionResult RedeemReward([FromForm] string studentID, [FromForm] string rewardID) {
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(rewardID)) {
+                return BadRequest(new { error = "UERROR: Student ID and Reward ID are required" });
+            } else {
+                var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var reward = _context.RewardItems.FirstOrDefault(r => r.RewardID == rewardID);
+                if (reward == null) {
+                    return NotFound(new { error = "ERROR: Reward not found" });
+                }
+
+                if (student.CurrentPoints < reward.RequiredPoints) {
+                    return BadRequest(new { error = "UERROR: Insufficient leafs to redeem reward" });
+                }
+
+                try {
+                    var redemption = new Redemption {
+                        RedemptionID = Utilities.GenerateUniqueID(),
+                        RedeemedOn = DateTime.Now,
+                        ClaimedOn = null,
+                        RedemptionStatus = "Pending",
+                        RewardID = reward.RewardID,
+                        StudentID = student.StudentID
+                    };
+
+                    _context.Redemptions.Add(redemption);
+                    student.CurrentPoints -= reward.RequiredPoints;
+                    _context.SaveChanges();
+                    return Ok(new { message = "SUCCESS: Reward redeemed successfully", data = student.CurrentPoints });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
                 }
