@@ -2,25 +2,28 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 
-namespace Backend.Controllers {
+namespace Backend.Controllers
+{
     [Route("api/[controller]")]
     [ApiController]
-    public class RewardItemController(MyDbContext _context) : ControllerBase {
-        
-        // GET: api/RewardItems
+    public class RewardItemController(MyDbContext _context) : ControllerBase
+    {
+
         [HttpGet]
-        public async Task<IActionResult> GetRewardItems() {
-            var rewardItems = await _context.RewardItems
-                .Where(item => item.IsAvailable) // Only fetch available items
-                .ToListAsync();
+        public async Task<IActionResult> GetRewardItems()
+        {
+            // Fetch all items from the database, including those with isAvailable = false
+            var rewardItems = await _context.RewardItems.ToListAsync();
             return Ok(rewardItems);
         }
 
         // GET: api/RewardItems/{rewardID}
         [HttpGet("{rewardID}")]
-        public async Task<IActionResult> GetRewardItem(string rewardID) {
+        public async Task<IActionResult> GetRewardItem(string rewardID)
+        {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
-            if (rewardItem == null || !rewardItem.IsAvailable) {
+            if (rewardItem == null || !rewardItem.IsAvailable)
+            {
                 return NotFound();
             }
 
@@ -28,8 +31,10 @@ namespace Backend.Controllers {
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateRewardItem([FromBody] RewardItem rewardItem) {
-            if (!ModelState.IsValid) {
+        public async Task<IActionResult> CreateRewardItem([FromBody] RewardItem rewardItem)
+        {
+            if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
             }
 
@@ -40,8 +45,10 @@ namespace Backend.Controllers {
 
         // PUT: api/RewardItems/{rewardID}
         [HttpPut("{rewardID}")]
-        public async Task<IActionResult> UpdateRewardItem(string rewardID, [FromBody] RewardItem updatedItem) {
-            if (rewardID != updatedItem.RewardID) {
+        public async Task<IActionResult> UpdateRewardItem(string rewardID, [FromBody] RewardItem updatedItem)
+        {
+            if (rewardID != updatedItem.RewardID)
+            {
                 return BadRequest();
             }
 
@@ -52,9 +59,11 @@ namespace Backend.Controllers {
 
         // PATCH: api/RewardItems/{rewardID}/toggle-availability
         [HttpPatch("{rewardID}/toggle-availability")]
-        public async Task<IActionResult> ToggleAvailability(string rewardID) {
+        public async Task<IActionResult> ToggleAvailability(string rewardID)
+        {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
-            if (rewardItem == null) {
+            if (rewardItem == null)
+            {
                 return NotFound();
             }
 
