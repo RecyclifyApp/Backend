@@ -7,11 +7,12 @@ namespace Backend.Controllers {
     [ApiController]
     public class RewardItemController(MyDbContext _context) : ControllerBase {
         
-
         // GET: api/RewardItems
         [HttpGet]
         public async Task<IActionResult> GetRewardItems() {
-            var rewardItems = await _context.RewardItems.ToListAsync();
+            var rewardItems = await _context.RewardItems
+                .Where(item => item.IsAvailable) // Only fetch available items
+                .ToListAsync();
             return Ok(rewardItems);
         }
 
@@ -19,7 +20,7 @@ namespace Backend.Controllers {
         [HttpGet("{rewardID}")]
         public async Task<IActionResult> GetRewardItem(string rewardID) {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
-            if (rewardItem == null) {
+            if (rewardItem == null || !rewardItem.IsAvailable) {
                 return NotFound();
             }
 
@@ -49,15 +50,17 @@ namespace Backend.Controllers {
             return NoContent();
         }
 
-        // DELETE: api/RewardItems/{rewardID}
-        [HttpDelete("{rewardID}")]
-        public async Task<IActionResult> DeleteRewardItem(string rewardID) {
+        // PATCH: api/RewardItems/{rewardID}/toggle-availability
+        [HttpPatch("{rewardID}/toggle-availability")]
+        public async Task<IActionResult> ToggleAvailability(string rewardID) {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
             if (rewardItem == null) {
                 return NotFound();
             }
 
-            _context.RewardItems.Remove(rewardItem);
+            // Toggle the IsAvailable status
+            rewardItem.IsAvailable = !rewardItem.IsAvailable;
+            _context.Entry(rewardItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return NoContent();
         }
