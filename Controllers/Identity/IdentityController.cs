@@ -261,6 +261,8 @@ namespace Backend.Controllers.Identity {
                 _context.Users.Remove(user);
                 _context.SaveChanges();
 
+                Logger.Log($"IDENTITY DELETEACCOUNT: User {user.Id} created.");
+
                 return Ok(new { message = "SUCCESS: Account deleted successfully." });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = "ERROR: An error occurred while deleting the account.", details = ex.Message });
@@ -280,6 +282,8 @@ namespace Backend.Controllers.Identity {
 
                 _context.Users.Remove(user);
                 _context.SaveChanges();
+
+                Logger.Log($"IDENTITY DELETETARGETEDACCOUNT: User {user.Id} created.");
 
                 return Ok(new { message = "SUCCESS: Account deleted successfully." });
             } catch (Exception ex) {
