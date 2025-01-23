@@ -14,7 +14,7 @@ namespace Backend.Controllers.Teachers {
         [HttpGet("get-classes")]
         public async Task<IActionResult> GetClasses(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
-                return BadRequest(new{ error = "Invalid teacher ID. Please provide a valid teacher ID." });
+                return BadRequest(new{ error = "UERROR: Invalid teacher ID. Please provide a valid teacher ID." });
             }
 
             try {
@@ -25,13 +25,13 @@ namespace Backend.Controllers.Teachers {
 
                 if (classes == null || classes.Count == 0) {
                     classes = [];
-                    return Ok( new { message = "No classes found.", data = classes });
+                    return Ok( new { message = "SUCCESS: No classes found.", data = classes });
                 }
 
-                return Ok( new { message = "Classes found.", data = classes });
+                return Ok( new { message = "SUCCESS: Classes found.", data = classes });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
 
@@ -39,19 +39,19 @@ namespace Backend.Controllers.Teachers {
         [HttpGet("get-class")]
         public async Task<IActionResult> GetClass(string classID) {
             if (string.IsNullOrEmpty(classID)) {
-                return BadRequest(new { error = "Invalid class ID. Please provide a valid class ID." });
+                return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
                 if (classData == null) {
-                    return Ok( new {message = "Class not found.", data = classData });
+                    return Ok( new {message = "SUCCESS: Class not found.", data = classData });
                 }
 
-                return Ok(new { message = "Class found.", data = classData });
+                return Ok(new { message = "SUCCESS: Class found.", data = classData });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
 
@@ -59,24 +59,24 @@ namespace Backend.Controllers.Teachers {
         [HttpPost("create-class")]
         public async Task<IActionResult> CreateClass(string className, string classDescription, string teacherID) {
             if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(teacherID)) {
-                return BadRequest( new { error = "Invalid class details. Please provide valid class details." });
+                return BadRequest( new { error = "UERROR: Invalid class details. Please provide valid class details." });
             }
 
             // Check if class name is an integer (E.g. 101)
             if (!int.TryParse(className, out int intClassName)) {
-                return BadRequest(new { error = "Class name must be an integer." });
+                return BadRequest(new { error = "UERROR: Class name must be an integer." });
             }
 
             // Find Teacher
             var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.TeacherID == teacherID);
             if (teacher == null) {
-                return NotFound(new { error = "Teacher not found." });
+                return NotFound(new { error = "ERROR: Teacher not found." });
             }
 
             // Find Class Existance
             var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
             if (classExist != null) {
-                return BadRequest(new { error = "Class already exists." });
+                return BadRequest(new { error = "UERROR: Class already exists." });
             }
 
             try {
@@ -94,10 +94,10 @@ namespace Backend.Controllers.Teachers {
                 _context.Classes.Add(newClass);
                 _context.SaveChanges();
 
-                return Ok(new { message = "Class created successfully." });
+                return Ok(new { message = "SUCCESS: Class created successfully." });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
 
         }
@@ -106,23 +106,23 @@ namespace Backend.Controllers.Teachers {
         [HttpDelete("delete-class")]
         public async Task<IActionResult> DeleteClass(string classId) {
             if (string.IsNullOrEmpty(classId)) {
-                return BadRequest( new { error = "Invalid class ID. Please provide a valid class ID." });
+                return BadRequest( new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
                 if (classData == null)
                 {
-                    return NotFound(new { error = "Class not found." });
+                    return NotFound(new { error = "ERROR: Class not found." });
                 }
 
                 _context.Classes.Remove(classData);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Class deleted successfully." });
+                return Ok(new { message = "SUCCESS: Class deleted successfully." });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
 
@@ -130,17 +130,23 @@ namespace Backend.Controllers.Teachers {
         [HttpPut("update-class")]
         public async Task<IActionResult> UpdateClass(string classId, string className, string classDescription) {
             if (string.IsNullOrEmpty(classId) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(className)) {
-                return BadRequest( new { error = "Invalid class details. Please provide valid class details." });
+                return BadRequest( new { error = "UERROR: Invalid class details. Please provide valid class details." });
             }
 
             if (!int.TryParse(className, out int intClassName)) {
-                return BadRequest(new { error = "Class name must be an integer." });
+                return BadRequest(new { error = "UERROR: Class name must be an integer." });
+            }
+
+            // Check if other class with same name exists
+            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
+            if (classExist != null) {
+                return BadRequest(new { error = "UERROR: Class already exists." });
             }
 
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classId);
                 if (classData == null) {
-                    return NotFound(new { error = "Class not found." });
+                    return NotFound(new { error = "ERROR: Class not found." });
                 }
 
                 classData.ClassName = intClassName;
@@ -148,10 +154,10 @@ namespace Backend.Controllers.Teachers {
                 _context.Classes.Update(classData);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Class updated successfully." });
+                return Ok(new { message = "SUCCESS: Class updated successfully." });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
 
@@ -159,7 +165,7 @@ namespace Backend.Controllers.Teachers {
         [HttpGet("get-students")]
         public async Task<IActionResult> GetStudents([FromQuery] string classId) {
             if (string.IsNullOrEmpty(classId)) {
-                return BadRequest(new { error = "Invalid class ID. Please provide a valid class ID." });
+                return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
@@ -167,11 +173,11 @@ namespace Backend.Controllers.Teachers {
                     .Where(cs => cs.ClassID == classId)
                     .Join(_context.Students, cs => cs.StudentID, s => s.StudentID, (cs, s) => s)
                     .Include(s => s.User)
-                    .ToListAsync();
+                    .ToListAsync(); 
 
                 return Ok(new { message = "SUCCESS: Students retrieved", data = students });
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
 
@@ -179,22 +185,22 @@ namespace Backend.Controllers.Teachers {
         [HttpDelete("delete-student")]
         public async Task<IActionResult> DeleteStudent(string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest( new { error = "Invalid student ID. Please provide a valid student ID." });
+                return BadRequest( new { error = "UERROR: Invalid student ID. Please provide a valid student ID." });
             }
 
             var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
             if (student == null) {
-                return NotFound( new { error = "Student not found." });
+                return NotFound( new { error = "ERROR: Student not found." });
             }
 
             try {
                 _context.Students.Remove(student);
                 await _context.SaveChangesAsync();
 
-                return Ok( new { message = "Student deleted successfully." });
+                return Ok( new { message = "SUCCESS: Student deleted successfully." });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
 
@@ -202,7 +208,7 @@ namespace Backend.Controllers.Teachers {
         [HttpPut("update-student")]
         public async Task<IActionResult> UpdateStudent(string studentID, string studentName, string studentEmail) {
             if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(studentName) || string.IsNullOrEmpty(studentEmail)) {
-                return BadRequest( new { error = "Invalid student details. Please provide valid student details." });
+                return BadRequest( new { error = "UERROR: Invalid student details. Please provide valid student details." });
             }
 
             // Find student and student user details
@@ -212,7 +218,7 @@ namespace Backend.Controllers.Teachers {
 
             // Collated if clause to check student and student user details
             if (student == null || student.User == null) {
-                return NotFound( new { error = "Student not found." });
+                return NotFound( new { error = "ERROR: Student not found." });
             }
 
             try {
@@ -221,9 +227,9 @@ namespace Backend.Controllers.Teachers {
                 _context.Students.Update(student);
                 await _context.SaveChangesAsync();
 
-                return Ok( new { message = "Student updated successfully." });
+                return Ok( new { message = "SUCCESS: Student updated successfully." });
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
     }
