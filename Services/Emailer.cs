@@ -24,7 +24,7 @@ namespace Backend.Services {
             ContextChecked = true;
         }
 
-        public static async Task<string> SendEmailAsync(string to, string subject, string template) {
+        public static async Task<string> SendEmailAsync(string to, string subject, string template, Dictionary<string, string> variables) {
             CheckContext();
             if (!ContextChecked) {
                 return "ERROR: System context was not checked before sending email. Skipping email.";
@@ -40,13 +40,17 @@ namespace Backend.Services {
                 email.To.Add(MailboxAddress.Parse(to));
                 email.Subject = subject;
 
-                var templatePath = "../Backend/templates/emails/" + template + ".html";
+                var templatePath = "templates/emails/" + template + ".html";
 
                 if (!File.Exists(templatePath)) {
                     return $"ERROR: Template file '{template}' not found.";
                 }
 
                 string htmlTemplate = File.ReadAllText(templatePath);
+
+                foreach (var variable in variables) {
+                    htmlTemplate = htmlTemplate.Replace($"{{{{{variable.Key}}}}}", variable.Value);
+                }
 
                 var builder = new BodyBuilder {
                     HtmlBody = htmlTemplate
