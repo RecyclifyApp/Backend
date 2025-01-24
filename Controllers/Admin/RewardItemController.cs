@@ -8,26 +8,23 @@ namespace Backend.Controllers
     [ApiController]
     public class RewardItemController(MyDbContext _context) : ControllerBase
     {
-
         [HttpGet]
         public async Task<IActionResult> GetRewardItems()
         {
-            // Fetch all items from the database, including those with isAvailable = false
             var rewardItems = await _context.RewardItems.ToListAsync();
-            return Ok(rewardItems);
+            return Ok(new { message = "SUCCESS: Reward items retrieved", data = rewardItems });
         }
 
-        // GET: api/RewardItems/{rewardID}
         [HttpGet("{rewardID}")]
         public async Task<IActionResult> GetRewardItem(string rewardID)
         {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
             if (rewardItem == null || !rewardItem.IsAvailable)
             {
-                return NotFound();
+                return NotFound(new { error = "ERROR: Reward item not found" });
             }
 
-            return Ok(rewardItem);
+            return Ok(new { message = "SUCCESS: Reward item retrieved", data = rewardItem });
         }
 
         [HttpPost]
@@ -35,43 +32,44 @@ namespace Backend.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { error = "UERROR: Invalid reward item data" });
             }
 
             _context.RewardItems.Add(rewardItem);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetRewardItem), new { rewardID = rewardItem.RewardID }, rewardItem);
+            return CreatedAtAction(
+                nameof(GetRewardItem), 
+                new { rewardID = rewardItem.RewardID }, 
+                new { message = "SUCCESS: Reward item created", data = rewardItem }
+            );
         }
 
-        // PUT: api/RewardItems/{rewardID}
         [HttpPut("{rewardID}")]
         public async Task<IActionResult> UpdateRewardItem(string rewardID, [FromBody] RewardItem updatedItem)
         {
             if (rewardID != updatedItem.RewardID)
             {
-                return BadRequest();
+                return BadRequest(new { error = "UERROR: Reward ID mismatch" });
             }
 
             _context.Entry(updatedItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(new { message = "SUCCESS: Reward item updated", data = updatedItem });
         }
 
-        // PUT: api/RewardItems/{rewardID}/toggle-availability
         [HttpPut("{rewardID}/toggle-availability")]
         public async Task<IActionResult> ToggleAvailability(string rewardID)
         {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
             if (rewardItem == null)
             {
-                return NotFound();
+                return NotFound(new { error = "ERROR: Reward item not found" });
             }
 
-            // Toggle the IsAvailable status
             rewardItem.IsAvailable = !rewardItem.IsAvailable;
             _context.Entry(rewardItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return Ok( new { message = "SUCCESS: Availability toggled successfully.", data = rewardItem });
+            return Ok(new { message = "SUCCESS: Availability toggled successfully", data = rewardItem });
         }
     }
 }

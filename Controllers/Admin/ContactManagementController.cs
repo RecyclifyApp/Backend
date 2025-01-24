@@ -12,7 +12,7 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetContactForms()
         {
             var contactForms = await _context.ContactForms.ToListAsync();
-            return Ok(contactForms);
+            return Ok(new { message = "SUCCESS: Contact forms retrieved", data = contactForms });
         }
 
         [HttpPut("{id}/mark-replied")]
@@ -21,10 +21,10 @@ namespace Backend.Controllers
             var contactForm = await _context.ContactForms.FindAsync(id);
             if (contactForm == null)
             {
-                return NotFound();
+                return NotFound(new { error = "ERROR: Contact form not found" });
             }
 
-            contactForm.HasReplied = true; // Mark the message as replied
+            contactForm.HasReplied = true;
             _context.Entry(contactForm).State = EntityState.Modified;
 
             try
@@ -35,15 +35,12 @@ namespace Backend.Controllers
             {
                 if (!_context.ContactForms.Any(e => e.Id == id))
                 {
-                    return NotFound();
+                    return NotFound(new { error = "ERROR: Contact form not found" });
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
-            return NoContent();
+            return Ok(new { message = "SUCCESS: Contact form marked as replied" });
         }
     }
 }

@@ -1,6 +1,6 @@
 using Backend.Models;
-using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Backend.Services;
 
 namespace Backend.Controllers
 {
@@ -15,7 +15,6 @@ namespace Backend.Controllers
             _context = context;
         }
 
-        // Define the ContactFormRequest class inside the controller
         public class ContactFormRequest
         {
             public string senderName { get; set; } = string.Empty;
@@ -28,30 +27,29 @@ namespace Backend.Controllers
         {
             if (contactFormRequest == null || !ModelState.IsValid)
             {
-                return BadRequest("Invalid contact form data.");
+                return BadRequest(new { error = "UERROR: Invalid contact form data" });
             }
 
-            // Validate and sanitize data as required
-            if (string.IsNullOrWhiteSpace(contactFormRequest.senderName) || string.IsNullOrWhiteSpace(contactFormRequest.senderEmail) || string.IsNullOrWhiteSpace(contactFormRequest.message))
+            if (string.IsNullOrWhiteSpace(contactFormRequest.senderName) || 
+                string.IsNullOrWhiteSpace(contactFormRequest.senderEmail) || 
+                string.IsNullOrWhiteSpace(contactFormRequest.message))
             {
-                return BadRequest("All fields are required.");
+                return BadRequest(new { error = "UERROR: All fields are required" });
             }
 
-            // Map the ContactFormRequest to the ContactForm entity
             var contactForm = new ContactForm
             {
-                Id = Utilities.GenerateRandomInt(10000, 99999), // Generate a random ID
+                Id = Utilities.GenerateRandomInt(10000, 99999),
                 SenderName = contactFormRequest.senderName,
                 SenderEmail = contactFormRequest.senderEmail,
                 Message = contactFormRequest.message,
-                HasReplied = false // Default value
+                HasReplied = false
             };
 
-            // Save the contact form to the database
             _context.ContactForms.Add(contactForm);
             await _context.SaveChangesAsync();
 
-            return Ok("Contact form submitted successfully!");
+            return Ok(new { message = "SUCCESS: Contact form submitted successfully" });
         }
     }
 }

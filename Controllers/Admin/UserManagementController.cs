@@ -8,13 +8,11 @@ namespace Backend.Controllers
     [ApiController]
     public class UserManagementController(MyDbContext _context) : ControllerBase
     {
-
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            // Fetch all items from the database, including those with isAvailable = false
-            var rewardItems = await _context.Users.ToListAsync();
-            return Ok(rewardItems);
+            var users = await _context.Users.ToListAsync();
+            return Ok(new { message = "SUCCESS: Users retrieved", data = users });
         }
 
         [HttpPut("{id}")]
@@ -22,16 +20,15 @@ namespace Backend.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { error = "UERROR: Invalid user data" });
             }
 
             var existingUser = await _context.Users.FindAsync(id);
             if (existingUser == null)
             {
-                return NotFound("User not found.");
+                return NotFound(new { error = "ERROR: User not found" });
             }
 
-            // Update only allowed fields
             existingUser.Name = updatedUser.Name;
             existingUser.Email = updatedUser.Email;
             existingUser.ContactNumber = updatedUser.ContactNumber;
@@ -40,11 +37,11 @@ namespace Backend.Controllers
             try
             {
                 await _context.SaveChangesAsync();
-                return Ok(existingUser);
+                return Ok(new { message = "SUCCESS: User updated", data = existingUser });
             }
             catch
             {
-                return StatusCode(500, "An error occurred while updating the user.");
+                return StatusCode(500, new { error = "ERROR: An error occurred while updating the user" });
             }
         }
     }
