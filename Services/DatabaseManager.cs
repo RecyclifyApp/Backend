@@ -135,6 +135,7 @@ namespace Backend.Services {
                     var specificParentObj = new Parent {
                         ParentID = baseUserObj.Id,
                         StudentID = keyValuePairs[0]["StudentID"].ToString() ?? "",
+                        User = baseUserObj,
                         Student = studentFound
                     };
 
