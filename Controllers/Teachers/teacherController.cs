@@ -230,6 +230,7 @@ namespace Backend.Controllers.Teachers {
                             }
                         }
                     )
+                    .OrderBy(student => student.User.Name)
                     .ToListAsync();
 
                 if (students == null || students.Count == 0){
