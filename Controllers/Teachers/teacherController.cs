@@ -1,6 +1,5 @@
 using Backend.Models;
 using Backend.Services;
-using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -105,7 +104,8 @@ namespace Backend.Controllers.Teachers {
                     ClassPoints = 0,
                     WeeklyClassPoints = [],
                     TeacherID = teacherID,
-                    Teacher = teacher
+                    Teacher = teacher,
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                 };
 
                 _context.Classes.Add(newClass);

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -13,19 +12,18 @@ namespace Backend.Controllers {
         [HttpGet("get-student")]
         public IActionResult GetStudent([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "Student ID is required" });
+                return BadRequest(new { error = "UERROR: Student ID is required" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
-                    return NotFound(new { error = "Student not found" });
+                    return NotFound(new { error = "ERROR: Student not found" });
                 }
 
                 var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == matchedStudent.StudentID);
                 if (studentClassRecord == null) {
-                    return NotFound(new { error = "Student's class not found" });
+                    return NotFound(new { error = "ERROR: Student's class not found" });
                 }
 
-                // Corrected query using a join to avoid client-side evaluation
                 var classStudents = _context.ClassStudents
                     .Where(cs => cs.ClassID == studentClassRecord.ClassID)
                     .Join(_context.Students,
@@ -60,13 +58,13 @@ namespace Backend.Controllers {
         [HttpGet("get-all-students")]
         public async Task<IActionResult> GetAllStudents([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "Student ID is required" });
+                return BadRequest(new { error = "UERROR: Student ID is required" });
             }
 
             var studentClass = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
 
             if (studentClass == null) {
-                return NotFound(new { error = "Student's class not found" });
+                return NotFound(new { error = "ERROR: Student's class not found" });
             }
 
             var allStudents = await _context.ClassStudents
@@ -96,11 +94,11 @@ namespace Backend.Controllers {
         [HttpGet("get-student-tasks")]
         public async Task<IActionResult> GetStudentTasks([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "Student ID is required" });
+                return BadRequest(new { error = "UERROR: Student ID is required" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
-                    return NotFound(new { error = "Student not found" });
+                    return NotFound(new { error = "ERROR: Student not found" });
                 } else {
                     var studentTaskProgresses = _context.TaskProgresses.Where(tp => tp.StudentID == matchedStudent.StudentID).ToList();
                     var todayTaskProgresses = studentTaskProgresses.Where(tp => DateTime.Parse(tp.DateAssigned) == DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"))).ToList();
@@ -111,17 +109,17 @@ namespace Backend.Controllers {
                         foreach (var task in randomTasks) {
                             var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == matchedStudent.StudentID);
                             if (studentClassRecord == null) {
-                                return NotFound(new { error = "Student's class not found" });
+                                return NotFound(new { error = "ERROR: Student's class not found" });
                             }
 
                             var studentClass = _context.Classes.FirstOrDefault(c => c.ClassID == studentClassRecord.ClassID);
                             if (studentClass == null) {
-                                return NotFound(new { error = "Student's class not found" });
+                                return NotFound(new { error = "ERROR: Student's class not found" });
                             }
 
                             var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == studentClass.TeacherID);
                             if (assignedTeacher == null) {
-                                return NotFound(new { error = "Class's teacher not found" });
+                                return NotFound(new { error = "ERROR: Class's teacher not found" });
                             }
 
                             var taskProgress = new TaskProgress {
@@ -148,7 +146,7 @@ namespace Backend.Controllers {
                                 var taskProgress = await _context.TaskProgresses.Where(tp => tp.TaskID == foundTask.TaskID && tp.StudentID == matchedStudent.StudentID).ToListAsync();
                                 var selectedTaskProgress = taskProgress.OrderByDescending(tp => tp.DateAssigned).FirstOrDefault();
                                 if (selectedTaskProgress == null) {
-                                    return NotFound(new { error = "Task progress not found", data = taskProgress });
+                                    return NotFound(new { error = "ERROR: Existing Task Progress not found", data = taskProgress });
                                 }
 
                                 studentTasks.Add(new {
@@ -170,11 +168,11 @@ namespace Backend.Controllers {
         [HttpGet("get-student-chart-statistics")]
         public IActionResult GetStudentChartStatistics([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "Student ID is required" });
+                return BadRequest(new { error = "UERROR: Student ID is required" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
-                    return NotFound(new { error = "Student not found" });
+                    return NotFound(new { error = "ERROR: Student not found" });
                 } else {
                     var studentPointRecords = _context.StudentPoints.Where(sp => sp.StudentID == studentID).ToList();
                     var studentPointsObj = new Dictionary<string, int> {
@@ -201,41 +199,41 @@ namespace Backend.Controllers {
         [HttpPost("submit-task")]
         public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
-                return BadRequest(new { error = "No file uploaded" });
+                return BadRequest(new { error = "UERROR: No file uploaded" });
             } 
 
             if (string.IsNullOrEmpty(taskID) || string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "Task ID and Student ID are required" });
+                return BadRequest(new { error = "UERROR: Task ID and Student ID are required" });
             } else {
                 try {
                     var task = _context.Tasks.FirstOrDefault(t => t.TaskID == taskID);
                     if (task == null) {
-                        return NotFound(new { error = "Associated task not found" });
+                        return NotFound(new { error = "ERROR: Associated task not found" });
                     }
 
                     var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                     if (student == null) {
-                        return NotFound(new { error = "Student not found" });
+                        return NotFound(new { error = "ERROR: Student not found" });
                     }
 
                     var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == student.StudentID);
                     if (studentClassRecord == null) {
-                        return NotFound(new { error = "Student's class not found" });
+                        return NotFound(new { error = "ERROR: Student's class not found" });
                     }
                     var studentClass = _context.Classes.FirstOrDefault(c => c.ClassID == studentClassRecord.ClassID);
                     if (studentClass == null) {
-                        return NotFound(new { error = "Student's class not found" });
+                        return NotFound(new { error = "ERROR: Student's class not found" });
                     }
 
                     var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == studentClass.TeacherID);
                     if (assignedTeacher == null) {
-                        return NotFound(new { error = "Class's teacher not found" });
+                        return NotFound(new { error = "ERROR: Class's teacher not found" });
                     }
 
                     var taskProgress = await _context.TaskProgresses.Where(tp => tp.TaskID == taskID && tp.StudentID == studentID).ToListAsync();
                     var selectedTaskProgress = taskProgress.OrderByDescending(tp => tp.DateAssigned).FirstOrDefault();
                     if (selectedTaskProgress == null) {
-                        return NotFound(new { error = "Task progress not found", data = taskProgress });
+                        return NotFound(new { error = "ERROR: Task progress not found", data = taskProgress });
                     }
 
                     try {
@@ -245,16 +243,16 @@ namespace Backend.Controllers {
 
                         try {
                             await _context.SaveChangesAsync();
-                            return Ok(new { message = "Task submitted successfully" });
+                            return Ok(new { message = "SUCCESS: Task submitted successfully" });
                         } catch (Exception ex) {
-                            return StatusCode(500, new { error = "Failed to save changes: " + ex.Message });
+                            return StatusCode(500, new { error = "ERROR: Failed to save changes: " + ex.Message });
                         }
                     } catch (Exception ex) {
                         var innerException = ex.InnerException?.Message;
-                        return StatusCode(500, new { error = "Failed to upload image: " + innerException });
+                        return StatusCode(500, new { error = "ERROR: Failed to upload image: " + innerException });
                     }
                 } catch (Exception ex) {
-                    return StatusCode(500, new { error = ex.Message });
+                    return StatusCode(500, new { error = "ERROR: ", ex.Message });
                 }
             }
         }
@@ -295,11 +293,21 @@ namespace Backend.Controllers {
                     var studentName = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Name ?? "Student";
                     var studentEmail = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Email ?? "student@mymail.nyp.edu.sg";
 
+                    var frontendUrl = Environment.GetEnvironmentVariable("VITE_FRONTEND_URL");
+                    if (string.IsNullOrEmpty(frontendUrl)) {
+                        return StatusCode(500, new { error = "ERROR: Environment not ready to generate QR Code for redemption" });
+                    }
+                    string apiPath = $"/student/claimReward?studentID={student.StudentID}&redemptionID={redemption.RedemptionID}";
+                    string fullUrl = $"{frontendUrl}{apiPath}";
+
+                    string qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={Uri.EscapeDataString(fullUrl)}";
+
                     var emailVars = new Dictionary<string, string> {
-                        { "username", studentName }
+                        { "username", studentName },
+                        { "qrcode", qrCodeUrl }
                     };
 
-                    await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RedeemedReward", emailVars);
+                    await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RewardRedemption", emailVars);
                     return Ok(new { message = "SUCCESS: Reward redeemed successfully", data = student.CurrentPoints });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
@@ -307,14 +315,81 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-rewards")]
+        public async Task<IActionResult> GetStudentRewards([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Student ID is required" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentRedemptions = await _context.Redemptions.Where(r => r.StudentID == studentID).ToListAsync();
+                var studentRewards = new List<dynamic>();
+                foreach (var redemption in studentRedemptions) {
+                    var reward = await _context.RewardItems.FirstOrDefaultAsync(r => r.RewardID == redemption.RewardID);
+                    if (reward != null) {
+                        studentRewards.Add(new {
+                            RedemptionStatus = redemption.RedemptionStatus,
+                            RewardID = reward.RewardID,
+                            RewardTitle = reward.RewardTitle,
+                            RewardDescription = reward.RewardDescription,
+                            RequiredPoints = reward.RequiredPoints,
+                            ImageUrl = reward.ImageUrl,
+                            ClaimedOn = redemption.ClaimedOn
+                        });
+                    }
+                }
+
+                return Ok(new { message = "SUCCESS: Student rewards retrieved", data = studentRewards });
+            }
+        }
+
+        [HttpGet("claim-reward")]
+        public async Task<IActionResult> ClaimReward([FromQuery] string studentID, [FromQuery] string redemptionID) {
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(redemptionID)) {
+                return BadRequest(new { error = "UERROR: StudentID and RedemptionID are required" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var redemption = await _context.Redemptions.FirstOrDefaultAsync(r => r.RedemptionID == redemptionID);
+                if (redemption == null) {
+                    return NotFound(new { error = "ERROR: Redemption not found" });
+                }
+
+                var reward = await _context.RewardItems.FirstOrDefaultAsync(r => r.RewardID == redemption.RewardID);
+                if (reward == null) {
+                    return NotFound(new { error = "ERROR: Reward not found" });
+                }
+
+                if (redemption.RedemptionStatus == "Claimed") {
+                    return BadRequest(new { error = "UERROR: Reward has already been claimed" });
+                }
+
+                try {
+                    redemption.ClaimedOn = DateTime.Now;
+                    redemption.RedemptionStatus = "Claimed";
+                    _context.SaveChanges();
+
+                    return Ok(new { message = "SUCCESS: Reward claimed successfully" });
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = "ERROR: ", ex.Message });
+                }
+            }
+        }
+
         [HttpPost("award-gift")]
         public IActionResult AwardGift([FromBody] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "Student ID is required" });
+                return BadRequest(new { error = "UERROR: Student ID is required" });
             } else {
                 var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (student == null) {
-                    return NotFound(new { error = "Student not found" });
+                    return NotFound(new { error = "ERROR: Student not found" });
                 }
 
                 var randomPoints = Utilities.GenerateRandomInt(10, 100);
@@ -324,9 +399,50 @@ namespace Backend.Controllers {
                     student.TotalPoints += randomPoints;
                     student.LastClaimedStreak = DateTime.Now.ToString("yyyy-MM-dd");
                     _context.SaveChanges();
-                    return Ok(new { message = "Gift awarded successfully", data = new { pointsAwarded = randomPoints, currentPoints = student.CurrentPoints } });
+                    return Ok(new { message = "SUCCESS: Gift awarded successfully", data = new { pointsAwarded = randomPoints, currentPoints = student.CurrentPoints } });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
+                }
+            }
+        }
+
+        [HttpPost("join-class")]
+        public async Task<IActionResult> JoinClass([FromForm] string studentID, [FromForm] int joinCode) {
+            if (string.IsNullOrEmpty(studentID) || joinCode <= 0) {
+                return BadRequest(new { error = "UERROR: Student ID and Class Code are required" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentClass = await _context.Classes.FirstOrDefaultAsync(c => c.JoinCode == joinCode);
+                if (studentClass == null) {
+                    return NotFound(new { error = "ERROR: Class not found" });
+                }
+
+                var existingStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
+                if (existingStudent != null) {
+                    return BadRequest(new { error = "UERROR: Student is already enrolled into another class" });
+                }
+
+                var existingClassStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID && cs.ClassID == studentClass.ClassID);
+                if (existingClassStudent != null) {
+                    return BadRequest(new { error = "UERROR: Student is already enrolled into this class" });
+                }
+
+                try {
+                    var newClassStudent = new ClassStudents {
+                        ClassID = studentClass.ClassID,
+                        StudentID = studentID
+                    };
+
+                    _context.ClassStudents.Add(newClassStudent);
+                    _context.SaveChanges();
+
+                    return Ok(new { message = "SUCCESS: Student joined class successfully" });
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = "ERROR: ", ex.Message });
                 }
             }
         }
@@ -334,7 +450,7 @@ namespace Backend.Controllers {
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
             if (file == null || file.Length == 0) {
-                return BadRequest(new { error = "No file uploaded" });
+                return BadRequest(new { error = "UERROR: No file uploaded" });
             } else {
                 try {
                     var recognitionResult = await CompVision.Recognise(file);

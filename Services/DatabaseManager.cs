@@ -218,7 +218,8 @@ namespace Backend.Services {
                 ClassPoints = 1000,
                 TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
-                WeeklyClassPoints = new List<WeeklyClassPoints>()
+                WeeklyClassPoints = new List<WeeklyClassPoints>(),
+                JoinCode = Utilities.GenerateRandomInt(100000, 999999)
             };
 
             var class2 = new Class {
@@ -228,7 +229,8 @@ namespace Backend.Services {
                 ClassPoints = 2000,
                 TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
-                WeeklyClassPoints = new List<WeeklyClassPoints>()
+                WeeklyClassPoints = new List<WeeklyClassPoints>(),
+                JoinCode = Utilities.GenerateRandomInt(100000, 999999)
             };
 
             class1.WeeklyClassPoints = new List<WeeklyClassPoints> {
