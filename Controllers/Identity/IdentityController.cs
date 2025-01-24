@@ -103,7 +103,7 @@ namespace Backend.Controllers.Identity {
                     user.Id,
                     user.Name,
                     user.Email,
-                    user.ContactNumber,
+                    user.EmailVerified,
                     user.UserRole,
                     user.Avatar
                 });
@@ -364,12 +364,12 @@ namespace Backend.Controllers.Identity {
 
                 // Check code match
                 if (user.EmailVerificationToken != request.Code) {
-                    return BadRequest(new { error = "ERROR: Invalid verification code" });
+                    return BadRequest(new { error = "UERROR: Invalid verification code" });
                 }
 
                 // Check expiration
                 if (!DateTime.TryParse(user.EmailVerificationTokenExpiry, out var expiryDate) || expiryDate < DateTime.UtcNow) {
-                    return BadRequest(new { error = "ERROR: Verification code expired" });
+                    return BadRequest(new { error = "UERROR: Verification code expired" });
                 }
 
                 // Mark email as verified
