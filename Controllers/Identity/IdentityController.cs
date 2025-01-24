@@ -103,7 +103,7 @@ namespace Backend.Controllers.Identity {
                     user.Id,
                     user.Name,
                     user.Email,
-                    user.ContactNumber,
+                    user.EmailVerified,
                     user.UserRole,
                     user.Avatar
                 });
@@ -125,7 +125,7 @@ namespace Backend.Controllers.Identity {
             // Generate JWT Token
             string token = CreateToken(user);
 
-            Logger.Log($"IDENTITY LOGIN: User {user.Id} logged in.");
+            Logger.Log($"[SUCCESS] IDENTITY LOGIN: User {user.Id} logged in.");
 
             // Return the token and user details
             return Ok(new {
@@ -176,9 +176,30 @@ namespace Backend.Controllers.Identity {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
+                // Generate 6-digit code
+                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+
+                // Store in database
+                user.EmailVerificationToken = code;
+                user.EmailVerificationTokenExpiry = expiry;
+                _context.SaveChanges();
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", user.Name },
+                    { "emailVerificationToken", code }
+                };
+
+                var result = await Emailer.SendEmailAsync(
+                    user.Email,
+                    "Welcome to Recyclify",
+                    "WelcomeEmail",
+                    emailVars
+                );
+
                 string token = CreateToken(user);
 
-                Logger.Log($"IDENTITY CREATEACCOUNT: User {user.Id} created.");
+                Logger.Log($"[SUCCESS] IDENTITY CREATEACCOUNT: User {user.Id} created.");
 
                 return Ok(new {
                     message = "SUCCESS: Account created successfully.",
@@ -242,9 +263,10 @@ namespace Backend.Controllers.Identity {
         [HttpDelete("deleteAccount")]
         [Authorize]
         public IActionResult DeleteAccount() {
+            // Extract the user ID from the token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             try {
-                // Extract the user ID from the token claims
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 var user = _context.Users.Find(userId);
                 if (user == null) {
@@ -255,8 +277,11 @@ namespace Backend.Controllers.Identity {
                 _context.Users.Remove(user);
                 _context.SaveChanges();
 
+                Logger.Log($"[SUCCESS] IDENTITY DELETEACCOUNT: User {user.Id} deleted.");
+
                 return Ok(new { message = "SUCCESS: Account deleted successfully." });
             } catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY DELETEACCOUNT: Error deleting user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while deleting the account.", details = ex.Message });
             }
         }
@@ -264,9 +289,6 @@ namespace Backend.Controllers.Identity {
         [HttpDelete("deleteTargetedAccount")]
         public IActionResult DeleteTargetedAccount([FromQuery] string id) {
             try {
-                // Extract the user ID from the token claims
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 var user = _context.Users.SingleOrDefault(u => u.Id == id);
                 if (user == null){
                     return NotFound(new { error = "ERROR: User not found." });
@@ -275,10 +297,99 @@ namespace Backend.Controllers.Identity {
                 _context.Users.Remove(user);
                 _context.SaveChanges();
 
+                Logger.Log($"[SUCCESS] IDENTITY DELETETARGETEDACCOUNT: User {user.Id} deleted.");
+
                 return Ok(new { message = "SUCCESS: Account deleted successfully." });
             } catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY DELETETARGETEDACCOUNT: Error deleting user {id}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while deleting the account.", details = ex.Message });
             }
+        }
+
+        [HttpPost("emailVerification")]
+        [Authorize]
+        public async Task<IActionResult> SendVerificationCode() {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _context.Users.Find(userId);
+
+            try {
+                
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Generate 6-digit code
+                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+
+                // Store in database
+                user.EmailVerificationToken = code;
+                user.EmailVerificationTokenExpiry = expiry;
+                _context.SaveChanges();
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", user.Name },
+                    { "emailVerificationToken", code }
+                };
+
+                var result = await Emailer.SendEmailAsync(
+                    user.Email,
+                    "Email Verification",
+                    "EmailVerification",
+                    emailVars
+                );
+
+                return result.StartsWith("SUCCESS") 
+                    ? Ok(new { message = "SUCCESS: Verification code sent" })
+                    : BadRequest(new { error = result });
+            }
+            catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY SENDVERIFICATIONCODE: Error processing verification request for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to process verification request", details = ex.Message });
+            }
+        }
+
+        [HttpPost("verifyEmail")]
+        [Authorize]
+        public IActionResult VerifyEmail([FromBody] VerifyCodeRequest request) {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _context.Users.Find(userId);
+
+            try {                
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.EmailVerificationToken) || string.IsNullOrEmpty(user.EmailVerificationTokenExpiry)) {
+                    return BadRequest(new { error = "ERROR: No verification code issued" });
+                }
+
+                // Check code match
+                if (user.EmailVerificationToken != request.Code) {
+                    return BadRequest(new { error = "UERROR: Invalid verification code" });
+                }
+
+                // Check expiration
+                if (!DateTime.TryParse(user.EmailVerificationTokenExpiry, out var expiryDate) || expiryDate < DateTime.UtcNow) {
+                    return BadRequest(new { error = "UERROR: Verification code expired" });
+                }
+
+                // Mark email as verified
+                user.EmailVerified = true;
+                user.EmailVerificationToken = null;
+                user.EmailVerificationTokenExpiry = null;
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Email verified successfully" });
+            }
+            catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY VERIFYEMAIL: Failed to verify email for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to verify email", details = ex.Message });
+            }
+        }
+
+        public class VerifyCodeRequest {
+            public required string Code { get; set; }
         }
                                 
         public class LoginRequest {
