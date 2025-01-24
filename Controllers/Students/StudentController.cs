@@ -405,6 +405,47 @@ namespace Backend.Controllers {
                 }
             }
         }
+
+        [HttpPost("join-class")]
+        public async Task<IActionResult> JoinClass([FromForm] string studentID, [FromForm] int joinCode) {
+            if (string.IsNullOrEmpty(studentID) || joinCode <= 0) {
+                return BadRequest(new { error = "UERROR: Student ID and Class Code are required" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentClass = await _context.Classes.FirstOrDefaultAsync(c => c.JoinCode == joinCode);
+                if (studentClass == null) {
+                    return NotFound(new { error = "ERROR: Class not found" });
+                }
+
+                var existingStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
+                if (existingStudent != null) {
+                    return BadRequest(new { error = "UERROR: Student is already enrolled into another class" });
+                }
+
+                var existingClassStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID && cs.ClassID == studentClass.ClassID);
+                if (existingClassStudent != null) {
+                    return BadRequest(new { error = "UERROR: Student is already enrolled into this class" });
+                }
+
+                try {
+                    var newClassStudent = new ClassStudents {
+                        ClassID = studentClass.ClassID,
+                        StudentID = studentID
+                    };
+
+                    _context.ClassStudents.Add(newClassStudent);
+                    _context.SaveChanges();
+
+                    return Ok(new { message = "SUCCESS: Student joined class successfully" });
+                } catch (Exception ex) {
+                    return StatusCode(500, new { error = "ERROR: ", ex.Message });
+                }
+            }
+        }
             
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
