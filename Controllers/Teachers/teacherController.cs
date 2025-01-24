@@ -88,7 +88,8 @@ namespace Backend.Controllers.Teachers {
                     ClassPoints = 0,
                     WeeklyClassPoints = [],
                     TeacherID = teacherID,
-                    Teacher = teacher
+                    Teacher = teacher,
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                 };
 
                 _context.Classes.Add(newClass);
