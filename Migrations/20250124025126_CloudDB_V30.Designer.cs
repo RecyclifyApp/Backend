@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250123080642_CloudDB_V30")]
+    [Migration("20250124025126_CloudDB_V30")]
     partial class CloudDB_V30
     {
         /// <inheritdoc />
@@ -51,6 +51,9 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ClassPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("JoinCode")
                         .HasColumnType("int");
 
                     b.Property<string>("TeacherID")

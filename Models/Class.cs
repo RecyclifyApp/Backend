@@ -13,5 +13,6 @@ namespace Backend.Models {
         public ICollection<Student>? Students { get; set; }
         public ICollection<QuestProgress>? QuestProgresses { get; set; }
         public required ICollection<WeeklyClassPoints> WeeklyClassPoints { get; set; } = new List<WeeklyClassPoints>();
+        public required int JoinCode { get; set; }
     }
 }

@@ -1,6 +1,5 @@
 using Backend.Models;
 using Backend.Services;
-using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +22,23 @@ namespace Backend.Controllers.Teachers {
                 .OrderBy(c => c.ClassName)
                 .ToListAsync();
 
+                if (classes == null || classes.Count == 0) {
+                    classes = [];
+                    return Ok( new { message = "SUCCESS: No classes found.", data = classes });
+                }
+
+                return Ok( new { message = "SUCCESS: Classes found.", data = classes });
+
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Get Overall Classes Data
+        [HttpGet("get-overall-classes-data")]
+        public async Task<IActionResult> GetOverallClassesData() {
+            try {
+                var classes = await _context.Classes.ToListAsync();
                 if (classes == null || classes.Count == 0) {
                     classes = [];
                     return Ok( new { message = "SUCCESS: No classes found.", data = classes });
@@ -88,7 +104,8 @@ namespace Backend.Controllers.Teachers {
                     ClassPoints = 0,
                     WeeklyClassPoints = [],
                     TeacherID = teacherID,
-                    Teacher = teacher
+                    Teacher = teacher,
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                 };
 
                 _context.Classes.Add(newClass);

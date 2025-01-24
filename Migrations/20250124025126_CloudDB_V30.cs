@@ -247,7 +247,8 @@ namespace Backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ClassPoints = table.Column<int>(type: "int", nullable: false),
                     TeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    JoinCode = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -3,6 +3,7 @@ using Backend.Models;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Routing.Constraints;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace Backend.Services {
     public class DatabaseManager {
@@ -84,6 +85,7 @@ namespace Backend.Services {
             string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
             string userRole = ValidateField(userDetails, "UserRole", required: true, "UserRole is required.");
             string avatar = userDetails.GetValueOrDefault("Avatar")?.ToString() ?? "";
+            string linkedStudent = userDetails.GetValueOrDefault("StudentID")?.ToString() ?? "";
 
             var baseUserObj = new User {
                 Id = id,
@@ -126,7 +128,7 @@ namespace Backend.Services {
 
                 context.Teachers.Add(specificTeacherObj);
             } else if (baseUser == "parent") {
-                var studentFound = context.Students.Find(keyValuePairs[0]["StudentID"].ToString());
+                var studentFound = context.Students.Find(linkedStudent);
                 if (studentFound == null) {
                     throw new ArgumentException("Invalid student ID.");
                 } else {
@@ -216,7 +218,8 @@ namespace Backend.Services {
                 ClassPoints = 1000,
                 TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
-                WeeklyClassPoints = new List<WeeklyClassPoints>()
+                WeeklyClassPoints = new List<WeeklyClassPoints>(),
+                JoinCode = Utilities.GenerateRandomInt(100000, 999999)
             };
 
             var class2 = new Class {
@@ -226,7 +229,8 @@ namespace Backend.Services {
                 ClassPoints = 2000,
                 TeacherID = teacher1?.TeacherID ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
                 Teacher = teacher1 ?? throw new ArgumentNullException(nameof(teacher1), "Teacher not found."),
-                WeeklyClassPoints = new List<WeeklyClassPoints>()
+                WeeklyClassPoints = new List<WeeklyClassPoints>(),
+                JoinCode = Utilities.GenerateRandomInt(100000, 999999)
             };
 
             class1.WeeklyClassPoints = new List<WeeklyClassPoints> {
@@ -264,6 +268,7 @@ namespace Backend.Services {
             
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student1Id },
                     { "Name", "Lana Ng" },
                     { "FName", "Lana" },
                     { "LName", "Ng" },
@@ -558,6 +563,21 @@ namespace Backend.Services {
 
                 context.RewardItems.Add(rewardItem);
             }
+
+            await CreateUserRecords(context, "parent", new List<Dictionary<string, object>> {
+                new Dictionary<string, object> {
+                    { "Name", "Nicholas Chew" },
+                    { "FName", "Nicholas" },
+                    { "LName", "Chew" },
+                    { "Email", "lincolnlim267@gmail.com" },
+                    { "Password", "parentPassword" },
+                    { "ContactNumber", "12312312" },
+                    { "UserRole", "parent" },
+                    { "Avatar", "parent_avatar.jpg" },
+                    { "EmailVerified", false },
+                    { "StudentID", student1Id }
+                }
+            });
 
             string dbMode = Environment.GetEnvironmentVariable("DB_MODE") ?? "";
             if (dbMode == "cloud") {
