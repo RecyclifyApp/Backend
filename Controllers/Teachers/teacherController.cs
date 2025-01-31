@@ -1,6 +1,5 @@
 using Backend.Models;
 using Backend.Services;
-using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +22,23 @@ namespace Backend.Controllers.Teachers {
                 .OrderBy(c => c.ClassName)
                 .ToListAsync();
 
+                if (classes == null || classes.Count == 0) {
+                    classes = [];
+                    return Ok( new { message = "SUCCESS: No classes found.", data = classes });
+                }
+
+                return Ok( new { message = "SUCCESS: Classes found.", data = classes });
+
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Get Overall Classes Data
+        [HttpGet("get-overall-classes-data")]
+        public async Task<IActionResult> GetOverallClassesData() {
+            try {
+                var classes = await _context.Classes.ToListAsync();
                 if (classes == null || classes.Count == 0) {
                     classes = [];
                     return Ok( new { message = "SUCCESS: No classes found.", data = classes });
@@ -88,7 +104,8 @@ namespace Backend.Controllers.Teachers {
                     ClassPoints = 0,
                     WeeklyClassPoints = [],
                     TeacherID = teacherID,
-                    Teacher = teacher
+                    Teacher = teacher,
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                 };
 
                 _context.Classes.Add(newClass);
@@ -164,19 +181,65 @@ namespace Backend.Controllers.Teachers {
         // Get Student
         [HttpGet("get-students")]
         public async Task<IActionResult> GetStudents([FromQuery] string classId) {
-            if (string.IsNullOrEmpty(classId)) {
+            if (string.IsNullOrEmpty(classId)){
                 return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
                 var students = await _context.ClassStudents
                     .Where(cs => cs.ClassID == classId)
-                    .Join(_context.Students, cs => cs.StudentID, s => s.StudentID, (cs, s) => s)
-                    .Include(s => s.User)
-                    .ToListAsync(); 
+                    .Join(
+                        _context.Students,
+                        cs => cs.StudentID,
+                        s => s.StudentID,
+                        (cs, s) => new { cs, s }
+                    )
+                    .GroupJoin(
+                        _context.Parents,
+                        combined => combined.s.ParentID,
+                        p => p.ParentID,
+                        (combined, p) => new { combined, Parent = p.FirstOrDefault() }
+                    )
+                    .Join(
+                        _context.Users,
+                        combined => combined.combined.s.UserID,
+                        u => u.Id,
+                        (combined, u) => new
+                        {
+                            combined.combined.s.StudentID,
+                            combined.combined.s.ParentID,
+                            combined.combined.s.League,
+                            combined.combined.s.LeagueRank,
+                            combined.combined.s.CurrentPoints,
+                            combined.combined.s.TotalPoints,
+                            combined.combined.s.Streak,
+                            combined.combined.s.LastClaimedStreak,
+                            combined.combined.s.TaskProgresses,
+                            combined.combined.s.Redemptions,
+                            Parent = combined.Parent != null && combined.Parent.User != null
+                                ? new
+                                {
+                                    ParentName = combined.Parent.User.Name,
+                                    ParentEmail = combined.Parent.User.Email
+                                }
+                                : null,
+                            User = new
+                            {
+                                u.Name,
+                                u.Email
+                            }
+                        }
+                    )
+                    .OrderBy(student => student.User.Name)
+                    .ToListAsync();
+
+                if (students == null || students.Count == 0){
+                    return Ok(new { message = "SUCCESS: No students found.", data = new List<object>() });
+                }
 
                 return Ok(new { message = "SUCCESS: Students retrieved", data = students });
-            } catch (Exception ex) {
+            }
+            catch (Exception ex){
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }

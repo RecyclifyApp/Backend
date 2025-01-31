@@ -50,6 +50,9 @@ namespace Backend.Migrations
                     b.Property<int>("ClassPoints")
                         .HasColumnType("int");
 
+                    b.Property<int>("JoinCode")
+                        .HasColumnType("int");
+
                     b.Property<string>("TeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250123080642_CloudDB_V30")]
-    partial class CloudDB_V30
+    [Migration("20250123071714_clouddb_v29")]
+    partial class clouddb_v29
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -268,9 +268,6 @@ namespace Backend.Migrations
                 {
                     b.Property<string>("RewardID")
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("longtext");
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("tinyint(1)");
