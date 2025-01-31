@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Backend.Services;
 
 namespace Backend.Controllers
 {
@@ -8,70 +9,95 @@ namespace Backend.Controllers
     [ApiController]
     public class RewardItemController(MyDbContext _context) : ControllerBase
     {
+        public class RewardItemRequest
+        {
+            public required string RewardTitle { get; set; }
+            public required string RewardDescription { get; set; }
+            public required int RequiredPoints { get; set; } = 0;
+            public required int RewardQuantity { get; set; } = 0;
+            public required bool IsAvailable { get; set; } = true;
+            public string? ImageUrl { get; set; }
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetRewardItems()
         {
-            // Fetch all items from the database, including those with isAvailable = false
             var rewardItems = await _context.RewardItems.ToListAsync();
-            return Ok(rewardItems);
+            return Ok(new { message = "SUCCESS: Reward items retrieved", data = rewardItems });
         }
 
-        // GET: api/RewardItems/{rewardID}
         [HttpGet("{rewardID}")]
         public async Task<IActionResult> GetRewardItem(string rewardID)
         {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
             if (rewardItem == null || !rewardItem.IsAvailable)
             {
-                return NotFound();
+                return NotFound(new { error = "ERROR: Reward item not found" });
             }
 
-            return Ok(rewardItem);
+            return Ok(new { message = "SUCCESS: Reward item retrieved", data = rewardItem });
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateRewardItem([FromBody] RewardItem rewardItem)
+        public async Task<IActionResult> CreateRewardItem([FromBody] RewardItemRequest rewardItemRequest)
         {
-            if (!ModelState.IsValid)
+            // Ensure required fields are provided
+            if (string.IsNullOrWhiteSpace(rewardItemRequest.RewardTitle) ||
+                string.IsNullOrWhiteSpace(rewardItemRequest.RewardDescription) ||
+                rewardItemRequest.RequiredPoints < 0 ||
+                rewardItemRequest.RewardQuantity < 0)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { error = "UERROR: All fields are required and must be valid" });
             }
 
+            // Generate a unique ID for the reward item
+            var rewardItem = new RewardItem
+            {
+                RewardID = Utilities.GenerateUniqueID(), // Generate a random ID
+                RewardTitle = rewardItemRequest.RewardTitle,
+                RewardDescription = rewardItemRequest.RewardDescription,
+                RequiredPoints = rewardItemRequest.RequiredPoints,
+                RewardQuantity = rewardItemRequest.RewardQuantity,
+                IsAvailable = rewardItemRequest.IsAvailable,
+                ImageUrl = rewardItemRequest.ImageUrl
+            };
+
+            // Add the reward item to the context
             _context.RewardItems.Add(rewardItem);
+
+            // Save changes to the database
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetRewardItem), new { rewardID = rewardItem.RewardID }, rewardItem);
+
+            // Return a 200 OK response with a success message
+            return Ok(new { message = "SUCCESS: Reward item created successfully", data = rewardItem });
         }
 
-        // PUT: api/RewardItems/{rewardID}
         [HttpPut("{rewardID}")]
         public async Task<IActionResult> UpdateRewardItem(string rewardID, [FromBody] RewardItem updatedItem)
         {
             if (rewardID != updatedItem.RewardID)
             {
-                return BadRequest();
+                return BadRequest(new { error = "UERROR: Reward ID mismatch" });
             }
 
             _context.Entry(updatedItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(new { message = "SUCCESS: Reward item updated", data = updatedItem });
         }
 
-        // PUT: api/RewardItems/{rewardID}/toggle-availability
         [HttpPut("{rewardID}/toggle-availability")]
         public async Task<IActionResult> ToggleAvailability(string rewardID)
         {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
             if (rewardItem == null)
             {
-                return NotFound();
+                return NotFound(new { error = "ERROR: Reward item not found" });
             }
 
-            // Toggle the IsAvailable status
             rewardItem.IsAvailable = !rewardItem.IsAvailable;
             _context.Entry(rewardItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return Ok( new { message = "SUCCESS: Availability toggled successfully.", data = rewardItem });
+            return Ok(new { message = "SUCCESS: Availability toggled successfully", data = rewardItem });
         }
     }
 }

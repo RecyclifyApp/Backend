@@ -2,8 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Routing.Constraints;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace Backend.Services {
     public class DatabaseManager {
@@ -135,6 +133,7 @@ namespace Backend.Services {
                     var specificParentObj = new Parent {
                         ParentID = baseUserObj.Id,
                         StudentID = keyValuePairs[0]["StudentID"].ToString() ?? "",
+                        User = baseUserObj,
                         Student = studentFound
                     };
 
@@ -161,23 +160,25 @@ namespace Backend.Services {
         }
 
         public static async Task CleanAndPopulateDatabase(MyDbContext context) {
-            context.Teachers.RemoveRange(context.Teachers);
+            context.Admins.RemoveRange(context.Admins);
             context.Classes.RemoveRange(context.Classes);
-            context.Students.RemoveRange(context.Students);
-            context.Parents.RemoveRange(context.Parents);
+            context.ClassStudents.RemoveRange(context.ClassStudents);
+            context.ContactForms.RemoveRange(context.ContactForms);
             context.DailyStudentPoints.RemoveRange(context.DailyStudentPoints);
+            context.Inboxes.RemoveRange(context.Inboxes);
+            context.Parents.RemoveRange(context.Parents);
             context.Quests.RemoveRange(context.Quests);
             context.QuestProgresses.RemoveRange(context.QuestProgresses);
+            context.Redemptions.RemoveRange(context.Redemptions);
+            context.RewardItems.RemoveRange(context.RewardItems);
+            context.Students.RemoveRange(context.Students);
+            context.StudentPoints.RemoveRange(context.StudentPoints);
             context.Tasks.RemoveRange(context.Tasks);
             context.TaskProgresses.RemoveRange(context.TaskProgresses);
-            context.RewardItems.RemoveRange(context.RewardItems);
-            context.Redemptions.RemoveRange(context.Redemptions);
-            context.Inboxes.RemoveRange(context.Inboxes);
-            context.Admins.RemoveRange(context.Admins);
+            context.Teachers.RemoveRange(context.Teachers);
             context.Users.RemoveRange(context.Users);
             context.WeeklyClassPoints.RemoveRange(context.WeeklyClassPoints);
-            context.ContactForms.RemoveRange(context.ContactForms);
-            
+
             await context.SaveChangesAsync();
 
             await CreateUserRecords(context, "admin", new List<Dictionary<string, object>> {
@@ -283,6 +284,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student2Id },
                     { "Name", "Kate Gibson" },
                     { "FName", "Kate" },
                     { "LName", "Gibson" },
@@ -297,6 +299,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student3Id },
                     { "Name", "Peter Parker" },
                     { "FName", "Peter" },
                     { "LName", "Parker" },
@@ -311,6 +314,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student4Id },
                     { "Name", "Ethan Carter" },
                     { "FName", "Ethan" },
                     { "LName", "Carter" },
@@ -325,6 +329,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student5Id },
                     { "Name", "Olivia Bennett" },
                     { "FName", "Olivia" },
                     { "LName", "Bennett" },
@@ -339,6 +344,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student6Id },
                     { "Name", "Noah Mitchell" },
                     { "FName", "Noah" },
                     { "LName", "Mitchell" },
@@ -353,6 +359,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student7Id },
                     { "Name", "Emma Robinson" },
                     { "FName", "Emma" },
                     { "LName", "Robinson" },
@@ -367,6 +374,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student8Id },
                     { "Name", "Liam Turner" },
                     { "FName", "Liam" },
                     { "LName", "Turner" },
@@ -381,6 +389,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student9Id },
                     { "Name", "Ava Parker" },
                     { "FName", "Ava" },
                     { "LName", "Parker" },
@@ -395,6 +404,7 @@ namespace Backend.Services {
 
             await CreateUserRecords(context, "student", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
+                    { "Id", student10Id },
                     { "Name", "Sophia Ramirez" },
                     { "FName", "Sophia" },
                     { "LName", "Ramirez" },
