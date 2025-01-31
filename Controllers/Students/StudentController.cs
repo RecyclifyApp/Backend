@@ -12,7 +12,7 @@ namespace Backend.Controllers {
         [HttpGet("get-student")]
         public IActionResult GetStudent([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
@@ -20,11 +20,8 @@ namespace Backend.Controllers {
                 }
 
                 var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == matchedStudent.StudentID);
-                if (studentClassRecord == null) {
-                    return NotFound(new { error = "ERROR: Student's class not found" });
-                }
-
-                var classStudents = _context.ClassStudents
+                if (studentClassRecord != null) {
+                    var classStudents = _context.ClassStudents
                     .Where(cs => cs.ClassID == studentClassRecord.ClassID)
                     .Join(_context.Students,
                         cs => cs.StudentID,
@@ -32,10 +29,10 @@ namespace Backend.Controllers {
                         (cs, s) => s)
                     .ToList();
 
-                var classStudentsRanked = classStudents.OrderByDescending(s => s.TotalPoints).ToList();
-                matchedStudent.LeagueRank = classStudentsRanked.FindIndex(s => s.StudentID == studentID) + 1;
-
-                _context.SaveChanges();
+                    var classStudentsRanked = classStudents.OrderByDescending(s => s.TotalPoints).ToList();
+                    matchedStudent.LeagueRank = classStudentsRanked.FindIndex(s => s.StudentID == studentID) + 1;
+                    _context.SaveChanges();
+                }
 
                 return Ok(new { message = "SUCCESS: Student details retrieved", data = matchedStudent });
             }
@@ -44,7 +41,7 @@ namespace Backend.Controllers {
         [HttpGet("get-student-leafs")]
         public IActionResult GetStudentLeafs([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
@@ -58,13 +55,13 @@ namespace Backend.Controllers {
         [HttpGet("get-all-students")]
         public async Task<IActionResult> GetAllStudents([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             }
 
             var studentClass = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
 
             if (studentClass == null) {
-                return NotFound(new { error = "ERROR: Student's class not found" });
+                return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
             }
 
             var allStudents = await _context.ClassStudents
@@ -90,11 +87,10 @@ namespace Backend.Controllers {
             return Ok(new { message = "SUCCESS: All students retrieved", data = allStudents });
         }
 
-
         [HttpGet("get-student-tasks")]
         public async Task<IActionResult> GetStudentTasks([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
@@ -109,12 +105,12 @@ namespace Backend.Controllers {
                         foreach (var task in randomTasks) {
                             var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == matchedStudent.StudentID);
                             if (studentClassRecord == null) {
-                                return NotFound(new { error = "ERROR: Student's class not found" });
+                                return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
                             }
 
                             var studentClass = _context.Classes.FirstOrDefault(c => c.ClassID == studentClassRecord.ClassID);
                             if (studentClass == null) {
-                                return NotFound(new { error = "ERROR: Student's class not found" });
+                                return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
                             }
 
                             var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == studentClass.TeacherID);
@@ -168,7 +164,7 @@ namespace Backend.Controllers {
         [HttpGet("get-student-chart-statistics")]
         public IActionResult GetStudentChartStatistics([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (matchedStudent == null) {
@@ -190,6 +186,41 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-class-students")]
+        public async Task<IActionResult> GetStudents([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            }
+
+            var studentClass = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
+            if (studentClass == null) {
+                return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
+            }
+
+            var allStudents = await _context.ClassStudents
+                .Where(cs => cs.ClassID == studentClass.ClassID)
+                .Include(cs => cs.Student)
+                .Where(cs => cs.Student != null && cs.Student.User != null)
+                .OrderByDescending(cs => cs.Student!.TotalPoints)
+                .Select(cs => new {
+                    StudentID = cs.Student!.StudentID,
+                    cs.ClassID,
+                    ParentID = cs.Student.ParentID,
+                    cs.Student.League,
+                    cs.Student.LeagueRank,
+                    cs.Student.CurrentPoints,
+                    cs.Student.TotalPoints,
+                    cs.Student.UserID,
+                    cs.Student.TaskLastSet,
+                    cs.Student.Streak,
+                    cs.Student.LastClaimedStreak,
+                    Name = cs.Student.User!.Name,
+                    Email = cs.Student.User!.Email
+                }).ToListAsync();
+
+            return Ok(new { message = "SUCCESS: All students retrieved", data = allStudents });
+        }
+
         [HttpGet("get-all-rewards")]
         public async Task<IActionResult> GetAllRewards() {
             var allRewards = await _context.RewardItems.ToListAsync();
@@ -203,7 +234,7 @@ namespace Backend.Controllers {
             } 
 
             if (string.IsNullOrEmpty(taskID) || string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Task ID and Student ID are required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 try {
                     var task = _context.Tasks.FirstOrDefault(t => t.TaskID == taskID);
@@ -218,11 +249,11 @@ namespace Backend.Controllers {
 
                     var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == student.StudentID);
                     if (studentClassRecord == null) {
-                        return NotFound(new { error = "ERROR: Student's class not found" });
+                        return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
                     }
                     var studentClass = _context.Classes.FirstOrDefault(c => c.ClassID == studentClassRecord.ClassID);
                     if (studentClass == null) {
-                        return NotFound(new { error = "ERROR: Student's class not found" });
+                        return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
                     }
 
                     var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == studentClass.TeacherID);
@@ -260,7 +291,7 @@ namespace Backend.Controllers {
         [HttpPost("redeem-reward")]
         public async Task<IActionResult> RedeemReward([FromForm] string studentID, [FromForm] string rewardID) {
             if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(rewardID)) {
-                return BadRequest(new { error = "UERROR: Student ID and Reward ID are required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (student == null) {
@@ -318,7 +349,7 @@ namespace Backend.Controllers {
         [HttpGet("get-student-rewards")]
         public async Task<IActionResult> GetStudentRewards([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
                 if (student == null) {
@@ -349,7 +380,7 @@ namespace Backend.Controllers {
         [HttpGet("claim-reward")]
         public async Task<IActionResult> ClaimReward([FromQuery] string studentID, [FromQuery] string redemptionID) {
             if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(redemptionID)) {
-                return BadRequest(new { error = "UERROR: StudentID and RedemptionID are required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
                 if (student == null) {
@@ -385,7 +416,7 @@ namespace Backend.Controllers {
         [HttpPost("award-gift")]
         public IActionResult AwardGift([FromBody] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
-                return BadRequest(new { error = "UERROR: Student ID is required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var student = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
                 if (student == null) {
@@ -409,7 +440,7 @@ namespace Backend.Controllers {
         [HttpPost("join-class")]
         public async Task<IActionResult> JoinClass([FromForm] string studentID, [FromForm] int joinCode) {
             if (string.IsNullOrEmpty(studentID) || joinCode <= 0) {
-                return BadRequest(new { error = "UERROR: Student ID and Class Code are required" });
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
                 var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
                 if (student == null) {
@@ -418,17 +449,17 @@ namespace Backend.Controllers {
 
                 var studentClass = await _context.Classes.FirstOrDefaultAsync(c => c.JoinCode == joinCode);
                 if (studentClass == null) {
-                    return NotFound(new { error = "ERROR: Class not found" });
+                    return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
                 }
 
                 var existingStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
                 if (existingStudent != null) {
-                    return BadRequest(new { error = "UERROR: Student is already enrolled into another class" });
+                    return BadRequest(new { error = "UERROR: You're already enrolled into another class" });
                 }
 
                 var existingClassStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID && cs.ClassID == studentClass.ClassID);
                 if (existingClassStudent != null) {
-                    return BadRequest(new { error = "UERROR: Student is already enrolled into this class" });
+                    return BadRequest(new { error = "UERROR: You're already enrolled into this class" });
                 }
 
                 try {
@@ -443,6 +474,25 @@ namespace Backend.Controllers {
                     return Ok(new { message = "SUCCESS: Student joined class successfully" });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = "ERROR: ", ex.Message });
+                }
+            }
+        }
+
+        [HttpGet("check-student-enrolment")]
+        public async Task<IActionResult> CheckStudentEnrolment([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentClass = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
+                if (studentClass == null) {
+                    return Ok(new { message = "SUCCESS: Student is not enrolled into any class" });
+                } else {
+                    return BadRequest(new { error = "UERROR: You're already enrolled into a class" });
                 }
             }
         }
