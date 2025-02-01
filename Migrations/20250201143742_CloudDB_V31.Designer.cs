@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250124025126_CloudDB_V30")]
-    partial class CloudDB_V30
+    [Migration("20250201143742_CloudDB_V31")]
+    partial class CloudDB_V31
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -208,6 +208,10 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("QuestTitle")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("QuestType")
                         .IsRequired()
                         .HasColumnType("longtext");
 

@@ -208,6 +208,10 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("QuestType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.HasKey("QuestID");
 
                     b.ToTable("Quests");
