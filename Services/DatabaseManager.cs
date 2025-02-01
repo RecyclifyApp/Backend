@@ -452,6 +452,7 @@ namespace Backend.Services {
                     QuestTitle = $"Quest {i + 1}",
                     QuestDescription = $"Quest {i + 1} Description",
                     QuestPoints = 100,
+                    QuestType = new[] { "Recycle", "Conservation", "Energy" }[new Random().Next(3)]
                 };
 
                 context.Quests.Add(quest);
