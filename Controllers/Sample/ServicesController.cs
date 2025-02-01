@@ -185,18 +185,14 @@ namespace Backend.Controllers {
                 return BadRequest(new { error = "Invalid Class ID. Please provide a valid Class ID." });
             }
 
+            if (!await _context.Classes.AnyAsync(c => c.ClassID == classID)) {
+                return NotFound(new { error = "Class not found" });
+            }
+
             try {
-                var recommendedQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
-                var classPointsRecords = await _context.ClassPoints.Where(cp => cp.ClassID == classID).ToListAsync();
-                var completedQuests = new List<Quest>();
-                foreach (var cp in classPointsRecords) {
-                    var quest = await _context.Quests.FindAsync(cp.QuestID);
-                    if (quest != null) completedQuests.Add(quest);
-                }
+                var recommendQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
 
-                var completedQuestTypes = completedQuests.Select(q => q.QuestType).ToList();
-
-                return Ok(new { completedQuestTypes, recommendedQuests });
+                return Ok(recommendQuests);
             } catch (Exception ex) {
                 return StatusCode(500, new { error = ex.Message });
             }

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Backend.Services {
     public class RecommendationsManager() {
 
-        public static async Task<List<Quest>> RecommendQuestsAsync(MyDbContext context, string classID) {
+        public static async Task<dynamic> RecommendQuestsAsync(MyDbContext context, string classID) {
             var recommendedQuests = new List<Quest>();
 
             var completedQuestIds = await context.ClassPoints.Where(cp => cp.ClassID == classID).Select(cp => cp.QuestID).ToListAsync();
@@ -37,7 +37,11 @@ namespace Backend.Services {
 
             recommendedQuests.AddRange(similarQuests);
 
-            return recommendedQuests.Distinct().Take(3).ToList();
+            var completedQuestTypes = completedQuests.Select(q => q.QuestType).ToList();
+
+            var result = recommendedQuests.Distinct().Take(3).ToList();
+
+            return new { completedQuestTypes, result };
         }
 
         private static Dictionary<string, int> GetCommonWords(List<string> descriptions) {
