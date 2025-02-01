@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
     public class RecommendationsManager {
-        public static async Task<dynamic> RecommendQuestsAsync(MyDbContext context, string classID) {
+        public static async Task<dynamic?> RecommendQuestsAsync(MyDbContext context, string classID) {
             var completedQuestIds = await context.ClassPoints
                 .Where(cp => cp.ClassID == classID)
                 .Select(cp => cp.QuestID)
@@ -18,7 +18,7 @@ namespace Backend.Services {
             }
 
             if (!completedQuests.Any()) {
-                return new { completedQuestTypes = new List<string>(), result = new List<Quest>() };
+                return null;
             }
 
             var questTypeFrequency = completedQuests
@@ -58,8 +58,17 @@ namespace Backend.Services {
             }
 
             var completedQuestTypes = completedQuests.Select(q => q.QuestType).ToList();
+            var numberOfRecyclingQuests = completedQuestTypes.Count(t => t == "Recycling");
+            var numberOfEnergyQuests = completedQuestTypes.Count(t => t == "Energy");
+            var numberOfEnvironmentQuests = completedQuestTypes.Count(t => t == "Environment");
 
-            return new { completedQuestTypes, result = recommendedQuests };
+            var completedQuestStatistics = new {
+                Recycling = numberOfRecyclingQuests,
+                Energy = numberOfEnergyQuests,
+                Environment = numberOfEnvironmentQuests
+            };
+
+            return new { completedQuestStatistics, result = recommendedQuests };
         }
 
         private static Dictionary<string, int> GetCommonWords(IEnumerable<string> descriptions) {

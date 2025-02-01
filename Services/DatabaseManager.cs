@@ -439,8 +439,36 @@ namespace Backend.Services {
                 var task = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = $"Task {i + 1}",
-                    TaskDescription = $"Task {i + 1} Description",
-                    TaskPoints = 100,
+                    TaskDescription = i switch {
+                        0 => "Bring 5 plastic bottles for recycling.",
+                        1 => "Sort and recycle 10 used cans.",
+                        2 => "Recycle 20 sheets of paper.",
+                        3 => "Collect 5 used batteries for recycling.",
+                        4 => "Bring 3 plastic containers to school for recycling.",
+                        5 => "Collect 10 cardboard items and recycle them.",
+                        6 => "Collect 5 empty cans and bring them to the recycling bin.",
+                        
+                        7 => "Turn off all lights in your home when not in use for a week.",
+                        8 => "Track and reduce your electricity usage for one week.",
+                        9 => "Use no electronic devices for one day.",
+                        10 => "Unplug unused devices at home for a week.",
+                        11 => "Ensure no lights are left on in your home when not needed for a week.",
+                        12 => "Switch off all lights when leaving a room for a week.",
+                        
+                        13 => "Plant a small plant at home or in the school yard.",
+                        14 => "Pick up 10 pieces of litter from your surroundings.",
+                        15 => "Use only reusable bags for a week.",
+                        16 => "Use a reusable water bottle for one week.",
+                        17 => "Bring in 5 used items for recycling from home.",
+                        18 => "Create a poster on how to reduce waste at school.",
+                        19 => "Collect 20 pieces of paper waste from home to recycle.",
+                        _ => ""
+                    },
+                    TaskPoints = i switch {
+                        <= 6 => 30,
+                        <= 12 => 50,
+                        _ => 75
+                    },
                 };
 
                 context.Tasks.Add(task);
@@ -450,13 +478,46 @@ namespace Backend.Services {
                 var quest = new Quest {
                     QuestID = Utilities.GenerateUniqueID(),
                     QuestTitle = $"Quest {i + 1}",
-                    QuestDescription = $"Quest {i + 1} Description",
-                    QuestPoints = 100,
-                    QuestType = new[] { "Recycle", "Conservation", "Energy" }[new Random().Next(3)]
+                    QuestDescription = i switch {
+                        0 => "Collect 50 plastic bottles for recycling.",
+                        1 => "Sort and recycle 25 cans and paper items.",
+                        2 => "Recycling 10 cardboard boxes.",
+                        3 => "Collect 20 used batteries for recycling.",
+                        4 => "Recycle 100 sheets of paper.",
+                        5 => "Bring 30 plastic containers for recycling.",
+                        6 => "Create and use a recycling bin for a week.",
+                        
+                        7 => "Turn off all lights and fans for a day.",
+                        8 => "Go without using electrical devices for a day.",
+                        9 => "Track and reduce electricity use for a week.",
+                        10 => "Unplug unused devices every day for a week.",
+                        11 => "Make sure no lights or devices are left on in the classroom for a week.",
+                        12 => "Switch off all classroom lights during breaks for a week.",
+                        
+                        13 => "Plant an indoor plant in the classroom.",
+                        14 => "Start a classroom compost for food scraps.",
+                        15 => "Pick up 20 pieces of trash around the school.",
+                        16 => "Use only reusable bags and bottles for a week.",
+                        17 => "Clean up the school grounds by collecting litter.",
+                        18 => "Create a poster on reducing waste.",
+                        19 => "Bring 30 pieces of paper waste for recycling.",
+                        _ => ""
+                    },
+                    QuestPoints = i switch {
+                        <= 6 => 100,
+                        <= 12 => 200,
+                        _ => 300
+                    },
+                    QuestType = i switch {
+                        <= 6 => "Recycling",
+                        <= 12 => "Energy",
+                        _ => "Environment"
+                    }
                 };
 
                 context.Quests.Add(quest);
             }
+
 
             await context.SaveChangesAsync();
 
