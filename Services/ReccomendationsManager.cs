@@ -2,49 +2,67 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
-    public class RecommendationsManager() {
-
+    public class RecommendationsManager {
         public static async Task<dynamic> RecommendQuestsAsync(MyDbContext context, string classID) {
-            var recommendedQuests = new List<Quest>();
-
-            var completedQuestIds = await context.ClassPoints.Where(cp => cp.ClassID == classID).Select(cp => cp.QuestID).ToListAsync();
+            var completedQuestIds = await context.ClassPoints
+                .Where(cp => cp.ClassID == classID)
+                .Select(cp => cp.QuestID)
+                .ToListAsync();
 
             var completedQuests = new List<Quest>();
-            foreach (var questId in completedQuestIds) {
-                var quest = await context.Quests.FindAsync(questId);
-                if (quest != null) completedQuests.Add(quest);
+            var allQuests = await context.Quests.ToListAsync();
+            foreach (var quest in allQuests) {
+                if (completedQuestIds.Contains(quest.QuestID)) {
+                    completedQuests.Add(quest);
+                }
             }
 
-            var questTypeFrequency = completedQuests.GroupBy(q => q.QuestType).ToDictionary(g => g.Key, g => g.Count());
+            if (!completedQuests.Any()) {
+                return new { completedQuestTypes = new List<string>(), result = new List<Quest>() };
+            }
 
-            var leastFrequentQuestType = questTypeFrequency.OrderBy(kvp => kvp.Value).FirstOrDefault().Key;
+            var questTypeFrequency = completedQuests
+                .GroupBy(q => q.QuestType)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var minFrequency = questTypeFrequency.Values.Min();
+            var leastFrequentQuestTypes = questTypeFrequency
+                .Where(kvp => kvp.Value == minFrequency)
+                .Select(kvp => kvp.Key)
+                .ToList();
 
             var questsByLeastFrequentType = new List<Quest>();
-            foreach (var quest in await context.Quests.Where(q => q.QuestType == leastFrequentQuestType).ToListAsync()) {
-                if (!completedQuestIds.Contains(quest.QuestID)) questsByLeastFrequentType.Add(quest);
+            foreach (var quest in allQuests) {
+                if (leastFrequentQuestTypes.Contains(quest.QuestType) && !completedQuestIds.Contains(quest.QuestID)) {
+                    questsByLeastFrequentType.Add(quest);
+                }
             }
-
-            recommendedQuests.AddRange(questsByLeastFrequentType);
 
             var commonWords = GetCommonWords(completedQuests.Select(q => q.QuestDescription).ToList());
 
             var similarQuests = new List<Quest>();
-            foreach (var quest in await context.Quests.ToListAsync()) {
-                if (ContainsCommonWords(quest.QuestDescription, commonWords) && !completedQuestIds.Contains(quest.QuestID)) {
+            foreach (var quest in questsByLeastFrequentType) {
+                if (ContainsCommonWords(quest.QuestDescription, commonWords)) {
                     similarQuests.Add(quest);
                 }
             }
 
-            recommendedQuests.AddRange(similarQuests);
+            var similarQuestIds = new HashSet<string>(similarQuests.Select(q => q.QuestID));
+            var recommendedQuests = new List<Quest>();
+
+            foreach (var quest in questsByLeastFrequentType) {
+                if (similarQuestIds.Contains(quest.QuestID) || recommendedQuests.Count < 3) {
+                    recommendedQuests.Add(quest);
+                }
+                if (recommendedQuests.Count >= 3) break;
+            }
 
             var completedQuestTypes = completedQuests.Select(q => q.QuestType).ToList();
 
-            var result = recommendedQuests.Distinct().Take(3).ToList();
-
-            return new { completedQuestTypes, result };
+            return new { completedQuestTypes, result = recommendedQuests };
         }
 
-        private static Dictionary<string, int> GetCommonWords(List<string> descriptions) {
+        private static Dictionary<string, int> GetCommonWords(IEnumerable<string> descriptions) {
             var wordCounts = new Dictionary<string, int>();
             foreach (var desc in descriptions) {
                 var words = desc.Split(' ', StringSplitOptions.RemoveEmptyEntries);

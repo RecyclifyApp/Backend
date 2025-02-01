@@ -191,6 +191,9 @@ namespace Backend.Controllers {
 
             try {
                 var recommendQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
+                if (recommendQuests.completedQuestTypes.Count == 0 || recommendQuests.result.Count == 0) {
+                    return NotFound(new { error = "Class has not completed any quests yet" });
+                }
 
                 return Ok(recommendQuests);
             } catch (Exception ex) {
