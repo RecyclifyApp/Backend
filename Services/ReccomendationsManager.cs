@@ -10,8 +10,7 @@ namespace Backend.Services {
             var completedQuestIds = _context.ClassPoints.Select(cp => cp.QuestID).ToList();
             var completedQuests = _context.Quests.Where(q => completedQuestIds.Contains(q.QuestID)).ToList();
 
-            var questTypeFrequency = completedQuests.GroupBy(q => q.QuestType)
-                                                    .ToDictionary(g => g.Key, g => g.Count());
+            var questTypeFrequency = completedQuests.GroupBy(q => q.QuestType).ToDictionary(g => g.Key, g => g.Count());
             var leastFrequentQuestType = questTypeFrequency.OrderBy(kvp => kvp.Value).FirstOrDefault().Key;
 
             var questsByLeastFrequentType = _context.Quests.Where(q => q.QuestType == leastFrequentQuestType && !completedQuestIds.Contains(q.QuestID)).Take(3).ToList();
