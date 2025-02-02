@@ -269,7 +269,7 @@ namespace Backend.Controllers {
 
                     try {
                         await AssetsManager.UploadFileAsync(file);
-                        selectedTaskProgress.ImageUrls = await AssetsManager.GetFileUrlAsync(file.FileName);
+                        selectedTaskProgress.ImageUrls = (await AssetsManager.GetFileUrlAsync(file.FileName)).Substring("SUCCESS: ".Length).Trim();
                         selectedTaskProgress.VerificationPending = true;
 
                         try {
