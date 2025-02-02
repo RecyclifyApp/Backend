@@ -162,6 +162,7 @@ namespace Backend.Services {
         public static async Task CleanAndPopulateDatabase(MyDbContext context) {
             context.Admins.RemoveRange(context.Admins);
             context.Classes.RemoveRange(context.Classes);
+            context.ClassPoints.RemoveRange(context.ClassPoints);
             context.ClassStudents.RemoveRange(context.ClassStudents);
             context.ContactForms.RemoveRange(context.ContactForms);
             context.DailyStudentPoints.RemoveRange(context.DailyStudentPoints);
@@ -435,28 +436,466 @@ namespace Backend.Services {
                 context.ClassStudents.Add(class2Students);
             }
 
-            for (int i = 0; i < 20; i++) {
-                var task = new Models.Task {
-                    TaskID = Utilities.GenerateUniqueID(),
-                    TaskTitle = $"Task {i + 1}",
-                    TaskDescription = $"Task {i + 1} Description",
-                    TaskPoints = 100,
-                };
+            var quest1ID = Utilities.GenerateUniqueID();
+            var quest2ID = Utilities.GenerateUniqueID();
+            var quest3ID = Utilities.GenerateUniqueID();
+            var quest4ID = Utilities.GenerateUniqueID();
+            var quest5ID = Utilities.GenerateUniqueID();
+            var quest6ID = Utilities.GenerateUniqueID();
+            var quest7ID = Utilities.GenerateUniqueID();
+            var quest8ID = Utilities.GenerateUniqueID();
+            var quest9ID = Utilities.GenerateUniqueID();
+            var quest10ID = Utilities.GenerateUniqueID();
+            var quest11ID = Utilities.GenerateUniqueID();
+            var quest12ID = Utilities.GenerateUniqueID();
+            var quest13ID = Utilities.GenerateUniqueID();
+            var quest14ID = Utilities.GenerateUniqueID();
+            var quest15ID = Utilities.GenerateUniqueID();
+            var quest16ID = Utilities.GenerateUniqueID();
+            var quest17ID = Utilities.GenerateUniqueID();
+            var quest18ID = Utilities.GenerateUniqueID();
+            var quest19ID = Utilities.GenerateUniqueID();
+            var quest20ID = Utilities.GenerateUniqueID();
 
-                context.Tasks.Add(task);
-            }
+            var quest1 = new Quest {
+                QuestID = quest1ID,
+                QuestTitle = "Quest 1",
+                QuestDescription = "Bring 30 plastic bottles for recycling.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 30
+            };
 
-            for (int i = 0; i < 20; i++) {
-                var quest = new Quest {
-                    QuestID = Utilities.GenerateUniqueID(),
-                    QuestTitle = $"Quest {i + 1}",
-                    QuestDescription = $"Quest {i + 1} Description",
-                    QuestPoints = 100,
-                };
+            var quest2 = new Quest {
+                QuestID = quest2ID,
+                QuestTitle = "Quest 2",
+                QuestDescription = "Sort and recycle 20 used cans.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 20
+            };
 
-                context.Quests.Add(quest);
-            }
+            var quest3 = new Quest {
+                QuestID = quest3ID,
+                QuestTitle = "Quest 3",
+                QuestDescription = "Recycle 50 sheets of paper.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 50
+            };
 
+            var quest4 = new Quest {
+                QuestID = quest4ID,
+                QuestTitle = "Quest 4",
+                QuestDescription = "Collect 20 used batteries for recycling.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 20
+            };
+
+            var quest5 = new Quest {
+                QuestID = quest5ID,
+                QuestTitle = "Quest 5",
+                QuestDescription = "Bring 30 plastic containers to school for recycling.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 30
+            };
+
+            var quest6 = new Quest {
+                QuestID = quest6ID,
+                QuestTitle = "Quest 6",
+                QuestDescription = "Collect 30 cardboard items and recycle them.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 30
+            };
+
+            var quest7 = new Quest {
+                QuestID = quest7ID,
+                QuestTitle = "Quest 7",
+                QuestDescription = "Collect 10 empty cans and bring them to the recycling bin.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 10
+            };
+
+            var quest8 = new Quest {
+                QuestID = quest8ID,
+                QuestTitle = "Quest 8",
+                QuestDescription = "5 students turn off all lights in your home when not in use for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5
+            };
+
+            var quest9 = new Quest {
+                QuestID = quest9ID,
+                QuestTitle = "Quest 9",
+                QuestDescription = "5 students track and reduce your electricity usage for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5
+            };
+
+            var quest10 = new Quest {
+                QuestID = quest10ID,
+                QuestTitle = "Quest 10",
+                QuestDescription = "10 students use natural sunlight instead of electrical lights for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 10
+            };
+
+            var quest11 = new Quest {
+                QuestID = quest11ID,
+                QuestTitle = "Quest 11",
+                QuestDescription = "5 students use energy-saving appliances for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5
+            };
+
+            var quest12 = new Quest {
+                QuestID = quest12ID,
+                QuestTitle = "Quest 12",
+                QuestDescription = "5 students engage in outdoor activities instead of using electronic devices for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5
+            };
+
+            var quest13 = new Quest {
+                QuestID = quest13ID,
+                QuestTitle = "Quest 13",
+                QuestDescription = "10 students use fans instead of air-conditioning for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 10
+            };
+
+            var quest14 = new Quest {
+                QuestID = quest14ID,
+                QuestTitle = "Quest 14",
+                QuestDescription = "10 students plant 1 small plant at home.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10
+            };
+
+            var quest15 = new Quest {
+                QuestID = quest15ID,
+                QuestTitle = "Quest 15",
+                QuestDescription = "Pick up 30 pieces of litter from surroundings.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 30
+            };
+
+            var quest16 = new Quest {
+                QuestID = quest16ID,
+                QuestTitle = "Quest 16",
+                QuestDescription = "10 students use re-usable cutlery for a day.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10
+            };
+
+            var quest17 = new Quest {
+                QuestID = quest17ID,
+                QuestTitle = "Quest 17",
+                QuestDescription = "10 students bring their own re-usable food containers for a day.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10
+            };
+
+            var quest18 = new Quest {
+                QuestID = quest18ID,
+                QuestTitle = "Quest 18",
+                QuestDescription = "10 students help water the plants in the school garden.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10
+            };
+
+            var quest19 = new Quest {
+                QuestID = quest19ID,
+                QuestTitle = "Quest 19",
+                QuestDescription = "Create 10 posters on how to reduce waste at school.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10
+            };
+
+            var quest20 = new Quest {
+                QuestID = quest20ID,
+                QuestTitle = "Quest 20",
+                QuestDescription = "10 students walk or cycle to school for a day.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10
+            };
+
+            context.Quests.AddRange(quest1, quest2, quest3, quest4, quest5, quest6, quest7, quest8, quest9, quest10, quest11, quest12, quest13, quest14, quest15, quest16, quest17, quest18, quest19, quest20);
+
+            var task1 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 1",
+                TaskDescription = "Bring 5 plastic bottles for recycling.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest1ID,
+                QuestContributionAmountOnComplete = 5
+            };
+
+            var task2 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 2",
+                TaskDescription = "Sort and recycle 10 used cans.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest2ID,
+                QuestContributionAmountOnComplete = 10
+            };
+
+            var task3 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 3",
+                TaskDescription = "Recycle 20 sheets of paper.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest3ID,
+                QuestContributionAmountOnComplete = 20
+            };
+
+            var task4 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 4",
+                TaskDescription = "Collect 5 used batteries for recycling.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest4ID,
+                QuestContributionAmountOnComplete = 5
+            };
+
+            var task5 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 5",
+                TaskDescription = "Bring 3 plastic containers to school for recycling.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest5ID,
+                QuestContributionAmountOnComplete = 3
+            };
+
+            var task6 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 6",
+                TaskDescription = "Collect 10 cardboard items and recycle them.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest6ID,
+                QuestContributionAmountOnComplete = 10
+            };
+
+            var task7 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 7",
+                TaskDescription = "Collect 5 empty cans and bring them to the recycling bin.",
+                TaskPoints = 30,
+                AssociatedQuestID = quest7ID,
+                QuestContributionAmountOnComplete = 5
+            };
+
+            var task8 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 8",
+                TaskDescription = "Turn off all lights in your home when not in use for a day.",
+                TaskPoints = 50,
+                AssociatedQuestID = quest8ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task9 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 9",
+                TaskDescription = "Track and reduce your electricity usage for a day.",
+                TaskPoints = 50,
+                AssociatedQuestID = quest9ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task10 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 10",
+                TaskDescription = "Use natural sunlight instead of electrical lights for a day.",
+                TaskPoints = 50,
+                AssociatedQuestID = quest10ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task11 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 11",
+                TaskDescription = "Use energy-saving appliances for a day.",
+                TaskPoints = 50,
+                AssociatedQuestID = quest11ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task12 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 12",
+                TaskDescription = "Engage in outdoor activities instead of using electronic devices for a day.",
+                TaskPoints = 50,
+                AssociatedQuestID = quest12ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task13 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 13",
+                TaskDescription = "Use fans instead of air-conditioning for a day.",
+                TaskPoints = 50,
+                AssociatedQuestID = quest13ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task14 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 14",
+                TaskDescription = "Plant 1 small plant at home.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest14ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task15 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 15",
+                TaskDescription = "Pick up 10 pieces of litter from your surroundings.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest15ID,
+                QuestContributionAmountOnComplete = 10
+            };
+
+            var task16 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 16",
+                TaskDescription = "Use re-usable cutlery for a day.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest16ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task17 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 17",
+                TaskDescription = "Bring your own re-usable food containers for a day.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest17ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task18 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 18",
+                TaskDescription = "Help water the plants in the school garden.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest18ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task19 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 19",
+                TaskDescription = "Create 1 poster on how to reduce waste at school.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest19ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            var task20 = new Models.Task {
+                TaskID = Utilities.GenerateUniqueID(),
+                TaskTitle = "Task 20",
+                TaskDescription = "Walk or cycle to school for a day.",
+                TaskPoints = 75,
+                AssociatedQuestID = quest20ID,
+                QuestContributionAmountOnComplete = 1
+            };
+
+            context.Tasks.AddRange(task1, task2, task3, task4, task5, task6, task7, task8, task9, task10, task11, task12, task13, task14, task15, task16, task17, task18, task19, task20);
+
+            await context.SaveChangesAsync();
+
+            var class1QuestProgress1 = new QuestProgress {
+                ClassID = class1.ClassID,
+                QuestID = quest1ID,
+                Quest = quest1,
+                Class = class1,
+                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                AmountCompleted = 0,
+                Completed = false,
+                AssignedTeacherID = teacher1.TeacherID,
+                AssignedTeacher = teacher1
+            };
+
+            var class1QuestProgress2 = new QuestProgress {
+                ClassID = class1.ClassID,
+                QuestID = quest2ID,
+                Quest = quest2,
+                Class = class1,
+                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                AmountCompleted = 0,
+                Completed = false,
+                AssignedTeacherID = teacher1.TeacherID,
+                AssignedTeacher = teacher1
+            };
+
+            var class1QuestProgress3 = new QuestProgress {
+                ClassID = class1.ClassID,
+                QuestID = quest3ID,
+                Quest = quest3,
+                Class = class1,
+                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                AmountCompleted = 0,
+                Completed = false,
+                AssignedTeacherID = teacher1.TeacherID,
+                AssignedTeacher = teacher1
+            };
+
+            var class2QuestProgress1 = new QuestProgress {
+                ClassID = class2.ClassID,
+                QuestID = quest4ID,
+                Quest = quest4,
+                Class = class2,
+                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                AmountCompleted = 0,
+                Completed = false,
+                AssignedTeacherID = teacher1.TeacherID,
+                AssignedTeacher = teacher1
+            };
+
+            var class2QuestProgress2 = new QuestProgress {
+                ClassID = class2.ClassID,
+                QuestID = quest5ID,
+                Quest = quest5,
+                Class = class2,
+                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                AmountCompleted = 0,
+                Completed = false,
+                AssignedTeacherID = teacher1.TeacherID,
+                AssignedTeacher = teacher1
+            };
+
+            var class2QuestProgress3 = new QuestProgress {
+                ClassID = class2.ClassID,
+                QuestID = quest6ID,
+                Quest = quest6,
+                Class = class2,
+                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                AmountCompleted = 0,
+                Completed = false,
+                AssignedTeacherID = teacher1.TeacherID,
+                AssignedTeacher = teacher1
+            };
+
+            context.QuestProgresses.AddRange(class1QuestProgress1, class1QuestProgress2, class1QuestProgress3, class2QuestProgress1, class2QuestProgress2, class2QuestProgress3);
             await context.SaveChangesAsync();
 
             for (int i = 0; i < 10; i++) {
