@@ -1,5 +1,7 @@
 using Backend.Services;
+using Backend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers {
     [ApiController]
@@ -174,6 +176,28 @@ namespace Backend.Controllers {
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex });
                 }
+            }
+        }
+
+        [HttpGet("reccomend-quests")]
+        public async Task<IActionResult> GetRecommendedQuests(string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "Invalid Class ID. Please provide a valid Class ID." });
+            }
+
+            if (!await _context.Classes.AnyAsync(c => c.ClassID == classID)) {
+                return NotFound(new { error = "Class not found" });
+            }
+
+            try {
+                var recommendQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
+                if (recommendQuests == null) {
+                    return NotFound(new { error = "Class has not completed any quests yet" });
+                }
+
+                return Ok(recommendQuests);
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = ex.Message });
             }
         }
     }
