@@ -413,8 +413,6 @@ namespace Backend.Controllers.Teachers {
                 var studentUsername = studentUser.Name;
                 var studentEmail = studentUser.Email;
 
-                Console.WriteLine($"Student: {studentUsername}, Email: {studentEmail}");
-
                 var emailVars = new Dictionary<string, string> {
                     { "username", studentUsername },
                     { "taskTitle", taskObj.TaskTitle },
