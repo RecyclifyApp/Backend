@@ -162,6 +162,7 @@ namespace Backend.Services {
         public static async Task CleanAndPopulateDatabase(MyDbContext context) {
             context.Admins.RemoveRange(context.Admins);
             context.Classes.RemoveRange(context.Classes);
+            context.ClassPoints.RemoveRange(context.ClassPoints);
             context.ClassStudents.RemoveRange(context.ClassStudents);
             context.ContactForms.RemoveRange(context.ContactForms);
             context.DailyStudentPoints.RemoveRange(context.DailyStudentPoints);
