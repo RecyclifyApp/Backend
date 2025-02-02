@@ -296,6 +296,99 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
+        // Send Update Email to Recipient (Student / Parent)
+        [HttpPost("send-update-email")]
+        public async Task<IActionResult> SendUpdateEmail(
+            [FromQuery] List<string> recipients,
+            [FromQuery] string classID,
+            [FromQuery] string studentID,
+            [FromQuery] string studentEmail,
+            [FromQuery] string? parentID = null,
+            [FromQuery] string? parentEmail = null)
+        {
+            if (recipients == null || recipients.Count == 0 || string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Invalid recipients or class ID. Please provide valid recipients and class ID." });
+            }
+
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(studentEmail)) {
+                return BadRequest(new { error = "UERROR: Invalid student details. Please provide valid student details." });
+            }
+
+            if (recipients.Contains("parents") && (string.IsNullOrEmpty(parentID) || string.IsNullOrEmpty(parentEmail))) {
+                return BadRequest(new { error = "UERROR: Invalid parent details. Please provide valid parent details." });
+            }
+
+            // Fetch class, student, and parent (if selected) user details
+            var classDetails = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+            var student = await _context.Students
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.StudentID == studentID);
+            var parentUser = await _context.Parents
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.ParentID == parentID);
+            
+            // Separate the recipients string by commas
+            recipients = [.. recipients[0].Split(',')];
+
+            if (classDetails == null) {
+                return NotFound(new { error = "ERROR: Class not found." });
+            }
+
+            if (student == null || student.User == null) {
+                return NotFound( new { error = "ERROR: Student not found." });
+            }
+
+            if (recipients.Contains("parents") && (parentUser == null || parentUser.User == null)) {
+                return NotFound(new { error = "ERROR: Parent not found." });
+            }
+
+            try {
+                var emailVars = new Dictionary<string, string> {
+                    { "studentName", student.User.Name },
+                    { "email", studentEmail },
+                    { "className", classDetails.ClassName.ToString() },
+                    { "totalPoints", student.TotalPoints.ToString() },
+                    { "currentPoints", student.CurrentPoints.ToString() },
+                    { "league", student.League ?? string.Empty },
+                    { "redemptions", student.Redemptions?.Count.ToString() ?? "0" }
+                };
+
+                if (parentUser != null && !string.IsNullOrEmpty(parentEmail)) {
+                    if (!string.IsNullOrEmpty(parentID)) {
+                        emailVars.Add("parentID", parentID);
+                    }
+                    if (!string.IsNullOrEmpty(parentEmail)) {
+                        emailVars.Add("parentEmail", parentEmail);
+                    }
+                    if (parentUser != null && parentUser.User != null) {
+                        emailVars.Add("parentName", parentUser.User.Name);
+                    }
+                }
+                
+                foreach (var recipient in recipients) {
+                    if (!string.IsNullOrEmpty(studentEmail) && recipient == "students") {
+                        try {
+                            await Emailer.SendEmailAsync(studentEmail, "Update from Recyclify", "StudentUpdateEmail", emailVars);
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(parentEmail) && recipient == "parents") {
+                        try {
+                            await Emailer.SendEmailAsync(parentEmail, "Update from Recyclify", "ParentUpdateEmail", emailVars);
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                        }
+                    }
+                }
+
+                return Ok(new { message = "SUCCESS: Email sent successfully." });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
         // Get Tasks Waiting for Verification
         [HttpGet("get-tasks-waiting-verification")]
         public async Task<IActionResult> GetTasksWaitingVerification(string teacherID) {
