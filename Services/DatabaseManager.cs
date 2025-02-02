@@ -435,72 +435,76 @@ namespace Backend.Services {
                 context.ClassStudents.Add(class2Students);
             }
 
-            for (int i = 0; i < 20; i++) {
-                var task = new Models.Task {
-                    TaskID = Utilities.GenerateUniqueID(),
-                    TaskTitle = $"Task {i + 1}",
-                    TaskDescription = i switch {
-                        0 => "Bring 5 plastic bottles for recycling.",
-                        1 => "Sort and recycle 10 used cans.",
-                        2 => "Recycle 20 sheets of paper.",
-                        3 => "Collect 5 used batteries for recycling.",
-                        4 => "Bring 3 plastic containers to school for recycling.",
-                        5 => "Collect 10 cardboard items and recycle them.",
-                        6 => "Collect 5 empty cans and bring them to the recycling bin.",
-                        
-                        7 => "Turn off all lights in your home when not in use for a week.",
-                        8 => "Track and reduce your electricity usage for one week.",
-                        9 => "Use no electronic devices for one day.",
-                        10 => "Unplug unused devices at home for a week.",
-                        11 => "Ensure no lights are left on in your home when not needed for a week.",
-                        12 => "Switch off all lights when leaving a room for a week.",
-                        
-                        13 => "Plant a small plant at home or in the school yard.",
-                        14 => "Pick up 10 pieces of litter from your surroundings.",
-                        15 => "Use only reusable bags for a week.",
-                        16 => "Use a reusable water bottle for one week.",
-                        17 => "Bring in 5 used items for recycling from home.",
-                        18 => "Create a poster on how to reduce waste at school.",
-                        19 => "Collect 20 pieces of paper waste from home to recycle.",
-                        _ => ""
-                    },
-                    TaskPoints = i switch {
-                        <= 6 => 30,
-                        <= 12 => 50,
-                        _ => 75
-                    },
-                };
-
-                context.Tasks.Add(task);
-            }
+            var quest1ID = Utilities.GenerateUniqueID();
+            var quest2ID = Utilities.GenerateUniqueID();
+            var quest3ID = Utilities.GenerateUniqueID();
+            var quest4ID = Utilities.GenerateUniqueID();
+            var quest5ID = Utilities.GenerateUniqueID();
+            var quest6ID = Utilities.GenerateUniqueID();
+            var quest7ID = Utilities.GenerateUniqueID();
+            var quest8ID = Utilities.GenerateUniqueID();
+            var quest9ID = Utilities.GenerateUniqueID();
+            var quest10ID = Utilities.GenerateUniqueID();
+            var quest11ID = Utilities.GenerateUniqueID();
+            var quest12ID = Utilities.GenerateUniqueID();
+            var quest13ID = Utilities.GenerateUniqueID();
+            var quest14ID = Utilities.GenerateUniqueID();
+            var quest15ID = Utilities.GenerateUniqueID();
+            var quest16ID = Utilities.GenerateUniqueID();
+            var quest17ID = Utilities.GenerateUniqueID();
+            var quest18ID = Utilities.GenerateUniqueID();
+            var quest19ID = Utilities.GenerateUniqueID();
+            var quest20ID = Utilities.GenerateUniqueID();
 
             for (int i = 0; i < 20; i++) {
                 var quest = new Quest {
-                    QuestID = Utilities.GenerateUniqueID(),
+                    QuestID = i switch {
+                        0 => quest1ID,
+                        1 => quest2ID,
+                        2 => quest3ID,
+                        3 => quest4ID,
+                        4 => quest5ID,
+                        5 => quest6ID,
+                        6 => quest7ID,
+                        7 => quest8ID,
+                        8 => quest9ID,
+                        9 => quest10ID,
+                        10 => quest11ID,
+                        11 => quest12ID,
+                        12 => quest13ID,
+                        13 => quest14ID,
+                        14 => quest15ID,
+                        15 => quest16ID,
+                        16 => quest17ID,
+                        17 => quest18ID,
+                        18 => quest19ID,
+                        19 => quest20ID,
+                        _ => ""
+                    },
                     QuestTitle = $"Quest {i + 1}",
                     QuestDescription = i switch {
-                        0 => "Collect 50 plastic bottles for recycling.",
-                        1 => "Sort and recycle 25 cans and paper items.",
-                        2 => "Recycling 10 cardboard boxes.",
+                        0 => "Bring 30 plastic bottles for recycling.",
+                        1 => "Sort and recycle 20 used cans.",
+                        2 => "Recycle 50 sheets of paper.",
                         3 => "Collect 20 used batteries for recycling.",
-                        4 => "Recycle 100 sheets of paper.",
-                        5 => "Bring 30 plastic containers for recycling.",
-                        6 => "Create and use a recycling bin for a week.",
+                        4 => "Bring 3 plastic containers to school for recycling.",
+                        5 => "Collect 30 cardboard items and recycle them.",
+                        6 => "Collect 10 empty cans and bring them to the recycling bin.",
                         
-                        7 => "Turn off all lights and fans for a day.",
-                        8 => "Go without using electrical devices for a day.",
-                        9 => "Track and reduce electricity use for a week.",
-                        10 => "Unplug unused devices every day for a week.",
-                        11 => "Make sure no lights or devices are left on in the classroom for a week.",
-                        12 => "Switch off all classroom lights during breaks for a week.",
+                        7 => "5 students turn off all lights in your home when not in use for a day.",
+                        8 => "5 students track and reduce your electricity usage for a day.",
+                        9 => "10 students use natural sunlight instead of electrical lights for a day.",
+                        10 => "5 students use energy-saving appliances for a day.",
+                        11 => "5 students engage in outdoor activities instead of using electronic devices for a day.",
+                        12 => "10 students use fans instead of air-conditioning for a day.",
                         
-                        13 => "Plant an indoor plant in the classroom.",
-                        14 => "Start a classroom compost for food scraps.",
-                        15 => "Pick up 20 pieces of trash around the school.",
-                        16 => "Use only reusable bags and bottles for a week.",
-                        17 => "Clean up the school grounds by collecting litter.",
-                        18 => "Create a poster on reducing waste.",
-                        19 => "Bring 30 pieces of paper waste for recycling.",
+                        13 => "10 students plant 1 small plant at home.",
+                        14 => "Pick up 30 pieces of litter from surroundings.",
+                        15 => "10 students use re-usable cutlery for a day.",
+                        16 => "10 students bring their own re-usable food containers for a day.",
+                        17 => "10 students help water the plants in the school garden.",
+                        18 => "Create 10 posters on how to reduce waste at school.",
+                        19 => "10 students walk or cycle to school for a day.",
                         _ => ""
                     },
                     QuestPoints = i switch {
@@ -518,6 +522,67 @@ namespace Backend.Services {
                 context.Quests.Add(quest);
             }
 
+            for (int i = 0; i < 20; i++) {
+                var task = new Models.Task {
+                    TaskID = Utilities.GenerateUniqueID(),
+                    TaskTitle = $"Task {i + 1}",
+                    TaskDescription = i switch {
+                        0 => "Bring 5 plastic bottles for recycling.",
+                        1 => "Sort and recycle 10 used cans.",
+                        2 => "Recycle 20 sheets of paper.",
+                        3 => "Collect 5 used batteries for recycling.",
+                        4 => "Bring 3 plastic containers to school for recycling.",
+                        5 => "Collect 10 cardboard items and recycle them.",
+                        6 => "Collect 5 empty cans and bring them to the recycling bin.",
+                        
+                        7 => "Turn off all lights in your home when not in use for a day.",
+                        8 => "Track and reduce your electricity usage for a day.",
+                        9 => "Use natural sunlight instead of electrical lights for a day.",
+                        10 => "Use energy-saving appliances for a day.",
+                        11 => "Engage in outdoor activities instead of using electronic devices for a day.",
+                        12 => "Use fans instead of air-conditioning for a day.",
+                        
+                        13 => "Plant 1 small plant at home.",
+                        14 => "Pick up 10 pieces of litter from your surroundings.",
+                        15 => "Use re-usable cutlery for a day.",
+                        16 => "Bring your own re-usable food containers for a day.",
+                        17 => "Help water the plants in the school garden.",
+                        18 => "Create 1 poster on how to reduce waste at school.",
+                        19 => "Walk or cycle to school for a day.",
+                        _ => ""
+                    },
+                    TaskPoints = i switch {
+                        <= 6 => 30,
+                        <= 12 => 50,
+                        _ => 75
+                    },
+                    AssociatedQuestID = i switch {
+                        0 => quest1ID,
+                        1 => quest2ID,
+                        2 => quest3ID,
+                        3 => quest4ID,
+                        4 => quest5ID,
+                        5 => quest6ID,
+                        6 => quest7ID,
+                        7 => quest8ID,
+                        8 => quest9ID,
+                        9 => quest10ID,
+                        10 => quest11ID,
+                        11 => quest12ID,
+                        12 => quest13ID,
+                        13 => quest14ID,
+                        14 => quest15ID,
+                        15 => quest16ID,
+                        16 => quest17ID,
+                        17 => quest18ID,
+                        18 => quest19ID,
+                        19 => quest20ID,
+                        _ => ""
+                    }
+                };
+
+                context.Tasks.Add(task);
+            }
 
             await context.SaveChangesAsync();
 

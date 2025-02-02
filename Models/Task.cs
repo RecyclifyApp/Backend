@@ -4,5 +4,6 @@ namespace Backend.Models {
         public required string TaskTitle { get; set; }
         public required string TaskDescription { get; set; }
         public required int TaskPoints { get; set; } = 0;
+        public required string AssociatedQuestID { get; set; }
     }
 }

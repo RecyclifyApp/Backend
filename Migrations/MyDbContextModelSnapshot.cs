@@ -366,6 +366,10 @@ namespace Backend.Migrations
                     b.Property<string>("TaskID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("AssociatedQuestID")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("TaskDescription")
                         .IsRequired()
                         .HasColumnType("longtext");
