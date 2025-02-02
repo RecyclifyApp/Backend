@@ -197,12 +197,6 @@ namespace Backend.Migrations
                     b.Property<string>("QuestID")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<int>("AmountCompleted")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("Completed")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("QuestDescription")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -240,20 +234,14 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnOrder(3);
 
-                    b.Property<int>("AmountContributed")
+                    b.Property<int>("AmountCompleted")
                         .HasColumnType("int");
 
                     b.Property<string>("AssignedTeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("ImageUrls")
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("QuestVerified")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("VerificationPending")
+                    b.Property<bool>("Completed")
                         .HasColumnType("tinyint(1)");
 
                     b.HasKey("QuestID", "ClassID", "DateAssigned");
@@ -398,6 +386,9 @@ namespace Backend.Migrations
                     b.Property<string>("AssociatedQuestID")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int>("QuestContributionAmountOnComplete")
+                        .HasColumnType("int");
 
                     b.Property<string>("TaskDescription")
                         .IsRequired()

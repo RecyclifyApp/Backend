@@ -6,7 +6,5 @@ namespace Backend.Models {
         public required int QuestPoints { get; set; } = 0;
         public required string QuestType { get; set; }
         public required int TotalAmountToComplete { get; set; }
-        public required int AmountCompleted { get; set; } = 0;
-        public required bool Completed { get; set; } = false;
     }
 }

@@ -12,11 +12,8 @@ namespace Backend.Models {
 
         [Key, Column(Order = 3)]
         public required string DateAssigned { get; set; }
-
-        public required int AmountContributed { get; set; } = 0;
-        public required bool VerificationPending { get; set; } = false; 
-        public required bool QuestVerified { get; set; } = false;
-        public string? ImageUrls { get; set; }
+        public required int AmountCompleted { get; set; } = 0;
+        public required bool Completed { get; set; } = false;
 
         [ForeignKey("QuestID")]
         public required Quest Quest { get; set; }

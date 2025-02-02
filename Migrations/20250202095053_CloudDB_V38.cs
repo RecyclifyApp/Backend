@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V33 : Migration
+    public partial class CloudDB_V38 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,9 +66,7 @@ namespace Backend.Migrations
                     QuestPoints = table.Column<int>(type: "int", nullable: false),
                     QuestType = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TotalAmountToComplete = table.Column<int>(type: "int", nullable: false),
-                    AmountCompleted = table.Column<int>(type: "int", nullable: false),
-                    Completed = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    TotalAmountToComplete = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -127,6 +125,7 @@ namespace Backend.Migrations
                     TaskDescription = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TaskPoints = table.Column<int>(type: "int", nullable: false),
+                    QuestContributionAmountOnComplete = table.Column<int>(type: "int", nullable: false),
                     AssociatedQuestID = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
@@ -279,11 +278,8 @@ namespace Backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DateAssigned = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    AmountContributed = table.Column<int>(type: "int", nullable: false),
-                    VerificationPending = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    QuestVerified = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    ImageUrls = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AmountCompleted = table.Column<int>(type: "int", nullable: false),
+                    Completed = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AssignedTeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
