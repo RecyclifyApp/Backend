@@ -457,71 +457,227 @@ namespace Backend.Services {
             var quest19ID = Utilities.GenerateUniqueID();
             var quest20ID = Utilities.GenerateUniqueID();
 
-            for (int i = 0; i < 20; i++) {
-                var quest = new Quest {
-                    QuestID = i switch {
-                        0 => quest1ID,
-                        1 => quest2ID,
-                        2 => quest3ID,
-                        3 => quest4ID,
-                        4 => quest5ID,
-                        5 => quest6ID,
-                        6 => quest7ID,
-                        7 => quest8ID,
-                        8 => quest9ID,
-                        9 => quest10ID,
-                        10 => quest11ID,
-                        11 => quest12ID,
-                        12 => quest13ID,
-                        13 => quest14ID,
-                        14 => quest15ID,
-                        15 => quest16ID,
-                        16 => quest17ID,
-                        17 => quest18ID,
-                        18 => quest19ID,
-                        19 => quest20ID,
-                        _ => ""
-                    },
-                    QuestTitle = $"Quest {i + 1}",
-                    QuestDescription = i switch {
-                        0 => "Bring 30 plastic bottles for recycling.",
-                        1 => "Sort and recycle 20 used cans.",
-                        2 => "Recycle 50 sheets of paper.",
-                        3 => "Collect 20 used batteries for recycling.",
-                        4 => "Bring 3 plastic containers to school for recycling.",
-                        5 => "Collect 30 cardboard items and recycle them.",
-                        6 => "Collect 10 empty cans and bring them to the recycling bin.",
-                        
-                        7 => "5 students turn off all lights in your home when not in use for a day.",
-                        8 => "5 students track and reduce your electricity usage for a day.",
-                        9 => "10 students use natural sunlight instead of electrical lights for a day.",
-                        10 => "5 students use energy-saving appliances for a day.",
-                        11 => "5 students engage in outdoor activities instead of using electronic devices for a day.",
-                        12 => "10 students use fans instead of air-conditioning for a day.",
-                        
-                        13 => "10 students plant 1 small plant at home.",
-                        14 => "Pick up 30 pieces of litter from surroundings.",
-                        15 => "10 students use re-usable cutlery for a day.",
-                        16 => "10 students bring their own re-usable food containers for a day.",
-                        17 => "10 students help water the plants in the school garden.",
-                        18 => "Create 10 posters on how to reduce waste at school.",
-                        19 => "10 students walk or cycle to school for a day.",
-                        _ => ""
-                    },
-                    QuestPoints = i switch {
-                        <= 6 => 100,
-                        <= 12 => 200,
-                        _ => 300
-                    },
-                    QuestType = i switch {
-                        <= 6 => "Recycling",
-                        <= 12 => "Energy",
-                        _ => "Environment"
-                    }
-                };
+            var quest1 = new Quest {
+                QuestID = quest1ID,
+                QuestTitle = "Quest 1",
+                QuestDescription = "Bring 30 plastic bottles for recycling.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 30,
+                AmountCompleted = 0,
+                Completed = false
+            };
 
-                context.Quests.Add(quest);
-            }
+            var quest2 = new Quest {
+                QuestID = quest2ID,
+                QuestTitle = "Quest 2",
+                QuestDescription = "Sort and recycle 20 used cans.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 20,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest3 = new Quest {
+                QuestID = quest3ID,
+                QuestTitle = "Quest 3",
+                QuestDescription = "Recycle 50 sheets of paper.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 50,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest4 = new Quest {
+                QuestID = quest4ID,
+                QuestTitle = "Quest 4",
+                QuestDescription = "Collect 20 used batteries for recycling.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 20,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest5 = new Quest {
+                QuestID = quest5ID,
+                QuestTitle = "Quest 5",
+                QuestDescription = "Bring 30 plastic containers to school for recycling.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 30,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest6 = new Quest {
+                QuestID = quest6ID,
+                QuestTitle = "Quest 6",
+                QuestDescription = "Collect 30 cardboard items and recycle them.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 30,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest7 = new Quest {
+                QuestID = quest7ID,
+                QuestTitle = "Quest 7",
+                QuestDescription = "Collect 10 empty cans and bring them to the recycling bin.",
+                QuestPoints = 100,
+                QuestType = "Recycling",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest8 = new Quest {
+                QuestID = quest8ID,
+                QuestTitle = "Quest 8",
+                QuestDescription = "5 students turn off all lights in your home when not in use for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest9 = new Quest {
+                QuestID = quest9ID,
+                QuestTitle = "Quest 9",
+                QuestDescription = "5 students track and reduce your electricity usage for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest10 = new Quest {
+                QuestID = quest10ID,
+                QuestTitle = "Quest 10",
+                QuestDescription = "10 students use natural sunlight instead of electrical lights for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest11 = new Quest {
+                QuestID = quest11ID,
+                QuestTitle = "Quest 11",
+                QuestDescription = "5 students use energy-saving appliances for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest12 = new Quest {
+                QuestID = quest12ID,
+                QuestTitle = "Quest 12",
+                QuestDescription = "5 students engage in outdoor activities instead of using electronic devices for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 5,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest13 = new Quest {
+                QuestID = quest13ID,
+                QuestTitle = "Quest 13",
+                QuestDescription = "10 students use fans instead of air-conditioning for a day.",
+                QuestPoints = 200,
+                QuestType = "Energy",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest14 = new Quest {
+                QuestID = quest14ID,
+                QuestTitle = "Quest 14",
+                QuestDescription = "10 students plant 1 small plant at home.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest15 = new Quest {
+                QuestID = quest15ID,
+                QuestTitle = "Quest 15",
+                QuestDescription = "Pick up 30 pieces of litter from surroundings.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 30,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest16 = new Quest {
+                QuestID = quest16ID,
+                QuestTitle = "Quest 16",
+                QuestDescription = "10 students use re-usable cutlery for a day.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest17 = new Quest {
+                QuestID = quest17ID,
+                QuestTitle = "Quest 17",
+                QuestDescription = "10 students bring their own re-usable food containers for a day.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest18 = new Quest {
+                QuestID = quest18ID,
+                QuestTitle = "Quest 18",
+                QuestDescription = "10 students help water the plants in the school garden.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest19 = new Quest {
+                QuestID = quest19ID,
+                QuestTitle = "Quest 19",
+                QuestDescription = "Create 10 posters on how to reduce waste at school.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            var quest20 = new Quest {
+                QuestID = quest20ID,
+                QuestTitle = "Quest 20",
+                QuestDescription = "10 students walk or cycle to school for a day.",
+                QuestPoints = 300,
+                QuestType = "Environment",
+                TotalAmountToComplete = 10,
+                AmountCompleted = 0,
+                Completed = false
+            };
+
+            context.Quests.AddRange(quest1, quest2, quest3, quest4, quest5, quest6, quest7, quest8, quest9, quest10, quest11, quest12, quest13, quest14, quest15, quest16, quest17, quest18, quest19, quest20);
 
             for (int i = 0; i < 20; i++) {
                 var task = new Models.Task {

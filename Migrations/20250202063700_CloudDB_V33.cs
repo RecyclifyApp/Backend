@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V32 : Migration
+    public partial class CloudDB_V33 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -65,7 +65,10 @@ namespace Backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     QuestPoints = table.Column<int>(type: "int", nullable: false),
                     QuestType = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TotalAmountToComplete = table.Column<int>(type: "int", nullable: false),
+                    AmountCompleted = table.Column<int>(type: "int", nullable: false),
+                    Completed = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -274,12 +277,19 @@ namespace Backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ClassID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Progress = table.Column<string>(type: "longtext", nullable: true)
+                    DateAssigned = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AmountContributed = table.Column<int>(type: "int", nullable: false),
+                    VerificationPending = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    QuestVerified = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ImageUrls = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AssignedTeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_QuestProgresses", x => x.QuestID);
+                    table.PrimaryKey("PK_QuestProgresses", x => new { x.QuestID, x.ClassID, x.DateAssigned });
                     table.ForeignKey(
                         name: "FK_QuestProgresses_Classes_ClassID",
                         column: x => x.ClassID,
@@ -291,6 +301,12 @@ namespace Backend.Migrations
                         column: x => x.QuestID,
                         principalTable: "Quests",
                         principalColumn: "QuestID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_QuestProgresses_Teachers_AssignedTeacherID",
+                        column: x => x.AssignedTeacherID,
+                        principalTable: "Teachers",
+                        principalColumn: "TeacherID",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -541,6 +557,11 @@ namespace Backend.Migrations
                 name: "IX_Parents_UserID",
                 table: "Parents",
                 column: "UserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuestProgresses_AssignedTeacherID",
+                table: "QuestProgresses",
+                column: "AssignedTeacherID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuestProgresses_ClassID",
