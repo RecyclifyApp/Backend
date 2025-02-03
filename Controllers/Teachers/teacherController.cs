@@ -326,7 +326,7 @@ namespace Backend.Controllers.Teachers {
             var parentUser = await _context.Parents
             .Include(p => p.User)
             .FirstOrDefaultAsync(p => p.ParentID == parentID);
-            
+
             // Separate the recipients string by commas
             recipients = [.. recipients[0].Split(',')];
 
@@ -515,6 +515,31 @@ namespace Backend.Controllers.Teachers {
                 await Emailer.SendEmailAsync(studentEmail, $"You've earned {taskObj.TaskPoints} leafs!", "SuccessfulTaskVerification", emailVars);
 
                 return Ok( new { message = "SUCCESS: Task verified successfully." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Get Class Points
+        [HttpGet("get-class-points")]
+        public async Task<IActionResult> GetClassPoints(string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest( new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
+            }
+
+            try {
+                var classPoints = await _context.ClassPoints
+                .Where(cp => cp.ClassID == classID)
+                .OrderByDescending(cp => cp.DateCompleted)
+                .ToListAsync();
+
+                if (classPoints == null || classPoints.Count == 0) {
+                    classPoints = [];
+                    return Ok( new { message = "SUCCESS: No class points found.", data = classPoints });
+                }
+
+                return Ok( new { message = "SUCCESS: Class points found.", data = classPoints });
+
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
