@@ -343,6 +343,99 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
+        // Send Update Email to Recipient (Student / Parent)
+        [HttpPost("send-update-email")]
+        public async Task<IActionResult> SendUpdateEmail(
+            [FromQuery] List<string> recipients,
+            [FromQuery] string classID,
+            [FromQuery] string studentID,
+            [FromQuery] string studentEmail,
+            [FromQuery] string? parentID = null,
+            [FromQuery] string? parentEmail = null)
+        {
+            if (recipients == null || recipients.Count == 0 || string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Invalid recipients or class ID. Please provide valid recipients and class ID." });
+            }
+
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(studentEmail)) {
+                return BadRequest(new { error = "UERROR: Invalid student details. Please provide valid student details." });
+            }
+
+            if (recipients.Contains("parents") && (string.IsNullOrEmpty(parentID) || string.IsNullOrEmpty(parentEmail))) {
+                return BadRequest(new { error = "UERROR: Invalid parent details. Please provide valid parent details." });
+            }
+
+            // Fetch class, student, and parent (if selected) user details
+            var classDetails = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+            var student = await _context.Students
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.StudentID == studentID);
+            var parentUser = await _context.Parents
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.ParentID == parentID);
+
+            // Separate the recipients string by commas
+            recipients = [.. recipients[0].Split(',')];
+
+            if (classDetails == null) {
+                return NotFound(new { error = "ERROR: Class not found." });
+            }
+
+            if (student == null || student.User == null) {
+                return NotFound( new { error = "ERROR: Student not found." });
+            }
+
+            if (recipients.Contains("parents") && (parentUser == null || parentUser.User == null)) {
+                return NotFound(new { error = "ERROR: Parent not found." });
+            }
+
+            try {
+                var emailVars = new Dictionary<string, string> {
+                    { "studentName", student.User.Name },
+                    { "email", studentEmail },
+                    { "className", classDetails.ClassName.ToString() },
+                    { "totalPoints", student.TotalPoints.ToString() },
+                    { "currentPoints", student.CurrentPoints.ToString() },
+                    { "league", student.League ?? string.Empty },
+                    { "redemptions", student.Redemptions?.Count.ToString() ?? "0" }
+                };
+
+                if (parentUser != null && !string.IsNullOrEmpty(parentEmail)) {
+                    if (!string.IsNullOrEmpty(parentID)) {
+                        emailVars.Add("parentID", parentID);
+                    }
+                    if (!string.IsNullOrEmpty(parentEmail)) {
+                        emailVars.Add("parentEmail", parentEmail);
+                    }
+                    if (parentUser != null && parentUser.User != null) {
+                        emailVars.Add("parentName", parentUser.User.Name);
+                    }
+                }
+                
+                foreach (var recipient in recipients) {
+                    if (!string.IsNullOrEmpty(studentEmail) && recipient == "students") {
+                        try {
+                            await Emailer.SendEmailAsync(studentEmail, "Update from Recyclify", "StudentUpdateEmail", emailVars);
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(parentEmail) && recipient == "parents") {
+                        try {
+                            await Emailer.SendEmailAsync(parentEmail, "Update from Recyclify", "ParentUpdateEmail", emailVars);
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                        }
+                    }
+                }
+
+                return Ok(new { message = "SUCCESS: Email sent successfully." });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
         // Get Tasks Waiting for Verification
         [HttpGet("get-waiting-verified-rejected-tasks")]
         public async Task<IActionResult> GetTasksWaitingVerification(string teacherID) {
@@ -543,6 +636,51 @@ namespace Backend.Controllers.Teachers {
                 await Emailer.SendEmailAsync(studentEmail, $"Your task: {taskObj.TaskTitle} has been rejected.", "SuccessfulTaskRejection", emailVars);
 
                 return Ok( new { message = "SUCCESS: Task rejected successfully." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+        
+        // Get Class Points
+        [HttpGet("get-class-points")]
+        public async Task<IActionResult> GetClassPoints(string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
+            }
+
+            try {
+                // Get today's date and the date 7 days ago
+                DateTime today = DateTime.UtcNow.Date;
+                DateTime sevenDaysAgo = today.AddDays(-6); // To include today as the 7th day
+
+                // Fetch class points from the last 7 days
+                var classPointsRaw = await _context.ClassPoints
+                    .Where(cp => cp.ClassID == classID)
+                    .OrderBy(cp => cp.DateCompleted) // Sort in ascending order for better mapping
+                    .ToListAsync();
+
+                // Initialize a dictionary with 7 days (default value is 0)
+                var classPointsDict = Enumerable.Range(0, 7)
+                    .ToDictionary(offset => sevenDaysAgo.AddDays(offset), _ => 0);
+
+                // Filter the records in-memory based on DateCompleted string
+                foreach (var record in classPointsRaw) {
+                    if (DateTime.TryParse(record.DateCompleted, out DateTime recordDate) && 
+                        recordDate >= sevenDaysAgo && recordDate <= today) {
+                        recordDate = recordDate.Date;
+                        if (classPointsDict.ContainsKey(recordDate)) {
+                            classPointsDict[recordDate] += record.PointsAwarded;
+                        }
+                    }
+                }
+
+                // Convert to list format for response
+                var classPoints = classPointsDict
+                    .OrderBy(entry => entry.Key) // Ensure chronological order
+                    .Select(entry => new { date = entry.Key.ToString("yyyy-MM-dd"), points = entry.Value })
+                    .ToList();
+
+                return Ok(new { message = "SUCCESS: Class points found.", data = classPoints });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
