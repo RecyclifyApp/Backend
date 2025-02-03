@@ -561,7 +561,7 @@ namespace Backend.Controllers {
                                 });
                             }
                         }
-                        return Ok(new { message = "SUCCESS: Student tasks retrieved", data = classQuests });
+                        return Ok(new { message = "SUCCESS: Class Quests retrieved", data = classQuests });
                     }
                 }
             }   
