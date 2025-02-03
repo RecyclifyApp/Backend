@@ -531,22 +531,69 @@ namespace Backend.Controllers.Teachers {
                 var associatedQuestProgress = await _context.QuestProgresses.FirstOrDefaultAsync(qp => qp.QuestID == associatedQuest.QuestID && qp.ClassID == studentClassRecord.ClassID);
 
                 if (associatedQuestProgress != null) {
-                    if (associatedQuestProgress.AmountCompleted + taskObj.QuestContributionAmountOnComplete == associatedQuest.TotalAmountToComplete) {
-                        associatedQuestProgress.AmountCompleted = associatedQuest.TotalAmountToComplete;
-                        associatedQuestProgress.Completed = true;
+                    if (DateTime.Parse(associatedQuestProgress.DateAssigned) >= DateTime.Now.AddDays(-7)) {
+                        if (associatedQuestProgress.AmountCompleted + taskObj.QuestContributionAmountOnComplete == associatedQuest.TotalAmountToComplete) {
+                            associatedQuestProgress.AmountCompleted = associatedQuest.TotalAmountToComplete;
+                            associatedQuestProgress.Completed = true;
 
-                        var addClassPoints = new ClassPoints {
-                            ClassID = studentClassRecord.ClassID,
-                            QuestID = associatedQuest.QuestID,
-                            PointsAwarded = associatedQuest.QuestPoints,
-                            DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
-                        };
+                            var addClassPoints = new ClassPoints {
+                                ClassID = studentClassRecord.ClassID,
+                                QuestID = associatedQuest.QuestID,
+                                PointsAwarded = associatedQuest.QuestPoints,
+                                DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
+                            };
 
-                        _context.ClassPoints.Add(addClassPoints);
-                        _context.Quests.Update(associatedQuest);
+                            _context.ClassPoints.Add(addClassPoints);
+                            _context.Quests.Update(associatedQuest);
+                        } else {
+                            associatedQuestProgress.AmountCompleted += taskObj.QuestContributionAmountOnComplete;
+                            _context.Quests.Update(associatedQuest);
+                        }
                     } else {
-                        associatedQuestProgress.AmountCompleted += taskObj.QuestContributionAmountOnComplete;
-                        _context.Quests.Update(associatedQuest);
+                        var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
+                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID);
+
+                        if (reccomendResponse != null) {
+                            foreach (var quest in reccomendResponse.result) {
+                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                                if (assignedTeacher == null) {
+                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
+                                }
+
+                                var questProgress = new QuestProgress {
+                                    QuestID = quest.QuestID,
+                                    ClassID = associatedQuestProgress.ClassID,
+                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                    AmountCompleted = taskObj.AssociatedQuestID == quest.QuestID ? taskObj.QuestContributionAmountOnComplete : 0,
+                                    Completed = false,
+                                    Quest = quest,
+                                    AssignedTeacherID = assignedTeacher.TeacherID,
+                                    AssignedTeacher = assignedTeacher
+                                };
+
+                                _context.QuestProgresses.Add(questProgress);
+                            }
+                        } else {
+                            foreach (var quest in fallbackQuests) {
+                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                                if (assignedTeacher == null) {
+                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
+                                }
+
+                                var questProgress = new QuestProgress {
+                                    QuestID = quest.QuestID,
+                                    ClassID = associatedQuestProgress.ClassID,
+                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                    AmountCompleted = taskObj.AssociatedQuestID == quest.QuestID ? taskObj.QuestContributionAmountOnComplete : 0,
+                                    Completed = false,
+                                    Quest = quest,
+                                    AssignedTeacherID = assignedTeacher.TeacherID,
+                                    AssignedTeacher = assignedTeacher
+                                };
+
+                                _context.QuestProgresses.Add(questProgress);
+                            }
+                        }
                     }
                 }
 
