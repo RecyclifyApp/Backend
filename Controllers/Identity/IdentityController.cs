@@ -102,7 +102,10 @@ namespace Backend.Controllers.Identity {
                 return Ok(new {
                     user.Id,
                     user.Name,
+                    user.FName,
+                    user.LName,
                     user.Email,
+                    user.ContactNumber,
                     user.EmailVerified,
                     user.UserRole,
                     user.Avatar
@@ -262,7 +265,7 @@ namespace Backend.Controllers.Identity {
 
         [HttpDelete("deleteAccount")]
         [Authorize]
-        public IActionResult DeleteAccount() {
+        public IActionResult DeleteAccount([FromBody] DeleteAccountRequest request) {
             // Extract the user ID from the token claims
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -273,9 +276,14 @@ namespace Backend.Controllers.Identity {
                     return NotFound(new { error = "ERROR: User not found." });
                 }
 
-                // Remove the user from the database
-                _context.Users.Remove(user);
-                _context.SaveChanges();
+                var password = Utilities.HashString(request.Password);
+                if (user.Password != password) {
+                    return BadRequest(new { error = "UERROR: Incorrect password." });
+                } else {
+                    // Remove the user from the database
+                    _context.Users.Remove(user);
+                    _context.SaveChanges();
+                }
 
                 Logger.Log($"[SUCCESS] IDENTITY DELETEACCOUNT: User {user.Id} deleted.");
 
@@ -414,6 +422,10 @@ namespace Backend.Controllers.Identity {
             public string? Name { get; set; }
             public string? Email { get; set; }
             public string? ContactNumber { get; set; }
+        }
+
+        public class DeleteAccountRequest {
+            public required string Password { get; set; }
         }
     }
 }
