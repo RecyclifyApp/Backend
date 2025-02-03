@@ -108,6 +108,9 @@ namespace Backend {
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<QuestProgress>()
+                .HasKey(qp => new { qp.QuestID, qp.ClassID, qp.DateAssigned });
+
+            modelBuilder.Entity<QuestProgress>()
                 .HasOne(qp => qp.Quest)
                 .WithMany()
                 .HasForeignKey(qp => qp.QuestID)

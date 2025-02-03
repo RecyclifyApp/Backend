@@ -1,6 +1,5 @@
 using Backend.Models;
 using Backend.Services;
-using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +22,23 @@ namespace Backend.Controllers.Teachers {
                 .OrderBy(c => c.ClassName)
                 .ToListAsync();
 
+                if (classes == null || classes.Count == 0) {
+                    classes = [];
+                    return Ok( new { message = "SUCCESS: No classes found.", data = classes });
+                }
+
+                return Ok( new { message = "SUCCESS: Classes found.", data = classes });
+
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Get Overall Classes Data
+        [HttpGet("get-overall-classes-data")]
+        public async Task<IActionResult> GetOverallClassesData() {
+            try {
+                var classes = await _context.Classes.ToListAsync();
                 if (classes == null || classes.Count == 0) {
                     classes = [];
                     return Ok( new { message = "SUCCESS: No classes found.", data = classes });
@@ -88,7 +104,8 @@ namespace Backend.Controllers.Teachers {
                     ClassPoints = 0,
                     WeeklyClassPoints = [],
                     TeacherID = teacherID,
-                    Teacher = teacher
+                    Teacher = teacher,
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                 };
 
                 _context.Classes.Add(newClass);
@@ -164,19 +181,65 @@ namespace Backend.Controllers.Teachers {
         // Get Student
         [HttpGet("get-students")]
         public async Task<IActionResult> GetStudents([FromQuery] string classId) {
-            if (string.IsNullOrEmpty(classId)) {
+            if (string.IsNullOrEmpty(classId)){
                 return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
                 var students = await _context.ClassStudents
                     .Where(cs => cs.ClassID == classId)
-                    .Join(_context.Students, cs => cs.StudentID, s => s.StudentID, (cs, s) => s)
-                    .Include(s => s.User)
-                    .ToListAsync(); 
+                    .Join(
+                        _context.Students,
+                        cs => cs.StudentID,
+                        s => s.StudentID,
+                        (cs, s) => new { cs, s }
+                    )
+                    .GroupJoin(
+                        _context.Parents,
+                        combined => combined.s.ParentID,
+                        p => p.ParentID,
+                        (combined, p) => new { combined, Parent = p.FirstOrDefault() }
+                    )
+                    .Join(
+                        _context.Users,
+                        combined => combined.combined.s.UserID,
+                        u => u.Id,
+                        (combined, u) => new
+                        {
+                            combined.combined.s.StudentID,
+                            combined.combined.s.ParentID,
+                            combined.combined.s.League,
+                            combined.combined.s.LeagueRank,
+                            combined.combined.s.CurrentPoints,
+                            combined.combined.s.TotalPoints,
+                            combined.combined.s.Streak,
+                            combined.combined.s.LastClaimedStreak,
+                            combined.combined.s.TaskProgresses,
+                            combined.combined.s.Redemptions,
+                            Parent = combined.Parent != null && combined.Parent.User != null
+                                ? new
+                                {
+                                    ParentName = combined.Parent.User.Name,
+                                    ParentEmail = combined.Parent.User.Email
+                                }
+                                : null,
+                            User = new
+                            {
+                                u.Name,
+                                u.Email
+                            }
+                        }
+                    )
+                    .OrderBy(student => student.User.Name)
+                    .ToListAsync();
+
+                if (students == null || students.Count == 0){
+                    return Ok(new { message = "SUCCESS: No students found.", data = new List<object>() });
+                }
 
                 return Ok(new { message = "SUCCESS: Students retrieved", data = students });
-            } catch (Exception ex) {
+            }
+            catch (Exception ex){
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
         }
@@ -228,6 +291,137 @@ namespace Backend.Controllers.Teachers {
                 await _context.SaveChangesAsync();
 
                 return Ok( new { message = "SUCCESS: Student updated successfully." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Get Tasks Waiting for Verification
+        [HttpGet("get-tasks-waiting-verification")]
+        public async Task<IActionResult> GetTasksWaitingVerification(string teacherID) {
+            if (string.IsNullOrEmpty(teacherID)) {
+                return BadRequest( new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
+            }
+
+            try {
+                var tasksProgressRecords = await _context.TaskProgresses
+                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == true && t.TaskVerified == false)
+                .ToListAsync();
+
+                if (tasksProgressRecords == null || tasksProgressRecords.Count == 0) {
+                    tasksProgressRecords = [];
+                    return Ok( new { message = "SUCCESS: No tasks found.", data = tasksProgressRecords });
+                }
+
+                return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = tasksProgressRecords });
+
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Verify Student Task Completion
+        [HttpPut("verify-student-task")]
+        public async Task<IActionResult> VerifyStudentTask(string studentID, string taskID) {
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
+                return BadRequest( new { error = "UERROR: Invalid student or task ID. Please provide valid student and task ID." });
+            }
+
+            var studentTaskProgressRecord = await _context.TaskProgresses.FirstOrDefaultAsync(st => st.StudentID == studentID && st.TaskID == taskID);
+
+            if (studentTaskProgressRecord == null) {
+                return NotFound( new { error = "ERROR: Task completion record not found." });
+            }
+
+            if (studentTaskProgressRecord.VerificationPending == false || studentTaskProgressRecord.TaskVerified == true) {
+                return BadRequest( new { error = "UERROR: Task is not pending verification or has already been verified." });
+            }
+
+            try {
+                var taskObj = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskID);
+                if (taskObj == null) {
+                    return NotFound(new { error = "ERROR: Task not found." });
+                }
+
+                studentTaskProgressRecord.TaskVerified = true;
+                studentTaskProgressRecord.VerificationPending = false;
+                _context.TaskProgresses.Update(studentTaskProgressRecord);
+
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                student.CurrentPoints += taskObj.TaskPoints;
+                student.TotalPoints += taskObj.TaskPoints;
+                _context.Students.Update(student);
+
+                var addStudentPoints = new StudentPoints {
+                    StudentID = studentID,
+                    TaskID = taskID,
+                    PointsAwarded = taskObj.TaskPoints,
+                    DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
+                };
+
+                _context.StudentPoints.Add(addStudentPoints);
+
+                var associatedQuest = await _context.Quests.FirstOrDefaultAsync(q => q.QuestID == taskObj.AssociatedQuestID);
+                if (associatedQuest == null) {
+                    return NotFound(new { error = "ERROR: Task's associated Quest not found." });
+                }
+
+                var studentClassRecord = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
+                if (studentClassRecord == null) {
+                    return NotFound(new { error = "ERROR: Student's class record not found." });
+                }
+
+                var associatedQuestProgress = await _context.QuestProgresses.FirstOrDefaultAsync(qp => qp.QuestID == associatedQuest.QuestID && qp.ClassID == studentClassRecord.ClassID);
+
+                if (associatedQuestProgress != null) {
+                    if (associatedQuestProgress.AmountCompleted + taskObj.QuestContributionAmountOnComplete == associatedQuest.TotalAmountToComplete) {
+                        associatedQuestProgress.AmountCompleted = associatedQuest.TotalAmountToComplete;
+                        associatedQuestProgress.Completed = true;
+
+                        var addClassPoints = new ClassPoints {
+                            ClassID = studentClassRecord.ClassID,
+                            QuestID = associatedQuest.QuestID,
+                            PointsAwarded = associatedQuest.QuestPoints,
+                            DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
+                        };
+
+                        _context.ClassPoints.Add(addClassPoints);
+                        _context.Quests.Update(associatedQuest);
+                    } else {
+                        associatedQuestProgress.AmountCompleted += taskObj.QuestContributionAmountOnComplete;
+                        _context.Quests.Update(associatedQuest);
+                    }
+                }
+
+                var studentInboxMessage = new Inbox {
+                    UserID = student.StudentID,
+                    Message = $"Your recent task: {taskObj.TaskTitle} has been verified. You earned {taskObj.TaskPoints} points.",
+                };
+
+                _context.Inboxes.Add(studentInboxMessage);
+
+                await _context.SaveChangesAsync();
+
+                var studentUser = _context.Users.FirstOrDefault(u => u.Id == student.StudentID);
+                if (studentUser == null) {
+                    return NotFound(new { error = "ERROR: Student user not found." });
+                }
+                var studentUsername = studentUser.Name;
+                var studentEmail = studentUser.Email;
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", studentUsername },
+                    { "taskTitle", taskObj.TaskTitle },
+                    { "taskPoints", taskObj.TaskPoints.ToString() }
+                };
+
+                await Emailer.SendEmailAsync(studentEmail, $"You've earned {taskObj.TaskPoints} leafs!", "SuccessfulTaskVerification", emailVars);
+
+                return Ok( new { message = "SUCCESS: Task verified successfully." });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }

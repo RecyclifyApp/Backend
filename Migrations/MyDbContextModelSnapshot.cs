@@ -50,6 +50,9 @@ namespace Backend.Migrations
                     b.Property<int>("ClassPoints")
                         .HasColumnType("int");
 
+                    b.Property<int>("JoinCode")
+                        .HasColumnType("int");
+
                     b.Property<string>("TeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
@@ -205,6 +208,13 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("QuestType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("TotalAmountToComplete")
+                        .HasColumnType("int");
+
                     b.HasKey("QuestID");
 
                     b.ToTable("Quests");
@@ -213,16 +223,30 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
                 {
                     b.Property<string>("QuestID")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
 
                     b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(2);
+
+                    b.Property<string>("DateAssigned")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(3);
+
+                    b.Property<int>("AmountCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AssignedTeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("Progress")
-                        .HasColumnType("longtext");
+                    b.Property<bool>("Completed")
+                        .HasColumnType("tinyint(1)");
 
-                    b.HasKey("QuestID");
+                    b.HasKey("QuestID", "ClassID", "DateAssigned");
+
+                    b.HasIndex("AssignedTeacherID");
 
                     b.HasIndex("ClassID");
 
@@ -358,6 +382,13 @@ namespace Backend.Migrations
                 {
                     b.Property<string>("TaskID")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("AssociatedQuestID")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("QuestContributionAmountOnComplete")
+                        .HasColumnType("int");
 
                     b.Property<string>("TaskDescription")
                         .IsRequired()
@@ -588,6 +619,12 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
                 {
+                    b.HasOne("Backend.Models.Teacher", "AssignedTeacher")
+                        .WithMany()
+                        .HasForeignKey("AssignedTeacherID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.Class", "Class")
                         .WithMany("QuestProgresses")
                         .HasForeignKey("ClassID")
@@ -599,6 +636,8 @@ namespace Backend.Migrations
                         .HasForeignKey("QuestID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedTeacher");
 
                     b.Navigation("Class");
 

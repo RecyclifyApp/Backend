@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250117175731_cloud_dbv22")]
-    partial class cloud_dbv22
+    [Migration("20250202095053_CloudDB_V38")]
+    partial class CloudDB_V38
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,6 +53,9 @@ namespace Backend.Migrations
                     b.Property<int>("ClassPoints")
                         .HasColumnType("int");
 
+                    b.Property<int>("JoinCode")
+                        .HasColumnType("int");
+
                     b.Property<string>("TeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
@@ -62,6 +65,42 @@ namespace Backend.Migrations
                     b.HasIndex("TeacherID");
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassPoints", b =>
+                {
+                    b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("QuestID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DateCompleted")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.HasKey("ClassID", "QuestID", "DateCompleted");
+
+                    b.ToTable("ClassPoints");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassStudents", b =>
+                {
+                    b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(0);
+
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
+
+                    b.HasKey("ClassID", "StudentID");
+
+                    b.HasIndex("StudentID");
+
+                    b.ToTable("ClassStudents");
                 });
 
             modelBuilder.Entity("Backend.Models.ContactForm", b =>
@@ -172,6 +211,13 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("QuestType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("TotalAmountToComplete")
+                        .HasColumnType("int");
+
                     b.HasKey("QuestID");
 
                     b.ToTable("Quests");
@@ -180,16 +226,30 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
                 {
                     b.Property<string>("QuestID")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
 
                     b.Property<string>("ClassID")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(2);
+
+                    b.Property<string>("DateAssigned")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(3);
+
+                    b.Property<int>("AmountCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AssignedTeacherID")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("Progress")
-                        .HasColumnType("longtext");
+                    b.Property<bool>("Completed")
+                        .HasColumnType("tinyint(1)");
 
-                    b.HasKey("QuestID");
+                    b.HasKey("QuestID", "ClassID", "DateAssigned");
+
+                    b.HasIndex("AssignedTeacherID");
 
                     b.HasIndex("ClassID");
 
@@ -233,6 +293,9 @@ namespace Backend.Migrations
                     b.Property<string>("RewardID")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("tinyint(1)");
 
@@ -266,6 +329,9 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("LastClaimedStreak")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("League")
                         .HasColumnType("longtext");
 
@@ -274,6 +340,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("ParentID")
                         .HasColumnType("longtext");
+
+                    b.Property<int>("Streak")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("TaskLastSet")
                         .HasColumnType("datetime(6)");
@@ -293,10 +362,36 @@ namespace Backend.Migrations
                     b.ToTable("Students");
                 });
 
+            modelBuilder.Entity("Backend.Models.StudentPoints", b =>
+                {
+                    b.Property<string>("StudentID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("TaskID")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DateCompleted")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.HasKey("StudentID", "TaskID", "DateCompleted");
+
+                    b.ToTable("StudentPoints");
+                });
+
             modelBuilder.Entity("Backend.Models.Task", b =>
                 {
                     b.Property<string>("TaskID")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("AssociatedQuestID")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("QuestContributionAmountOnComplete")
+                        .HasColumnType("int");
 
                     b.Property<string>("TaskDescription")
                         .IsRequired()
@@ -325,7 +420,8 @@ namespace Backend.Migrations
                         .HasColumnOrder(2);
 
                     b.Property<string>("DateAssigned")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(3);
 
                     b.Property<string>("AssignedTeacherID")
                         .IsRequired()
@@ -383,6 +479,15 @@ namespace Backend.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("EmailVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("FName")
                         .IsRequired()
@@ -451,6 +556,25 @@ namespace Backend.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("Backend.Models.ClassStudents", b =>
+                {
+                    b.HasOne("Backend.Models.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("Backend.Models.DailyStudentPoints", b =>
                 {
                     b.HasOne("Backend.Models.Student", "Student")
@@ -498,6 +622,12 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.QuestProgress", b =>
                 {
+                    b.HasOne("Backend.Models.Teacher", "AssignedTeacher")
+                        .WithMany()
+                        .HasForeignKey("AssignedTeacherID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.Class", "Class")
                         .WithMany("QuestProgresses")
                         .HasForeignKey("ClassID")
@@ -509,6 +639,8 @@ namespace Backend.Migrations
                         .HasForeignKey("QuestID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedTeacher");
 
                     b.Navigation("Class");
 
@@ -536,7 +668,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Student", b =>
                 {
-                    b.HasOne("Backend.Models.Class", "Class")
+                    b.HasOne("Backend.Models.Class", null)
                         .WithMany("Students")
                         .HasForeignKey("ClassID");
 
@@ -549,8 +681,6 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID");
-
-                    b.Navigation("Class");
 
                     b.Navigation("User");
                 });

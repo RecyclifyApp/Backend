@@ -11,6 +11,6 @@ namespace Backend.Models {
         [ForeignKey(nameof(User))]
         public required string UserID { get; set; }
 
-        public required virtual User User { get; set; }
+        public User? User { get; set; }
     }
 }
