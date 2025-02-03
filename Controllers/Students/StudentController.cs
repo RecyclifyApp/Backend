@@ -125,6 +125,7 @@ namespace Backend.Controllers {
                                 TaskID = task.TaskID,
                                 StudentID = matchedStudent.StudentID,
                                 TaskVerified = false,
+                                TaskRejected = false,
                                 VerificationPending = false,
                                 AssignedTeacherID = assignedTeacher.TeacherID,
                                 DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
@@ -265,6 +266,10 @@ namespace Backend.Controllers {
                     var selectedTaskProgress = taskProgress.OrderByDescending(tp => tp.DateAssigned).FirstOrDefault();
                     if (selectedTaskProgress == null) {
                         return NotFound(new { error = "ERROR: Task progress not found", data = taskProgress });
+                    }
+
+                    if (selectedTaskProgress.DateAssigned != DateTime.Now.ToString("yyyy-MM-dd")) {
+                        return BadRequest(new { error = "UERROR: Task expired. Please refresh the page" });
                     }
 
                     try {
@@ -496,6 +501,71 @@ namespace Backend.Controllers {
                 }
             }
         }
+
+        [HttpGet("get-class-quests")]
+        public async Task<IActionResult> GetClassQuests([FromQuery] string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+               var matchedClass = _context.Classes.FirstOrDefault(c => c.ClassID == classID);
+                if (matchedClass == null) {
+                    return NotFound(new { error = "ERROR: Class not found" });
+                } else {
+                    var classQuestProgresses = _context.QuestProgresses.Where(qp => qp.ClassID == matchedClass.ClassID).ToList();
+                    var todayQuestProgresses = classQuestProgresses.Where(tp => DateTime.Parse(tp.DateAssigned) == DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"))).ToList();
+
+                    var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
+                    
+                    if (!todayQuestProgresses.Any()) {
+                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
+
+                        if (reccomendResponse != null) {
+                            foreach (var quest in reccomendResponse.result) {
+                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
+                                if (assignedTeacher == null) {
+                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
+                                }
+
+                                var questProgress = new QuestProgress {
+                                    QuestID = quest.QuestID,
+                                    ClassID = matchedClass.ClassID,
+                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                    AmountCompleted = 0,
+                                    Completed = false,
+                                    Quest = quest,
+                                    AssignedTeacherID = assignedTeacher.TeacherID,
+                                    AssignedTeacher = assignedTeacher
+                                };
+
+                                _context.QuestProgresses.Add(questProgress);
+                                _context.SaveChanges();
+                            }
+                            return Ok(new { message = "SUCCESS: Class quests assigned", data = reccomendResponse.result });
+                        } else {
+                            return Ok(new { message = "SUCCESS: Claass quests assigned", data = fallbackQuests }); 
+                        }
+                    } else {
+                        var classQuests = new List<dynamic>();
+                        foreach (var quest in todayQuestProgresses) {
+                            var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
+                            if (foundQuest != null) {
+                                var questProgress = await _context.QuestProgresses.Where(qp => qp.QuestID == foundQuest.QuestID && qp.ClassID == matchedClass.ClassID).ToListAsync();
+
+                                classQuests.Add(new {
+                                    foundQuest.QuestID,
+                                    foundQuest.QuestTitle,
+                                    foundQuest.QuestDescription,
+                                    foundQuest.QuestPoints,
+                                    foundQuest.QuestType,
+                                    foundQuest.TotalAmountToComplete
+                                });
+                            }
+                        }
+                        return Ok(new { message = "SUCCESS: Student tasks retrieved", data = classQuests });
+                    }
+                }
+            }   
+        }   
             
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
