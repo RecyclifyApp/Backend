@@ -396,6 +396,42 @@ namespace Backend.Controllers.Identity {
             }
         }
 
+        [HttpPost("changePassword")]
+        [Authorize]
+        public IActionResult ChangePassword([FromBody] ChangePasswordRequest request) {
+            // Extract the user ID from the token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Compare the old password with the stored password
+                var hashedOldPassword = Utilities.HashString(request.OldPassword);
+                if (user.Password != hashedOldPassword) {
+                    return BadRequest(new { error = "UERROR: Incorrect password." });
+                }
+
+                // Hash the new password and update the user's password
+                var hashedNewPassword = Utilities.HashString(request.NewPassword);
+                user.Password = hashedNewPassword;
+
+                // Save the changes to the database
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                Logger.Log($"[SUCCESS] IDENTITY CHANGEPASSWORD: User {user.Id} changed password successfully.");
+
+                return Ok(new { message = "SUCCESS: Password changed successfully." });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY CHANGEPASSWORD: Error changing password for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while changing the password.", details = ex.Message });
+            }
+        }
+
         public class VerifyCodeRequest {
             public required string Code { get; set; }
         }
@@ -426,6 +462,11 @@ namespace Backend.Controllers.Identity {
 
         public class DeleteAccountRequest {
             public required string Password { get; set; }
+        }
+
+        public class ChangePasswordRequest {
+            public required string OldPassword { get; set; }
+            public required string NewPassword { get; set; }
         }
     }
 }
