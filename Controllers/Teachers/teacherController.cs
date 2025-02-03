@@ -524,21 +524,42 @@ namespace Backend.Controllers.Teachers {
         [HttpGet("get-class-points")]
         public async Task<IActionResult> GetClassPoints(string classID) {
             if (string.IsNullOrEmpty(classID)) {
-                return BadRequest( new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
+                return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
             }
 
             try {
-                var classPoints = await _context.ClassPoints
-                .Where(cp => cp.ClassID == classID)
-                .OrderByDescending(cp => cp.DateCompleted)
-                .ToListAsync();
+                // Get today's date and the date 7 days ago
+                DateTime today = DateTime.UtcNow.Date;
+                DateTime sevenDaysAgo = today.AddDays(-6); // To include today as the 7th day
 
-                if (classPoints == null || classPoints.Count == 0) {
-                    classPoints = [];
-                    return Ok( new { message = "SUCCESS: No class points found.", data = classPoints });
+                // Fetch class points from the last 7 days
+                var classPointsRaw = await _context.ClassPoints
+                    .Where(cp => cp.ClassID == classID)
+                    .OrderBy(cp => cp.DateCompleted) // Sort in ascending order for better mapping
+                    .ToListAsync();
+
+                // Initialize a dictionary with 7 days (default value is 0)
+                var classPointsDict = Enumerable.Range(0, 7)
+                    .ToDictionary(offset => sevenDaysAgo.AddDays(offset), _ => 0);
+
+                // Filter the records in-memory based on DateCompleted string
+                foreach (var record in classPointsRaw) {
+                    if (DateTime.TryParse(record.DateCompleted, out DateTime recordDate) && 
+                        recordDate >= sevenDaysAgo && recordDate <= today) {
+                        recordDate = recordDate.Date;
+                        if (classPointsDict.ContainsKey(recordDate)) {
+                            classPointsDict[recordDate] += record.PointsAwarded;
+                        }
+                    }
                 }
 
-                return Ok( new { message = "SUCCESS: Class points found.", data = classPoints });
+                // Convert to list format for response
+                var classPoints = classPointsDict
+                    .OrderBy(entry => entry.Key) // Ensure chronological order
+                    .Select(entry => new { date = entry.Key.ToString("yyyy-MM-dd"), points = entry.Value })
+                    .ToList();
+
+                return Ok(new { message = "SUCCESS: Class points found.", data = classPoints });
 
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
