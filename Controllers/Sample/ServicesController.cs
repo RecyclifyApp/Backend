@@ -190,7 +190,7 @@ namespace Backend.Controllers {
             }
 
             try {
-                var recommendQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
+                var recommendQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID, 3);
                 if (recommendQuests == null) {
                     return NotFound(new { error = "Class has not completed any quests yet" });
                 }

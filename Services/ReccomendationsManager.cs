@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
     public class RecommendationsManager {
-        public static async Task<dynamic?> RecommendQuestsAsync(MyDbContext context, string classID) {
+        public static async Task<dynamic?> RecommendQuestsAsync(MyDbContext context, string classID, int numberOfQuests) {
             var completedQuestIds = await context.ClassPoints
                 .Where(cp => cp.ClassID == classID)
                 .Select(cp => cp.QuestID)
@@ -51,10 +51,10 @@ namespace Backend.Services {
             var recommendedQuests = new List<Quest>();
 
             foreach (var quest in questsByLeastFrequentType) {
-                if (similarQuestIds.Contains(quest.QuestID) || recommendedQuests.Count < 3) {
+                if (similarQuestIds.Contains(quest.QuestID) || recommendedQuests.Count < numberOfQuests) {
                     recommendedQuests.Add(quest);
                 }
-                if (recommendedQuests.Count >= 3) break;
+                if (recommendedQuests.Count >= numberOfQuests) break;
             }
 
             var completedQuestTypes = completedQuests.Select(q => q.QuestType).ToList();

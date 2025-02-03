@@ -512,12 +512,29 @@ namespace Backend.Controllers {
                     return NotFound(new { error = "ERROR: Class not found" });
                 } else {
                     var classQuestProgresses = _context.QuestProgresses.Where(qp => qp.ClassID == matchedClass.ClassID).ToList();
-                    var todayQuestProgresses = classQuestProgresses.Where(tp => DateTime.Parse(tp.DateAssigned) == DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"))).ToList();
+                    var invalidQuestProgresses = classQuestProgresses.Where(qp => DateTime.Parse(qp.DateAssigned) < DateTime.Now.AddDays(-7)).ToList();
+                    var validQuestProgresses = classQuestProgresses.Where(qp => DateTime.Parse(qp.DateAssigned) >= DateTime.Now.AddDays(-7)).ToList();
 
-                    var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
+                    foreach (var questProgress in invalidQuestProgresses) {
+                        _context.QuestProgresses.Remove(questProgress);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    var questList = new List<Quest>();
                     
-                    if (!todayQuestProgresses.Any()) {
-                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
+                    if (validQuestProgresses.Count == 0 || validQuestProgresses.Count != 3) {
+                        var numberOfQuestsToRegenerate = 3 - validQuestProgresses.Count;
+                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, numberOfQuestsToRegenerate);
+
+                        var fallbackQuests = await _context.Quests.ToListAsync();
+                        fallbackQuests = fallbackQuests.OrderBy(r => Guid.NewGuid()).Take(numberOfQuestsToRegenerate).ToList();
+
+                        foreach (var quest in validQuestProgresses) {
+                            var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
+                            if (foundQuest != null) {
+                                questList.Add(foundQuest);
+                            }
+                        }
 
                         if (reccomendResponse != null) {
                             foreach (var quest in reccomendResponse.result) {
@@ -538,31 +555,50 @@ namespace Backend.Controllers {
                                 };
 
                                 _context.QuestProgresses.Add(questProgress);
+                                questList.Add(quest);
                                 _context.SaveChanges();
                             }
-                            return Ok(new { message = "SUCCESS: Class quests assigned", data = reccomendResponse.result });
                         } else {
-                            return Ok(new { message = "SUCCESS: Claass quests assigned", data = fallbackQuests }); 
+                            foreach (var quest in fallbackQuests) {
+                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
+                                if (assignedTeacher == null) {
+                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
+                                }
+
+                                var questProgress = new QuestProgress {
+                                    QuestID = quest.QuestID,
+                                    ClassID = matchedClass.ClassID,
+                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                    AmountCompleted = 0,
+                                    Completed = false,
+                                    Quest = quest,
+                                    AssignedTeacherID = assignedTeacher.TeacherID,
+                                    AssignedTeacher = assignedTeacher
+                                };
+
+                                _context.QuestProgresses.Add(questProgress);
+                                questList.Add(quest);
+                                _context.SaveChanges();
+                            }
                         }
                     } else {
-                        var classQuests = new List<dynamic>();
-                        foreach (var quest in todayQuestProgresses) {
+                        foreach (var quest in validQuestProgresses) {
                             var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
                             if (foundQuest != null) {
                                 var questProgress = await _context.QuestProgresses.Where(qp => qp.QuestID == foundQuest.QuestID && qp.ClassID == matchedClass.ClassID).ToListAsync();
 
-                                classQuests.Add(new {
-                                    foundQuest.QuestID,
-                                    foundQuest.QuestTitle,
-                                    foundQuest.QuestDescription,
-                                    foundQuest.QuestPoints,
-                                    foundQuest.QuestType,
-                                    foundQuest.TotalAmountToComplete
+                                questList.Add(new Quest {
+                                    QuestID = foundQuest.QuestID,
+                                    QuestTitle = foundQuest.QuestTitle,
+                                    QuestDescription = foundQuest.QuestDescription,
+                                    QuestPoints = foundQuest.QuestPoints,
+                                    QuestType = foundQuest.QuestType,
+                                    TotalAmountToComplete = foundQuest.TotalAmountToComplete
                                 });
                             }
                         }
-                        return Ok(new { message = "SUCCESS: Class Quests retrieved", data = classQuests });
                     }
+                    return Ok(new { message = "SUCCESS: Class Quests retrieved", data = questList });
                 }
             }   
         }   

@@ -2,6 +2,7 @@ using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Backend.Controllers.Teachers {
     [ApiController]
@@ -111,8 +112,10 @@ namespace Backend.Controllers.Teachers {
 
                 _context.Classes.Add(newClass);
 
-                var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
-                var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
+                var fallbackQuests = await _context.Quests.ToListAsync();
+                fallbackQuests = fallbackQuests.OrderBy(r => Guid.NewGuid()).Take(3).ToList();
+
+                var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, 3);
 
                 if (reccomendResponse != null) {
                     foreach (var quest in reccomendResponse.result) {
@@ -550,10 +553,15 @@ namespace Backend.Controllers.Teachers {
                             _context.Quests.Update(associatedQuest);
                         }
                     } else {
-                        var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
-                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID);
+                        var fallbackQuests = await _context.Quests.ToListAsync();
+                        fallbackQuests = fallbackQuests.OrderBy(r => Guid.NewGuid()).Take(1).ToList();
+
+                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID, 1);
 
                         if (reccomendResponse != null) {
+                            _context.QuestProgresses.Remove(associatedQuestProgress);
+                            await _context.SaveChangesAsync();
+
                             foreach (var quest in reccomendResponse.result) {
                                 var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
                                 if (assignedTeacher == null) {
@@ -728,6 +736,106 @@ namespace Backend.Controllers.Teachers {
                     .ToList();
 
                 return Ok(new { message = "SUCCESS: Class points found.", data = classPoints });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Re-generate Class Quests
+        [HttpPost("regenerate-class-quests")]
+        public async Task<IActionResult> RegenerateClassQuests(string classID, string teacherID) {
+            if (string.IsNullOrEmpty(classID) || string.IsNullOrEmpty(teacherID)) {
+                return BadRequest(new { error = "UERROR: Invalid class ID or teacher ID. Please provide a valid class ID or teacher ID." });
+            }
+
+            var matchedClass = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+            if (matchedClass == null) {
+                return NotFound(new { error = "ERROR: Class not found." });
+            }
+
+            if (teacherID != matchedClass.TeacherID) {
+                return BadRequest(new { error = "UERROR: You are not authorised to regenerate quests for this class." });
+            }
+
+            try {
+                var classQuests = _context.QuestProgresses
+                    .Where(qp => qp.ClassID == classID)
+                    .AsEnumerable()
+                    .Where(qp => DateTime.Parse(qp.DateAssigned) >= DateTime.Now.AddDays(-7))
+                    .ToList();
+
+                var completedClassQuests = classQuests.Where(qp => qp.Completed == true).ToList();
+                var uncompletedClassQuests = classQuests.Where(qp => qp.Completed == false).ToList();
+
+                if (uncompletedClassQuests != null && uncompletedClassQuests.Count > 0) {
+                    var noOfQuestsToRegenerate = uncompletedClassQuests.Count;
+                    _context.QuestProgresses.RemoveRange(uncompletedClassQuests);
+
+                    var fallbackQuests = await _context.Quests.ToListAsync();
+                    fallbackQuests = fallbackQuests.OrderBy(r => Guid.NewGuid()).Take(noOfQuestsToRegenerate).ToList();
+
+                    var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, noOfQuestsToRegenerate);
+
+                    var updatedSetOfQuestProgresses = new List<QuestProgress>();
+                    var updatedSetOfQuests = new List<Quest>();
+
+                    foreach(var quest in completedClassQuests) {
+                        updatedSetOfQuests.Add(quest.Quest);
+                    }
+
+                    if (reccomendResponse != null) {
+                        var reccomendedQuests = reccomendResponse.result;
+                        foreach (var quest in reccomendedQuests) {
+                            var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                            if (assignedTeacher == null) {
+                                return NotFound(new { error = "ERROR: Class's teacher not found" });
+                            }
+
+                            var questProgress = new QuestProgress {
+                                QuestID = quest.QuestID,
+                                ClassID = classID,
+                                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                AmountCompleted = 0,
+                                Completed = false,
+                                Quest = quest,
+                                AssignedTeacherID = assignedTeacher.TeacherID,
+                                AssignedTeacher = assignedTeacher
+                            };
+
+                            updatedSetOfQuestProgresses.Add(questProgress);
+                            updatedSetOfQuests.Add(quest);
+                            _context.QuestProgresses.Add(questProgress);
+                        }
+                    } else {
+                        foreach (var quest in fallbackQuests) {
+                            var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                            if (assignedTeacher == null) {
+                                return NotFound(new { error = "ERROR: Class's teacher not found" });
+                            }
+
+                            var questProgress = new QuestProgress {
+                                QuestID = quest.QuestID,
+                                ClassID = classID,
+                                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                AmountCompleted = 0,
+                                Completed = false,
+                                Quest = quest,
+                                AssignedTeacherID = assignedTeacher.TeacherID,
+                                AssignedTeacher = assignedTeacher
+                            };
+
+                            updatedSetOfQuestProgresses.Add(questProgress);
+                            updatedSetOfQuests.Add(quest);
+                            _context.QuestProgresses.Add(questProgress);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { message = "SUCCESS: Quests regenerated successfully.", data = updatedSetOfQuests });
+                } else {
+                    return BadRequest(new { message = "UERROR: All quests completed. Please wait for the next week to receive new quests" });
+                }
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
