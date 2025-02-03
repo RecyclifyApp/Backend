@@ -427,6 +427,9 @@ namespace Backend.Migrations
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
 
+                    b.Property<bool>("TaskRejected")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("TaskVerified")
                         .HasColumnType("tinyint(1)");
 

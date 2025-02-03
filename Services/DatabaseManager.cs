@@ -1000,18 +1000,125 @@ namespace Backend.Services {
                 context.ClassPoints.Add(class2Points);
             }
 
-            for (int i = 0; i < 10; i++) {
-                var rewardItem = new RewardItem {
+            var defaultRewards = new List<RewardItem> {
+                new RewardItem {
                     RewardID = Utilities.GenerateUniqueID(),
-                    RewardTitle = $"Reward {i + 1}",
-                    RewardDescription = $"Reward {i + 1} Description",
-                    RequiredPoints = Utilities.GenerateRandomInt(100, 1000),
-                    RewardQuantity = Utilities.GenerateRandomInt(1, 10),
-                    IsAvailable = true
-                };
+                    RewardTitle = "Reusable Water Bottle",
+                    RewardDescription = "Leak-proof, stainless steel bottle to stay hydrated throughout the day.",
+                    RequiredPoints = 250,
+                    RewardQuantity = 5,
+                    IsAvailable = true,
+                    ImageUrl = "reusable_bottle.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Recycled Paper Notebook",
+                    RewardDescription = "100% recycled paper notebook for taking notes sustainably.",
+                    RequiredPoints = 180,
+                    RewardQuantity = 7,
+                    IsAvailable = true,
+                    ImageUrl = "recycled_notebook.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Solar-Powered Power Bank",
+                    RewardDescription = "Charge your devices on the go with a solar-powered battery bank.",
+                    RequiredPoints = 600,
+                    RewardQuantity = 3,
+                    IsAvailable = true,
+                    ImageUrl = "solar_power_bank.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Bamboo Pen Set",
+                    RewardDescription = "Eco-friendly bamboo pens for smooth writing.",
+                    RequiredPoints = 120,
+                    RewardQuantity = 10,
+                    IsAvailable = true,
+                    ImageUrl = "bamboo_pens.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Reusable Coffee Cup",
+                    RewardDescription = "Insulated, reusable cup for hot drinks on campus.",
+                    RequiredPoints = 300,
+                    RewardQuantity = 6,
+                    IsAvailable = true,
+                    ImageUrl = "reusable_coffee_cup.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Eco-Friendly Backpack",
+                    RewardDescription = "Durable backpack made from recycled materials.",
+                    RequiredPoints = 800,
+                    RewardQuantity = 2,
+                    IsAvailable = true,
+                    ImageUrl = "eco_backpack.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "LED Desk Lamp (Energy Efficient)",
+                    RewardDescription = "Rechargeable LED lamp for late-night study sessions.",
+                    RequiredPoints = 500,
+                    RewardQuantity = 4,
+                    IsAvailable = true,
+                    ImageUrl = "led_desk_lamp.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Plant-Based Highlighters",
+                    RewardDescription = "Non-toxic, refillable highlighters made from natural materials.",
+                    RequiredPoints = 150,
+                    RewardQuantity = 8,
+                    IsAvailable = true,
+                    ImageUrl = "plant_highlighters.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Reusable Sticky Notes",
+                    RewardDescription = "Dry-erase sticky notes that can be reused, reducing paper waste.",
+                    RequiredPoints = 200,
+                    RewardQuantity = 7,
+                    IsAvailable = true,
+                    ImageUrl = "reusable_sticky_notes.jpg"
+                },
+                new RewardItem {
+                    RewardID = Utilities.GenerateUniqueID(),
+                    RewardTitle = "Organic Cotton Tote Bag",
+                    RewardDescription = "Lightweight, reusable bag for carrying books or groceries.",
+                    RequiredPoints = 160,
+                    RewardQuantity = 9,
+                    IsAvailable = true,
+                    ImageUrl = "cotton_tote_bag.jpg"
+                }
+            };
 
-                context.RewardItems.Add(rewardItem);
+            foreach (var reward in defaultRewards) {
+                try {
+                    var filePath = Path.Combine("wwwroot", "Assets", "Rewards", Path.GetFileName(reward.ImageUrl ?? string.Empty));
+                    
+                    if (File.Exists(filePath)) {
+                        using var stream = new FileStream(filePath, FileMode.Open);
+                        
+                        var formFile = new FormFile(stream, 0, stream.Length, "", Path.GetFileName(filePath)) {
+                            Headers = new HeaderDictionary(),
+                            ContentType = "image/jpeg"
+                        };
+
+                        var uploadResult = await AssetsManager.UploadFileAsync(formFile);
+
+                        if (uploadResult.StartsWith("SUCCESS")) {
+                            reward.ImageUrl = await AssetsManager.GetFileUrlAsync(Path.GetFileName(filePath));
+                            reward.ImageUrl = reward.ImageUrl.Substring("SUCCESS: ".Length).Trim();
+                        }
+                    }
+                } catch (Exception ex) {    
+                    throw new Exception("Error uploading default reward image: " + ex.Message);
+                }
             }
+
+            context.RewardItems.AddRange(defaultRewards);
+            await context.SaveChangesAsync();
 
             await CreateUserRecords(context, "parent", new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
