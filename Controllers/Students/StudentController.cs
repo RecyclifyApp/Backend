@@ -267,6 +267,10 @@ namespace Backend.Controllers {
                         return NotFound(new { error = "ERROR: Task progress not found", data = taskProgress });
                     }
 
+                    if (selectedTaskProgress.DateAssigned != DateTime.Now.ToString("yyyy-MM-dd")) {
+                        return BadRequest(new { error = "UERROR: Task expired. Please refresh the page" });
+                    }
+
                     try {
                         await AssetsManager.UploadFileAsync(file);
                         selectedTaskProgress.ImageUrls = (await AssetsManager.GetFileUrlAsync(file.FileName)).Substring("SUCCESS: ".Length).Trim();
