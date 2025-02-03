@@ -125,6 +125,7 @@ namespace Backend.Controllers {
                                 TaskID = task.TaskID,
                                 StudentID = matchedStudent.StudentID,
                                 TaskVerified = false,
+                                TaskRejected = false,
                                 VerificationPending = false,
                                 AssignedTeacherID = assignedTeacher.TeacherID,
                                 DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")

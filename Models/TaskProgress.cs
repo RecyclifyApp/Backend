@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Eventing.Reader;
 using System.Text.Json.Serialization;
 
 namespace Backend.Models {
@@ -21,6 +22,7 @@ namespace Backend.Models {
         public Student? Student { get; set; }
 
         public required bool TaskVerified { get; set; } = false;
+        public required bool TaskRejected { get; set; } = false;
         public required bool VerificationPending { get; set; } = false;
 
         [ForeignKey("AssignedTeacherID")]

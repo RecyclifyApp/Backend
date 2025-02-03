@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V38 : Migration
+    public partial class CloudDB_V39 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -498,6 +498,7 @@ namespace Backend.Migrations
                     DateAssigned = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TaskVerified = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    TaskRejected = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     VerificationPending = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AssignedTeacherID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),

@@ -344,23 +344,32 @@ namespace Backend.Controllers.Teachers {
         }
 
         // Get Tasks Waiting for Verification
-        [HttpGet("get-tasks-waiting-verification")]
+        [HttpGet("get-waiting-verified-rejected-tasks")]
         public async Task<IActionResult> GetTasksWaitingVerification(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
                 return BadRequest( new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
             }
 
             try {
-                var tasksProgressRecords = await _context.TaskProgresses
+                var tasksWaitingVerification = await _context.TaskProgresses
                 .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == true && t.TaskVerified == false)
                 .ToListAsync();
 
-                if (tasksProgressRecords == null || tasksProgressRecords.Count == 0) {
-                    tasksProgressRecords = [];
-                    return Ok( new { message = "SUCCESS: No tasks found.", data = tasksProgressRecords });
-                }
+                var tasksVerified = await _context.TaskProgresses
+                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == false && t.TaskVerified == true)
+                .ToListAsync();
 
-                return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = tasksProgressRecords });
+                var tasksRejected = await _context.TaskProgresses
+                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == false && t.TaskRejected == true)
+                .ToListAsync();
+
+                var result = new {
+                    tasksWaitingVerification,
+                    tasksVerified,
+                    tasksRejected
+                };
+
+                return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = result });
 
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
@@ -369,15 +378,19 @@ namespace Backend.Controllers.Teachers {
 
         // Verify Student Task Completion
         [HttpPut("verify-student-task")]
-        public async Task<IActionResult> VerifyStudentTask(string studentID, string taskID) {
-            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
-                return BadRequest( new { error = "UERROR: Invalid student or task ID. Please provide valid student and task ID." });
+        public async Task<IActionResult> VerifyStudentTask(string teacherID, string studentID, string taskID) {
+            if (string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
+                return BadRequest( new { error = "UERROR: Invalid teacher, student or task ID. Please provide valid teacher, student and task ID." });
             }
 
             var studentTaskProgressRecord = await _context.TaskProgresses.FirstOrDefaultAsync(st => st.StudentID == studentID && st.TaskID == taskID);
 
             if (studentTaskProgressRecord == null) {
                 return NotFound( new { error = "ERROR: Task completion record not found." });
+            }
+
+            if (studentTaskProgressRecord.AssignedTeacherID != teacherID) {
+                return BadRequest( new { error = "UERROR: You are not authorised to verify this task." });
             }
 
             if (studentTaskProgressRecord.VerificationPending == false || studentTaskProgressRecord.TaskVerified == true) {
@@ -469,6 +482,67 @@ namespace Backend.Controllers.Teachers {
                 await Emailer.SendEmailAsync(studentEmail, $"You've earned {taskObj.TaskPoints} leafs!", "SuccessfulTaskVerification", emailVars);
 
                 return Ok( new { message = "SUCCESS: Task verified successfully." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Reject Student Task Completion
+        [HttpPut("reject-student-task")]
+        public async Task<IActionResult> RejectStudentTask(string teacherID, string studentID, string taskID, string rejectionReason) {
+            if (string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
+                return BadRequest( new { error = "UERROR: Invalid teacher, student or task ID. Please provide valid teacher, student and task ID." });
+            }
+
+            var studentTaskProgressRecord = await _context.TaskProgresses.FirstOrDefaultAsync(st => st.StudentID == studentID && st.TaskID == taskID);
+
+            if (studentTaskProgressRecord == null) {
+                return NotFound( new { error = "ERROR: Task completion record not found." });
+            }
+
+            if (studentTaskProgressRecord.AssignedTeacherID != teacherID) {
+                return BadRequest( new { error = "UERROR: You are not authorised to reject this task." });
+            }
+
+            if (studentTaskProgressRecord.VerificationPending == false || studentTaskProgressRecord.TaskRejected == true) {
+                return BadRequest( new { error = "UERROR: Task is not pending verification or has already been rejected." });
+            }
+
+            try {
+                var taskObj = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskID);
+                if (taskObj == null) {
+                    return NotFound(new { error = "ERROR: Task not found." });
+                }
+
+                studentTaskProgressRecord.TaskRejected = true;
+                studentTaskProgressRecord.VerificationPending = false;
+                _context.TaskProgresses.Update(studentTaskProgressRecord);
+
+                var studentInboxMessage = new Inbox {
+                    UserID = studentID,
+                    Message = $"Your recent task: {taskObj.TaskTitle} has been rejected. Please try again.",
+                };
+
+                _context.Inboxes.Add(studentInboxMessage);
+
+                await _context.SaveChangesAsync();
+
+                var studentUser = _context.Users.FirstOrDefault(u => u.Id == studentID);
+                if (studentUser == null) {
+                    return NotFound(new { error = "ERROR: Student user not found." });
+                }
+                var studentUsername = studentUser.Name;
+                var studentEmail = studentUser.Email;
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", studentUsername },
+                    { "taskTitle", taskObj.TaskTitle },
+                    { "rejectionReason", rejectionReason }
+                };
+
+                await Emailer.SendEmailAsync(studentEmail, $"Your task: {taskObj.TaskTitle} has been rejected.", "SuccessfulTaskRejection", emailVars);
+
+                return Ok( new { message = "SUCCESS: Task rejected successfully." });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
             }
