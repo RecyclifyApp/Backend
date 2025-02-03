@@ -112,10 +112,10 @@ namespace Backend.Controllers.Teachers {
                 _context.Classes.Add(newClass);
 
                 var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
-                var reccomendedQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID) ?? new List<Quest>();
+                var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID);
 
-                if (reccomendedQuests.Count != 0) {
-                    foreach (var quest in reccomendedQuests) {
+                if (reccomendResponse != null) {
+                    foreach (var quest in reccomendResponse.result) {
                         var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
                         if (assignedTeacher == null) {
                             return NotFound(new { error = "ERROR: Class's teacher not found" });
