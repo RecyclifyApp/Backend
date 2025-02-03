@@ -96,8 +96,9 @@ namespace Backend.Controllers.Teachers {
             }
 
             try {
+                var classID = Utilities.GenerateUniqueID();
                 var newClass = new Class {
-                    ClassID = Utilities.GenerateUniqueID(),
+                    ClassID = classID,
                     ClassName = intClassName,
                     ClassDescription = classDescription,
                     ClassImage = "",
@@ -109,6 +110,52 @@ namespace Backend.Controllers.Teachers {
                 };
 
                 _context.Classes.Add(newClass);
+
+                var fallbackQuests = await _context.Quests.Take(3).ToListAsync();
+                var reccomendedQuests = await RecommendationsManager.RecommendQuestsAsync(_context, classID) ?? new List<Quest>();
+
+                if (reccomendedQuests.Count != 0) {
+                    foreach (var quest in reccomendedQuests) {
+                        var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                        if (assignedTeacher == null) {
+                            return NotFound(new { error = "ERROR: Class's teacher not found" });
+                        }
+
+                        var questProgress = new QuestProgress {
+                            QuestID = quest.QuestID,
+                            ClassID = classID,
+                            DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                            AmountCompleted = 0,
+                            Completed = false,
+                            Quest = quest,
+                            AssignedTeacherID = assignedTeacher.TeacherID,
+                            AssignedTeacher = assignedTeacher
+                        };
+
+                        _context.QuestProgresses.Add(questProgress);
+                    }
+                } else {
+                    foreach (var quest in fallbackQuests) {
+                        var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                        if (assignedTeacher == null) {
+                            return NotFound(new { error = "ERROR: Class's teacher not found" });
+                        }
+
+                        var questProgress = new QuestProgress {
+                            QuestID = quest.QuestID,
+                            ClassID = classID,
+                            DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                            AmountCompleted = 0,
+                            Completed = false,
+                            Quest = quest,
+                            AssignedTeacherID = assignedTeacher.TeacherID,
+                            AssignedTeacher = assignedTeacher
+                        };
+
+                        _context.QuestProgresses.Add(questProgress);
+                    }
+                }
+
                 _context.SaveChanges();
 
                 return Ok(new { message = "SUCCESS: Class created successfully." });
