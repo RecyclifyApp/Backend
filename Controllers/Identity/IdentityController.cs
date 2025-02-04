@@ -135,6 +135,7 @@ namespace Backend.Controllers.Identity {
                 // Return user details
                 return Ok(new {
                     user.Id,
+                    user.AboutMe,
                     user.Name,
                     user.FName,
                     user.LName,
@@ -271,6 +272,9 @@ namespace Backend.Controllers.Identity {
                 }
 
                 var name = string.IsNullOrWhiteSpace(request.Name) ? user.Name : request.Name.Trim();
+                var fname = string.IsNullOrWhiteSpace(request.FName) ? user.FName : request.FName.Trim();
+                var lname = string.IsNullOrWhiteSpace(request.LName) ? user.LName : request.LName.Trim();
+                var aboutMe = string.IsNullOrWhiteSpace(request.AboutMe) ? user.AboutMe : request.AboutMe.Trim();
 
                 // Validate email only if it has changed
                 var email = user.Email; // Default to the current email
@@ -285,6 +289,9 @@ namespace Backend.Controllers.Identity {
                 }
 
                 user.Name = name;
+                user.FName = fname;
+                user.LName = lname;
+                user.AboutMe = aboutMe;
                 user.Email = email;
                 user.ContactNumber = contactNumber;
 
@@ -544,6 +551,9 @@ namespace Backend.Controllers.Identity {
 
         public class EditAccountRequest {
             public string? Name { get; set; }
+            public string? FName { get; set; }
+            public string? LName { get; set; }
+            public string? AboutMe { get; set; }
             public string? Email { get; set; }
             public string? ContactNumber { get; set; }
         }
