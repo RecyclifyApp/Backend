@@ -985,6 +985,7 @@ namespace Backend.Services {
                 var class1Points = new ClassPoints {
                     ClassID = class1.ClassID,
                     QuestID = context.Quests.ToList()[i].QuestID,
+                    ContributingStudentID = context.Students.ToList()[i].StudentID,
                     DateCompleted = DateTime.Now.AddDays(i - 7).ToString("yyyy-MM-dd"),
                     PointsAwarded = Utilities.GenerateRandomInt(10, 100)
                 };
@@ -992,6 +993,7 @@ namespace Backend.Services {
                 var class2Points = new ClassPoints {
                     ClassID = class2.ClassID,
                     QuestID = context.Quests.ToList()[i].QuestID,
+                    ContributingStudentID = context.Students.ToList()[i].StudentID,
                     DateCompleted = DateTime.Now.AddDays(i - 7).ToString("yyyy-MM-dd"),
                     PointsAwarded = Utilities.GenerateRandomInt(10, 100)
                 };

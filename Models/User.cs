@@ -12,6 +12,7 @@ namespace Backend.Models {
         public required string ContactNumber { get; set; }
         public required string UserRole { get; set; }
         public string? Avatar { get; set; }
+        public string? AboutMe { get; set; }
         public required bool EmailVerified { get; set; } = false;
         public string? EmailVerificationToken { get; set; }
         public string? EmailVerificationTokenExpiry { get; set; }

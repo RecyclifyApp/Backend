@@ -441,7 +441,7 @@ namespace Backend.Controllers.Teachers {
 
         // Get Tasks Waiting for Verification
         [HttpGet("get-waiting-verified-rejected-tasks")]
-        public async Task<IActionResult> GetTasksWaitingVerification(string teacherID) {
+        public async Task<IActionResult> GetWaitingVerifiedRejectedTasks(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
                 return BadRequest( new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
             }
@@ -468,7 +468,7 @@ namespace Backend.Controllers.Teachers {
                 return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = result });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
             }
         }
 
@@ -508,6 +508,12 @@ namespace Backend.Controllers.Teachers {
                     return NotFound(new { error = "ERROR: Student not found." });
                 }
 
+                var todayDatetimeString = DateTime.Now.ToString("yyyy-MM-dd");
+                var existingStudentPointsRecord = await _context.StudentPoints.FirstOrDefaultAsync(sp => sp.StudentID == studentID && sp.TaskID == taskID && sp.DateCompleted == todayDatetimeString);
+                if (existingStudentPointsRecord != null) {
+                    return BadRequest(new { error = "UERROR: Points already awarded for this task." });
+                }
+
                 student.CurrentPoints += taskObj.TaskPoints;
                 student.TotalPoints += taskObj.TaskPoints;
                 _context.Students.Update(student);
@@ -539,15 +545,20 @@ namespace Backend.Controllers.Teachers {
                             associatedQuestProgress.AmountCompleted = associatedQuest.TotalAmountToComplete;
                             associatedQuestProgress.Completed = true;
 
-                            var addClassPoints = new ClassPoints {
-                                ClassID = studentClassRecord.ClassID,
-                                QuestID = associatedQuest.QuestID,
-                                PointsAwarded = associatedQuest.QuestPoints,
-                                DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
-                            };
+                            var existingClassPointsRecord = await _context.ClassPoints.FirstOrDefaultAsync(cp => cp.ClassID == studentClassRecord.ClassID && cp.QuestID == associatedQuest.QuestID && cp.DateCompleted == todayDatetimeString && cp.ContributingStudentID == studentID);
 
-                            _context.ClassPoints.Add(addClassPoints);
-                            _context.Quests.Update(associatedQuest);
+                            if (existingClassPointsRecord == null) {
+                                var addClassPoints = new ClassPoints {
+                                    ClassID = studentClassRecord.ClassID,
+                                    QuestID = associatedQuest.QuestID,
+                                    ContributingStudentID = studentID,
+                                    PointsAwarded = associatedQuest.QuestPoints,
+                                    DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
+                                };
+
+                                _context.ClassPoints.Add(addClassPoints);
+                                _context.Quests.Update(associatedQuest);
+                            }
                         } else {
                             associatedQuestProgress.AmountCompleted += taskObj.QuestContributionAmountOnComplete;
                             _context.Quests.Update(associatedQuest);
@@ -558,10 +569,10 @@ namespace Backend.Controllers.Teachers {
 
                         var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID, 1);
 
-                        if (reccomendResponse != null) {
-                            _context.QuestProgresses.Remove(associatedQuestProgress);
-                            await _context.SaveChangesAsync();
+                        _context.QuestProgresses.Remove(associatedQuestProgress);
+                        await _context.SaveChangesAsync();
 
+                        if (reccomendResponse != null) {
                             foreach (var quest in reccomendResponse.result) {
                                 var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
                                 if (assignedTeacher == null) {
@@ -631,7 +642,7 @@ namespace Backend.Controllers.Teachers {
 
                 return Ok( new { message = "SUCCESS: Task verified successfully." });
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}"});
             }
         }
 
@@ -692,7 +703,7 @@ namespace Backend.Controllers.Teachers {
 
                 return Ok( new { message = "SUCCESS: Task rejected successfully." });
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
             }
         }
         
@@ -837,7 +848,7 @@ namespace Backend.Controllers.Teachers {
                     return BadRequest(new { message = "UERROR: All quests completed. Please wait for the next week to receive new quests" });
                 }
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
             }
         }
     }

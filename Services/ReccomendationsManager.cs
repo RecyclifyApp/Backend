@@ -38,6 +38,8 @@ namespace Backend.Services {
                 }
             }
 
+            questsByLeastFrequentType = questsByLeastFrequentType.OrderBy(q => Guid.NewGuid()).ToList();
+
             var commonWords = GetCommonWords(completedQuests.Select(q => q.QuestDescription).ToList());
 
             var similarQuests = new List<Quest>();
