@@ -112,7 +112,7 @@ namespace Backend.Controllers.Teachers {
 
                 _context.Classes.Add(newClass);
 
-                var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, 3);
+                var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, 3);
 
                 if (reccomendResponse != null) {
                     foreach (var quest in reccomendResponse.result) {
@@ -541,7 +541,7 @@ namespace Backend.Controllers.Teachers {
                             _context.Quests.Update(associatedQuest);
                         }
                     } else {
-                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID, 1);
+                        var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID, 1);
 
                         _context.QuestProgresses.Remove(associatedQuestProgress);
                         await _context.SaveChangesAsync();
@@ -736,7 +736,7 @@ namespace Backend.Controllers.Teachers {
                     var noOfQuestsToRegenerate = uncompletedClassQuests.Count;
                     _context.QuestProgresses.RemoveRange(uncompletedClassQuests);
 
-                    var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, noOfQuestsToRegenerate);
+                    var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, noOfQuestsToRegenerate);
 
                     var updatedSetOfQuestProgresses = new List<QuestProgress>();
                     var updatedSetOfQuests = new List<dynamic>();

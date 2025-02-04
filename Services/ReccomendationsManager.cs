@@ -2,7 +2,7 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
-    public class RecommendationsManager {
+    public class ReccommendationsManager {
         public static async Task<dynamic?> RecommendQuestsAsync(MyDbContext context, string classID, int numberOfQuests) {
             var completedQuestIds = await context.ClassPoints
                 .Where(cp => cp.ClassID == classID)

@@ -543,7 +543,7 @@ namespace Backend.Controllers {
                     
                     if (validQuestProgresses.Count == 0 || validQuestProgresses.Count != 3) {
                         var numberOfQuestsToRegenerate = 3 - validQuestProgresses.Count;
-                        var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, numberOfQuestsToRegenerate);
+                        var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, numberOfQuestsToRegenerate);
 
                         foreach (var quest in validQuestProgresses) {
                             var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
