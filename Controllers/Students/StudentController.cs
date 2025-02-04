@@ -38,6 +38,25 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-classID")]
+        public IActionResult GetStudentClassID([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == matchedStudent.StudentID);
+                if (studentClassRecord == null) {
+                    return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
+                }
+
+                return Ok(new { message = "SUCCESS: Student classID retrieved", data = studentClassRecord.ClassID });
+            }
+        }   
+
         [HttpGet("get-student-leafs")]
         public IActionResult GetStudentLeafs([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
