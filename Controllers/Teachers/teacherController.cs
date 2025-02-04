@@ -708,7 +708,7 @@ namespace Backend.Controllers.Teachers {
 
         // Re-generate Class Quests
         [HttpPost("regenerate-class-quests")]
-        public async Task<IActionResult> RegenerateClassQuests(string classID, string teacherID) {
+        public async Task<IActionResult> RegenerateClassQuests([FromForm] string classID, [FromForm] string teacherID) {
             if (string.IsNullOrEmpty(classID) || string.IsNullOrEmpty(teacherID)) {
                 return BadRequest(new { error = "UERROR: Invalid class ID or teacher ID. Please provide a valid class ID or teacher ID." });
             }
@@ -739,10 +739,18 @@ namespace Backend.Controllers.Teachers {
                     var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, noOfQuestsToRegenerate);
 
                     var updatedSetOfQuestProgresses = new List<QuestProgress>();
-                    var updatedSetOfQuests = new List<Quest>();
+                    var updatedSetOfQuests = new List<dynamic>();
 
                     foreach(var quest in completedClassQuests) {
-                        updatedSetOfQuests.Add(quest.Quest);
+                        updatedSetOfQuests.Add(new {
+                            quest.Quest.QuestID,
+                            quest.Quest.QuestTitle,
+                            quest.Quest.QuestDescription,
+                            quest.Quest.QuestPoints,
+                            quest.Quest.QuestType,
+                            quest.Quest.TotalAmountToComplete,
+                            AmountCompleted = quest.Quest.TotalAmountToComplete,
+                        });
                     }
 
                     if (reccomendResponse != null) {
@@ -765,7 +773,17 @@ namespace Backend.Controllers.Teachers {
                             };
 
                             updatedSetOfQuestProgresses.Add(questProgress);
-                            updatedSetOfQuests.Add(quest);
+
+                            updatedSetOfQuests.Add(new {
+                                quest.QuestID,
+                                quest.QuestTitle,
+                                quest.QuestDescription,
+                                quest.QuestPoints,
+                                quest.QuestType,
+                                quest.TotalAmountToComplete,
+                                AmountCompleted = 0,
+                            });
+
                             _context.QuestProgresses.Add(questProgress);
                         }
                     }

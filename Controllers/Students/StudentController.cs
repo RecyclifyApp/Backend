@@ -520,7 +520,7 @@ namespace Backend.Controllers {
                         await _context.SaveChangesAsync();
                     }
 
-                    var questList = new List<Quest>();
+                    var questList = new List<dynamic>();
                     
                     if (validQuestProgresses.Count == 0 || validQuestProgresses.Count != 3) {
                         var numberOfQuestsToRegenerate = 3 - validQuestProgresses.Count;
@@ -552,7 +552,17 @@ namespace Backend.Controllers {
                                 };
 
                                 _context.QuestProgresses.Add(questProgress);
-                                questList.Add(quest);
+
+                                questList.Add(new {
+                                    quest.QuestID,
+                                    quest.QuestTitle,
+                                    quest.QuestDescription,
+                                    quest.QuestPoints,
+                                    quest.QuestType,
+                                    quest.TotalAmountToComplete,
+                                    AmountCompleted = 0
+                                });
+
                                 _context.SaveChanges();
                             }
                         }
@@ -562,13 +572,14 @@ namespace Backend.Controllers {
                             if (foundQuest != null) {
                                 var questProgress = await _context.QuestProgresses.Where(qp => qp.QuestID == foundQuest.QuestID && qp.ClassID == matchedClass.ClassID).ToListAsync();
 
-                                questList.Add(new Quest {
-                                    QuestID = foundQuest.QuestID,
-                                    QuestTitle = foundQuest.QuestTitle,
-                                    QuestDescription = foundQuest.QuestDescription,
-                                    QuestPoints = foundQuest.QuestPoints,
-                                    QuestType = foundQuest.QuestType,
-                                    TotalAmountToComplete = foundQuest.TotalAmountToComplete
+                                questList.Add(new {
+                                    foundQuest.QuestID,
+                                    foundQuest.QuestTitle,
+                                    foundQuest.QuestDescription,
+                                    foundQuest.QuestPoints,
+                                    foundQuest.QuestType,
+                                    foundQuest.TotalAmountToComplete,
+                                    AmountCompleted = questProgress.FirstOrDefault()?.AmountCompleted ?? 0
                                 });
                             }
                         }
@@ -576,7 +587,7 @@ namespace Backend.Controllers {
                     return Ok(new { message = "SUCCESS: Class Quests retrieved", data = questList });
                 }
             }   
-        }   
+        }
             
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {

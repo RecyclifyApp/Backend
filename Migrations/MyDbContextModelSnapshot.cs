@@ -479,6 +479,9 @@ namespace Backend.Migrations
                     b.Property<string>("Avatar")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Banner")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("ContactNumber")
                         .IsRequired()
                         .HasColumnType("longtext");
