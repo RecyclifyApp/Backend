@@ -38,6 +38,25 @@ namespace Backend.Controllers {
             }
         }
 
+        [HttpGet("get-student-classID")]
+        public IActionResult GetStudentClassID([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+                var matchedStudent = _context.Students.FirstOrDefault(s => s.StudentID == studentID);
+                if (matchedStudent == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentClassRecord = _context.ClassStudents.FirstOrDefault(cs => cs.StudentID == matchedStudent.StudentID);
+                if (studentClassRecord == null) {
+                    return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
+                }
+
+                return Ok(new { message = "SUCCESS: Student classID retrieved", data = studentClassRecord.ClassID });
+            }
+        }   
+
         [HttpGet("get-student-leafs")]
         public IActionResult GetStudentLeafs([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -125,6 +144,7 @@ namespace Backend.Controllers {
                                 TaskID = task.TaskID,
                                 StudentID = matchedStudent.StudentID,
                                 TaskVerified = false,
+                                TaskRejected = false,
                                 VerificationPending = false,
                                 AssignedTeacherID = assignedTeacher.TeacherID,
                                 DateAssigned = DateTime.Now.ToString("yyyy-MM-dd")
@@ -265,6 +285,10 @@ namespace Backend.Controllers {
                     var selectedTaskProgress = taskProgress.OrderByDescending(tp => tp.DateAssigned).FirstOrDefault();
                     if (selectedTaskProgress == null) {
                         return NotFound(new { error = "ERROR: Task progress not found", data = taskProgress });
+                    }
+
+                    if (selectedTaskProgress.DateAssigned != DateTime.Now.ToString("yyyy-MM-dd")) {
+                        return BadRequest(new { error = "UERROR: Task expired. Please refresh the page" });
                     }
 
                     try {
@@ -495,6 +519,93 @@ namespace Backend.Controllers {
                     return BadRequest(new { error = "UERROR: You're already enrolled into a class" });
                 }
             }
+        }
+
+        [HttpGet("get-class-quests")]
+        public async Task<IActionResult> GetClassQuests([FromQuery] string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+               var matchedClass = _context.Classes.FirstOrDefault(c => c.ClassID == classID);
+                if (matchedClass == null) {
+                    return NotFound(new { error = "ERROR: Class not found" });
+                } else {
+                    var classQuestProgresses = _context.QuestProgresses.Where(qp => qp.ClassID == matchedClass.ClassID).ToList();
+                    var invalidQuestProgresses = classQuestProgresses.Where(qp => DateTime.Parse(qp.DateAssigned) < DateTime.Now.AddDays(-7)).ToList();
+                    var validQuestProgresses = classQuestProgresses.Where(qp => DateTime.Parse(qp.DateAssigned) >= DateTime.Now.AddDays(-7)).ToList();
+
+                    foreach (var questProgress in invalidQuestProgresses) {
+                        _context.QuestProgresses.Remove(questProgress);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    var questList = new List<dynamic>();
+                    
+                    if (validQuestProgresses.Count == 0 || validQuestProgresses.Count != 3) {
+                        var numberOfQuestsToRegenerate = 3 - validQuestProgresses.Count;
+                        var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, numberOfQuestsToRegenerate);
+
+                        foreach (var quest in validQuestProgresses) {
+                            var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
+                            if (foundQuest != null) {
+                                questList.Add(foundQuest);
+                            }
+                        }
+
+                        if (reccomendResponse != null) {
+                            foreach (var quest in reccomendResponse.result) {
+                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
+                                if (assignedTeacher == null) {
+                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
+                                }
+
+                                var questProgress = new QuestProgress {
+                                    QuestID = quest.QuestID,
+                                    ClassID = matchedClass.ClassID,
+                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                    AmountCompleted = 0,
+                                    Completed = false,
+                                    Quest = quest,
+                                    AssignedTeacherID = assignedTeacher.TeacherID,
+                                    AssignedTeacher = assignedTeacher
+                                };
+
+                                _context.QuestProgresses.Add(questProgress);
+
+                                questList.Add(new {
+                                    quest.QuestID,
+                                    quest.QuestTitle,
+                                    quest.QuestDescription,
+                                    quest.QuestPoints,
+                                    quest.QuestType,
+                                    quest.TotalAmountToComplete,
+                                    AmountCompleted = 0
+                                });
+
+                                _context.SaveChanges();
+                            }
+                        }
+                    } else {
+                        foreach (var quest in validQuestProgresses) {
+                            var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
+                            if (foundQuest != null) {
+                                var questProgress = await _context.QuestProgresses.Where(qp => qp.QuestID == foundQuest.QuestID && qp.ClassID == matchedClass.ClassID).ToListAsync();
+
+                                questList.Add(new {
+                                    foundQuest.QuestID,
+                                    foundQuest.QuestTitle,
+                                    foundQuest.QuestDescription,
+                                    foundQuest.QuestPoints,
+                                    foundQuest.QuestType,
+                                    foundQuest.TotalAmountToComplete,
+                                    AmountCompleted = questProgress.FirstOrDefault()?.AmountCompleted ?? 0
+                                });
+                            }
+                        }
+                    }
+                    return Ok(new { message = "SUCCESS: Class Quests retrieved", data = questList });
+                }
+            }   
         }
             
         [HttpPost("recognise-image")]

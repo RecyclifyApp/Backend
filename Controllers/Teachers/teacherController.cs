@@ -2,6 +2,7 @@ using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Backend.Controllers.Teachers {
     [ApiController]
@@ -61,7 +62,7 @@ namespace Backend.Controllers.Teachers {
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
                 if (classData == null) {
-                    return Ok( new {message = "SUCCESS: Class not found.", data = classData });
+                    return NotFound( new {message = "SUCCESS: Class not found.", data = classData });
                 }
 
                 return Ok(new { message = "SUCCESS: Class found.", data = classData });
@@ -96,8 +97,9 @@ namespace Backend.Controllers.Teachers {
             }
 
             try {
+                var classID = Utilities.GenerateUniqueID();
                 var newClass = new Class {
-                    ClassID = Utilities.GenerateUniqueID(),
+                    ClassID = classID,
                     ClassName = intClassName,
                     ClassDescription = classDescription,
                     ClassImage = "",
@@ -109,6 +111,31 @@ namespace Backend.Controllers.Teachers {
                 };
 
                 _context.Classes.Add(newClass);
+
+                var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, 3);
+
+                if (reccomendResponse != null) {
+                    foreach (var quest in reccomendResponse.result) {
+                        var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                        if (assignedTeacher == null) {
+                            return NotFound(new { error = "ERROR: Class's teacher not found" });
+                        }
+
+                        var questProgress = new QuestProgress {
+                            QuestID = quest.QuestID,
+                            ClassID = classID,
+                            DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                            AmountCompleted = 0,
+                            Completed = false,
+                            Quest = quest,
+                            AssignedTeacherID = assignedTeacher.TeacherID,
+                            AssignedTeacher = assignedTeacher
+                        };
+
+                        _context.QuestProgresses.Add(questProgress);
+                    }
+                }
+
                 _context.SaveChanges();
 
                 return Ok(new { message = "SUCCESS: Class created successfully." });
@@ -154,8 +181,8 @@ namespace Backend.Controllers.Teachers {
                 return BadRequest(new { error = "UERROR: Class name must be an integer." });
             }
 
-            // Check if other class with same name exists
-            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
+            // Check if other class with same name exists, must have different ID
+            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName && c.ClassID != classId);
             if (classExist != null) {
                 return BadRequest(new { error = "UERROR: Class already exists." });
             }
@@ -296,41 +323,147 @@ namespace Backend.Controllers.Teachers {
             }
         }
 
+        // Send Update Email to Recipient (Student / Parent)
+        [HttpPost("send-update-email")]
+        public async Task<IActionResult> SendUpdateEmail(
+            [FromQuery] List<string> recipients,
+            [FromQuery] string classID,
+            [FromQuery] string studentID,
+            [FromQuery] string studentEmail,
+            [FromQuery] string? parentID = null,
+            [FromQuery] string? parentEmail = null)
+        {
+            if (recipients == null || recipients.Count == 0 || string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Invalid recipients or class ID. Please provide valid recipients and class ID." });
+            }
+
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(studentEmail)) {
+                return BadRequest(new { error = "UERROR: Invalid student details. Please provide valid student details." });
+            }
+
+            if (recipients.Contains("parents") && (string.IsNullOrEmpty(parentID) || string.IsNullOrEmpty(parentEmail))) {
+                return BadRequest(new { error = "UERROR: Invalid parent details. Please provide valid parent details." });
+            }
+
+            // Fetch class, student, and parent (if selected) user details
+            var classDetails = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+            var student = await _context.Students
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.StudentID == studentID);
+            var parentUser = await _context.Parents
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.ParentID == parentID);
+
+            // Separate the recipients string by commas
+            recipients = [.. recipients[0].Split(',')];
+
+            if (classDetails == null) {
+                return NotFound(new { error = "ERROR: Class not found." });
+            }
+
+            if (student == null || student.User == null) {
+                return NotFound( new { error = "ERROR: Student not found." });
+            }
+
+            if (recipients.Contains("parents") && (parentUser == null || parentUser.User == null)) {
+                return NotFound(new { error = "ERROR: Parent not found." });
+            }
+
+            try {
+                var emailVars = new Dictionary<string, string> {
+                    { "studentName", student.User.Name },
+                    { "email", studentEmail },
+                    { "className", classDetails.ClassName.ToString() },
+                    { "totalPoints", student.TotalPoints.ToString() },
+                    { "currentPoints", student.CurrentPoints.ToString() },
+                    { "league", student.League ?? string.Empty },
+                    { "redemptions", student.Redemptions?.Count.ToString() ?? "0" }
+                };
+
+                if (parentUser != null && !string.IsNullOrEmpty(parentEmail)) {
+                    if (!string.IsNullOrEmpty(parentID)) {
+                        emailVars.Add("parentID", parentID);
+                    }
+                    if (!string.IsNullOrEmpty(parentEmail)) {
+                        emailVars.Add("parentEmail", parentEmail);
+                    }
+                    if (parentUser != null && parentUser.User != null) {
+                        emailVars.Add("parentName", parentUser.User.Name);
+                    }
+                }
+                
+                foreach (var recipient in recipients) {
+                    if (!string.IsNullOrEmpty(studentEmail) && recipient == "students") {
+                        try {
+                            await Emailer.SendEmailAsync(studentEmail, "Update from Recyclify", "StudentUpdateEmail", emailVars);
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(parentEmail) && recipient == "parents") {
+                        try {
+                            await Emailer.SendEmailAsync(parentEmail, "Update from Recyclify", "ParentUpdateEmail", emailVars);
+                        } catch (Exception ex) {
+                            return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                        }
+                    }
+                }
+
+                return Ok(new { message = "SUCCESS: Email sent successfully." });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
         // Get Tasks Waiting for Verification
-        [HttpGet("get-tasks-waiting-verification")]
-        public async Task<IActionResult> GetTasksWaitingVerification(string teacherID) {
+        [HttpGet("get-waiting-verified-rejected-tasks")]
+        public async Task<IActionResult> GetWaitingVerifiedRejectedTasks(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
                 return BadRequest( new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
             }
 
             try {
-                var tasksProgressRecords = await _context.TaskProgresses
+                var tasksWaitingVerification = await _context.TaskProgresses
                 .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == true && t.TaskVerified == false)
                 .ToListAsync();
 
-                if (tasksProgressRecords == null || tasksProgressRecords.Count == 0) {
-                    tasksProgressRecords = [];
-                    return Ok( new { message = "SUCCESS: No tasks found.", data = tasksProgressRecords });
-                }
+                var tasksVerified = await _context.TaskProgresses
+                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == false && t.TaskVerified == true)
+                .ToListAsync();
 
-                return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = tasksProgressRecords });
+                var tasksRejected = await _context.TaskProgresses
+                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == false && t.TaskRejected == true)
+                .ToListAsync();
+
+                var result = new {
+                    tasksWaitingVerification,
+                    tasksVerified,
+                    tasksRejected
+                };
+
+                return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = result });
 
             } catch (Exception ex) {
-                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
             }
         }
 
         // Verify Student Task Completion
         [HttpPut("verify-student-task")]
-        public async Task<IActionResult> VerifyStudentTask(string studentID, string taskID) {
-            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
-                return BadRequest( new { error = "UERROR: Invalid student or task ID. Please provide valid student and task ID." });
+        public async Task<IActionResult> VerifyStudentTask(string teacherID, string studentID, string taskID) {
+            if (string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
+                return BadRequest( new { error = "UERROR: Invalid teacher, student or task ID. Please provide valid teacher, student and task ID." });
             }
 
             var studentTaskProgressRecord = await _context.TaskProgresses.FirstOrDefaultAsync(st => st.StudentID == studentID && st.TaskID == taskID);
 
             if (studentTaskProgressRecord == null) {
                 return NotFound( new { error = "ERROR: Task completion record not found." });
+            }
+
+            if (studentTaskProgressRecord.AssignedTeacherID != teacherID) {
+                return BadRequest( new { error = "UERROR: You are not authorised to verify this task." });
             }
 
             if (studentTaskProgressRecord.VerificationPending == false || studentTaskProgressRecord.TaskVerified == true) {
@@ -350,6 +483,12 @@ namespace Backend.Controllers.Teachers {
                 var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
                 if (student == null) {
                     return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                var todayDatetimeString = DateTime.Now.ToString("yyyy-MM-dd");
+                var existingStudentPointsRecord = await _context.StudentPoints.FirstOrDefaultAsync(sp => sp.StudentID == studentID && sp.TaskID == taskID && sp.DateCompleted == todayDatetimeString);
+                if (existingStudentPointsRecord != null) {
+                    return BadRequest(new { error = "UERROR: Points already awarded for this task." });
                 }
 
                 student.CurrentPoints += taskObj.TaskPoints;
@@ -378,22 +517,56 @@ namespace Backend.Controllers.Teachers {
                 var associatedQuestProgress = await _context.QuestProgresses.FirstOrDefaultAsync(qp => qp.QuestID == associatedQuest.QuestID && qp.ClassID == studentClassRecord.ClassID);
 
                 if (associatedQuestProgress != null) {
-                    if (associatedQuestProgress.AmountCompleted + taskObj.QuestContributionAmountOnComplete == associatedQuest.TotalAmountToComplete) {
-                        associatedQuestProgress.AmountCompleted = associatedQuest.TotalAmountToComplete;
-                        associatedQuestProgress.Completed = true;
+                    if (DateTime.Parse(associatedQuestProgress.DateAssigned) >= DateTime.Now.AddDays(-7)) {
+                        if (associatedQuestProgress.AmountCompleted + taskObj.QuestContributionAmountOnComplete == associatedQuest.TotalAmountToComplete) {
+                            associatedQuestProgress.AmountCompleted = associatedQuest.TotalAmountToComplete;
+                            associatedQuestProgress.Completed = true;
 
-                        var addClassPoints = new ClassPoints {
-                            ClassID = studentClassRecord.ClassID,
-                            QuestID = associatedQuest.QuestID,
-                            PointsAwarded = associatedQuest.QuestPoints,
-                            DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
-                        };
+                            var existingClassPointsRecord = await _context.ClassPoints.FirstOrDefaultAsync(cp => cp.ClassID == studentClassRecord.ClassID && cp.QuestID == associatedQuest.QuestID && cp.DateCompleted == todayDatetimeString && cp.ContributingStudentID == studentID);
 
-                        _context.ClassPoints.Add(addClassPoints);
-                        _context.Quests.Update(associatedQuest);
+                            if (existingClassPointsRecord == null) {
+                                var addClassPoints = new ClassPoints {
+                                    ClassID = studentClassRecord.ClassID,
+                                    QuestID = associatedQuest.QuestID,
+                                    ContributingStudentID = studentID,
+                                    PointsAwarded = associatedQuest.QuestPoints,
+                                    DateCompleted = DateTime.Now.ToString("yyyy-MM-dd")
+                                };
+
+                                _context.ClassPoints.Add(addClassPoints);
+                                _context.Quests.Update(associatedQuest);
+                            }
+                        } else {
+                            associatedQuestProgress.AmountCompleted += taskObj.QuestContributionAmountOnComplete;
+                            _context.Quests.Update(associatedQuest);
+                        }
                     } else {
-                        associatedQuestProgress.AmountCompleted += taskObj.QuestContributionAmountOnComplete;
-                        _context.Quests.Update(associatedQuest);
+                        var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, associatedQuestProgress.ClassID, 1);
+
+                        _context.QuestProgresses.Remove(associatedQuestProgress);
+                        await _context.SaveChangesAsync();
+
+                        if (reccomendResponse != null) {
+                            foreach (var quest in reccomendResponse.result) {
+                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                                if (assignedTeacher == null) {
+                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
+                                }
+
+                                var questProgress = new QuestProgress {
+                                    QuestID = quest.QuestID,
+                                    ClassID = associatedQuestProgress.ClassID,
+                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                    AmountCompleted = taskObj.AssociatedQuestID == quest.QuestID ? taskObj.QuestContributionAmountOnComplete : 0,
+                                    Completed = false,
+                                    Quest = quest,
+                                    AssignedTeacherID = assignedTeacher.TeacherID,
+                                    AssignedTeacher = assignedTeacher
+                                };
+
+                                _context.QuestProgresses.Add(questProgress);
+                            }
+                        }
                     }
                 }
 
@@ -423,7 +596,206 @@ namespace Backend.Controllers.Teachers {
 
                 return Ok( new { message = "SUCCESS: Task verified successfully." });
             } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}"});
+            }
+        }
+
+        // Reject Student Task Completion
+        [HttpPut("reject-student-task")]
+        public async Task<IActionResult> RejectStudentTask(string teacherID, string studentID, string taskID, string rejectionReason) {
+            if (string.IsNullOrEmpty(teacherID) || string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(taskID)) {
+                return BadRequest( new { error = "UERROR: Invalid teacher, student or task ID. Please provide valid teacher, student and task ID." });
+            }
+
+            var studentTaskProgressRecord = await _context.TaskProgresses.FirstOrDefaultAsync(st => st.StudentID == studentID && st.TaskID == taskID);
+
+            if (studentTaskProgressRecord == null) {
+                return NotFound( new { error = "ERROR: Task completion record not found." });
+            }
+
+            if (studentTaskProgressRecord.AssignedTeacherID != teacherID) {
+                return BadRequest( new { error = "UERROR: You are not authorised to reject this task." });
+            }
+
+            if (studentTaskProgressRecord.VerificationPending == false || studentTaskProgressRecord.TaskRejected == true) {
+                return BadRequest( new { error = "UERROR: Task is not pending verification or has already been rejected." });
+            }
+
+            try {
+                var taskObj = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskID);
+                if (taskObj == null) {
+                    return NotFound(new { error = "ERROR: Task not found." });
+                }
+
+                studentTaskProgressRecord.TaskRejected = true;
+                studentTaskProgressRecord.VerificationPending = false;
+                _context.TaskProgresses.Update(studentTaskProgressRecord);
+
+                var studentInboxMessage = new Inbox {
+                    UserID = studentID,
+                    Message = $"Your recent task: {taskObj.TaskTitle} has been rejected. Please try again.",
+                };
+
+                _context.Inboxes.Add(studentInboxMessage);
+
+                await _context.SaveChangesAsync();
+
+                var studentUser = _context.Users.FirstOrDefault(u => u.Id == studentID);
+                if (studentUser == null) {
+                    return NotFound(new { error = "ERROR: Student user not found." });
+                }
+                var studentUsername = studentUser.Name;
+                var studentEmail = studentUser.Email;
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", studentUsername },
+                    { "taskTitle", taskObj.TaskTitle },
+                    { "rejectionReason", rejectionReason }
+                };
+
+                await Emailer.SendEmailAsync(studentEmail, $"Your task: {taskObj.TaskTitle} has been rejected.", "SuccessfulTaskRejection", emailVars);
+
+                return Ok( new { message = "SUCCESS: Task rejected successfully." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
+            }
+        }
+        
+        // Get Class Points
+        [HttpGet("get-class-points")]
+        public async Task<IActionResult> GetClassPoints(string classID) {
+            if (string.IsNullOrEmpty(classID)) {
+                return BadRequest(new { error = "UERROR: Invalid class ID. Please provide a valid class ID." });
+            }
+
+            try {
+                // Get today's date and the date 7 days ago
+                DateTime today = DateTime.UtcNow.Date;
+                DateTime sevenDaysAgo = today.AddDays(-6); // To include today as the 7th day
+
+                // Fetch class points from the last 7 days
+                var classPointsRaw = await _context.ClassPoints
+                    .Where(cp => cp.ClassID == classID)
+                    .OrderBy(cp => cp.DateCompleted) // Sort in ascending order for better mapping
+                    .ToListAsync();
+
+                // Initialize a dictionary with 7 days (default value is 0)
+                var classPointsDict = Enumerable.Range(0, 7)
+                    .ToDictionary(offset => sevenDaysAgo.AddDays(offset), _ => 0);
+
+                // Filter the records in-memory based on DateCompleted string
+                foreach (var record in classPointsRaw) {
+                    if (DateTime.TryParse(record.DateCompleted, out DateTime recordDate) && 
+                        recordDate >= sevenDaysAgo && recordDate <= today) {
+                        recordDate = recordDate.Date;
+                        if (classPointsDict.ContainsKey(recordDate)) {
+                            classPointsDict[recordDate] += record.PointsAwarded;
+                        }
+                    }
+                }
+
+                // Convert to list format for response
+                var classPoints = classPointsDict
+                    .OrderBy(entry => entry.Key) // Ensure chronological order
+                    .Select(entry => new { date = entry.Key.ToString("yyyy-MM-dd"), points = entry.Value })
+                    .ToList();
+
+                return Ok(new { message = "SUCCESS: Class points found.", data = classPoints });
+            } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
+            }
+        }
+
+        // Re-generate Class Quests
+        [HttpPost("regenerate-class-quests")]
+        public async Task<IActionResult> RegenerateClassQuests([FromForm] string classID, [FromForm] string teacherID) {
+            if (string.IsNullOrEmpty(classID) || string.IsNullOrEmpty(teacherID)) {
+                return BadRequest(new { error = "UERROR: Invalid class ID or teacher ID. Please provide a valid class ID or teacher ID." });
+            }
+
+            var matchedClass = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
+            if (matchedClass == null) {
+                return NotFound(new { error = "ERROR: Class not found." });
+            }
+
+            if (teacherID != matchedClass.TeacherID) {
+                return BadRequest(new { error = "UERROR: You are not authorised to regenerate quests for this class." });
+            }
+
+            try {
+                var classQuests = _context.QuestProgresses
+                    .Where(qp => qp.ClassID == classID)
+                    .AsEnumerable()
+                    .Where(qp => DateTime.Parse(qp.DateAssigned) >= DateTime.Now.AddDays(-7))
+                    .ToList();
+
+                var completedClassQuests = classQuests.Where(qp => qp.Completed == true).ToList();
+                var uncompletedClassQuests = classQuests.Where(qp => qp.Completed == false).ToList();
+
+                if (uncompletedClassQuests != null && uncompletedClassQuests.Count > 0) {
+                    var noOfQuestsToRegenerate = uncompletedClassQuests.Count;
+                    _context.QuestProgresses.RemoveRange(uncompletedClassQuests);
+
+                    var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, noOfQuestsToRegenerate);
+
+                    var updatedSetOfQuestProgresses = new List<QuestProgress>();
+                    var updatedSetOfQuests = new List<dynamic>();
+
+                    foreach(var quest in completedClassQuests) {
+                        updatedSetOfQuests.Add(new {
+                            quest.Quest.QuestID,
+                            quest.Quest.QuestTitle,
+                            quest.Quest.QuestDescription,
+                            quest.Quest.QuestPoints,
+                            quest.Quest.QuestType,
+                            quest.Quest.TotalAmountToComplete,
+                            AmountCompleted = quest.Quest.TotalAmountToComplete,
+                        });
+                    }
+
+                    if (reccomendResponse != null) {
+                        var reccomendedQuests = reccomendResponse.result;
+                        foreach (var quest in reccomendedQuests) {
+                            var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                            if (assignedTeacher == null) {
+                                return NotFound(new { error = "ERROR: Class's teacher not found" });
+                            }
+
+                            var questProgress = new QuestProgress {
+                                QuestID = quest.QuestID,
+                                ClassID = classID,
+                                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                AmountCompleted = 0,
+                                Completed = false,
+                                Quest = quest,
+                                AssignedTeacherID = assignedTeacher.TeacherID,
+                                AssignedTeacher = assignedTeacher
+                            };
+
+                            updatedSetOfQuestProgresses.Add(questProgress);
+
+                            updatedSetOfQuests.Add(new {
+                                quest.QuestID,
+                                quest.QuestTitle,
+                                quest.QuestDescription,
+                                quest.QuestPoints,
+                                quest.QuestType,
+                                quest.TotalAmountToComplete,
+                                AmountCompleted = 0,
+                            });
+
+                            _context.QuestProgresses.Add(questProgress);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { message = "SUCCESS: Quests regenerated successfully.", data = updatedSetOfQuests });
+                } else {
+                    return BadRequest(new { message = "UERROR: All quests completed. Please wait for the next week to receive new quests" });
+                }
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
             }
         }
     }
