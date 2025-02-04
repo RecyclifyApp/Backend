@@ -18,7 +18,17 @@ namespace Backend.Services {
             }
 
             if (!completedQuests.Any()) {
-                return null;
+                var randomQuests = allQuests.OrderBy(q => Guid.NewGuid()).Take(numberOfQuests).ToList();
+
+                var emptyQuestStatistics = new {
+                    Recycling = 0,
+                    Energy = 0,
+                    Environment = 0
+                };
+
+                Console.WriteLine("Random 3 Quests: " + string.Join(", ", randomQuests.Select(q => q.QuestTitle)));
+
+                return new { completedQuestStatistics = emptyQuestStatistics, result = randomQuests };   
             }
 
             var questTypeFrequency = completedQuests
@@ -48,6 +58,8 @@ namespace Backend.Services {
                     similarQuests.Add(quest);
                 }
             }
+
+            Console.WriteLine($"Found {similarQuests.Count} similar quests: {string.Join(", ", similarQuests.Select(q => q.QuestTitle))}");
 
             var similarQuestIds = new HashSet<string>(similarQuests.Select(q => q.QuestID));
             var recommendedQuests = new List<Quest>();

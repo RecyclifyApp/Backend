@@ -526,9 +526,6 @@ namespace Backend.Controllers {
                         var numberOfQuestsToRegenerate = 3 - validQuestProgresses.Count;
                         var reccomendResponse = await RecommendationsManager.RecommendQuestsAsync(_context, classID, numberOfQuestsToRegenerate);
 
-                        var fallbackQuests = await _context.Quests.ToListAsync();
-                        fallbackQuests = fallbackQuests.OrderBy(r => Guid.NewGuid()).Take(numberOfQuestsToRegenerate).ToList();
-
                         foreach (var quest in validQuestProgresses) {
                             var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
                             if (foundQuest != null) {
@@ -538,28 +535,6 @@ namespace Backend.Controllers {
 
                         if (reccomendResponse != null) {
                             foreach (var quest in reccomendResponse.result) {
-                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
-                                if (assignedTeacher == null) {
-                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
-                                }
-
-                                var questProgress = new QuestProgress {
-                                    QuestID = quest.QuestID,
-                                    ClassID = matchedClass.ClassID,
-                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
-                                    AmountCompleted = 0,
-                                    Completed = false,
-                                    Quest = quest,
-                                    AssignedTeacherID = assignedTeacher.TeacherID,
-                                    AssignedTeacher = assignedTeacher
-                                };
-
-                                _context.QuestProgresses.Add(questProgress);
-                                questList.Add(quest);
-                                _context.SaveChanges();
-                            }
-                        } else {
-                            foreach (var quest in fallbackQuests) {
                                 var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
                                 if (assignedTeacher == null) {
                                     return NotFound(new { error = "ERROR: Class's teacher not found" });
