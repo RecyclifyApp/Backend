@@ -46,6 +46,8 @@ namespace Backend.Controllers.Identity {
             return tokenHandler.WriteToken(token);
         }
 
+        
+
         [HttpGet("getUserDetails")]
         [Authorize]
         public IActionResult GetUserDetails() {
@@ -429,6 +431,50 @@ namespace Backend.Controllers.Identity {
             } catch (Exception ex) {
                 Logger.Log($"[ERROR] IDENTITY CHANGEPASSWORD: Error changing password for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while changing the password.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("editAvatar")]
+        [Authorize]
+        public async Task<IActionResult> EditAvatar(IFormFile file) {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (file == null || file.Length == 0) {
+                return BadRequest("Invalid file. Please upload a valid file.");
+            }
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Delete old avatar if exists
+                if (!string.IsNullOrEmpty(user.Avatar)) {
+                    await AssetsManager.DeleteFileAsync(user.Avatar);
+                }
+
+                // Upload new avatar
+                var uploadAvatarResult = await AssetsManager.UploadFileAsync(file);
+                if (uploadAvatarResult.StartsWith("ERROR")) {
+                    return StatusCode(500, uploadAvatarResult);
+                }
+
+                // Save the filename in the database
+                user.Avatar = file.FileName;
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                // Get the file URL
+                string getAvatarResult = await AssetsManager.GetFileUrlAsync(user.Avatar);
+                string avatarUrl = getAvatarResult.StartsWith("SUCCESS: ") ? getAvatarResult.Substring(9) : getAvatarResult;
+
+                Logger.Log($"[SUCCESS] USER EDITAVATAR: User {user.Id} updated avatar successfully.");
+
+                return Ok(new { message = "SUCCESS: Avatar updated successfully.", avatarUrl });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER EDITAVATAR: Error updating avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while updating the avatar.", details = ex.Message });
             }
         }
 
