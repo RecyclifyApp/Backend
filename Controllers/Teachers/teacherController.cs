@@ -62,7 +62,7 @@ namespace Backend.Controllers.Teachers {
             try {
                 var classData = await _context.Classes.FirstOrDefaultAsync(c => c.ClassID == classID);
                 if (classData == null) {
-                    return Ok( new {message = "SUCCESS: Class not found.", data = classData });
+                    return NotFound( new {message = "SUCCESS: Class not found.", data = classData });
                 }
 
                 return Ok(new { message = "SUCCESS: Class found.", data = classData });
@@ -181,8 +181,8 @@ namespace Backend.Controllers.Teachers {
                 return BadRequest(new { error = "UERROR: Class name must be an integer." });
             }
 
-            // Check if other class with same name exists
-            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
+            // Check if other class with same name exists, must have different ID
+            var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName && c.ClassID != classId);
             if (classExist != null) {
                 return BadRequest(new { error = "UERROR: Class already exists." });
             }

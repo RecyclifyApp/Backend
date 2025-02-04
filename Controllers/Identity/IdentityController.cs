@@ -46,6 +46,74 @@ namespace Backend.Controllers.Identity {
             return tokenHandler.WriteToken(token);
         }
 
+        [HttpGet("getAvatar")]
+        public async Task<IActionResult> GetAvatar([FromQuery] string userId) {
+            try {
+                if (string.IsNullOrEmpty(userId)) {
+                    return BadRequest(new { error = "ERROR: User ID is required." });
+                }
+
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.Avatar)) {
+                    return NotFound(new { error = "ERROR: User has no avatar set." });
+                }
+
+                // Construct the full file name using the naming convention
+                string fullFileName = $"{userId}_Avatar_{user.Avatar}";
+                string result = await AssetsManager.GetFileUrlAsync(fullFileName);
+
+                if (result.StartsWith("ERROR")) {
+                    return StatusCode(500, new { error = result });
+                }
+
+                // Remove "SUCCESS: " prefix from the response
+                string avatarUrl = result.StartsWith("SUCCESS: ") ? result.Substring(9) : result;
+
+                return Ok(new { avatarUrl });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] GETAVATAR: Error retrieving avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the avatar.", details = ex.Message });
+            }
+        }
+
+        [HttpGet("getBanner")]
+        public async Task<IActionResult> GetBanner([FromQuery] string userId) {
+            try {
+                if (string.IsNullOrEmpty(userId)) {
+                    return BadRequest(new { error = "ERROR: User ID is required." });
+                }
+
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.Banner)) {
+                    return NotFound(new { error = "ERROR: User has no banner set." });
+                }
+
+                // Construct the full file name using the naming convention
+                string fullFileName = $"{userId}_Banner_{user.Banner}";
+                string result = await AssetsManager.GetFileUrlAsync(fullFileName);
+
+                if (result.StartsWith("ERROR")) {
+                    return StatusCode(500, new { error = result });
+                }
+
+                // Remove "SUCCESS: " prefix from the response
+                string bannerUrl = result.StartsWith("SUCCESS: ") ? result.Substring(9) : result;
+
+                return Ok(new { bannerUrl });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] GETBANNER: Error retrieving banner for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the banner.", details = ex.Message });
+            }
+        }
+
         [HttpGet("getUserDetails")]
         [Authorize]
         public IActionResult GetUserDetails() {
@@ -101,11 +169,16 @@ namespace Backend.Controllers.Identity {
                 // Return user details
                 return Ok(new {
                     user.Id,
+                    user.AboutMe,
                     user.Name,
+                    user.FName,
+                    user.LName,
                     user.Email,
+                    user.ContactNumber,
                     user.EmailVerified,
                     user.UserRole,
-                    user.Avatar
+                    user.Avatar,
+                    user.Banner
                 });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = "ERROR: An error occurred while retrieving user details.", details = ex.Message });
@@ -152,7 +225,6 @@ namespace Backend.Controllers.Identity {
                     { "Password", request.Password },
                     { "ContactNumber", request.ContactNumber },
                     { "UserRole", request.UserRole },
-                    { "Avatar", request.Avatar }
                 }
             };
 
@@ -234,6 +306,9 @@ namespace Backend.Controllers.Identity {
                 }
 
                 var name = string.IsNullOrWhiteSpace(request.Name) ? user.Name : request.Name.Trim();
+                var fname = string.IsNullOrWhiteSpace(request.FName) ? user.FName : request.FName.Trim();
+                var lname = string.IsNullOrWhiteSpace(request.LName) ? user.LName : request.LName.Trim();
+                var aboutMe = string.IsNullOrWhiteSpace(request.AboutMe) ? user.AboutMe : request.AboutMe.Trim();
 
                 // Validate email only if it has changed
                 var email = user.Email; // Default to the current email
@@ -248,6 +323,9 @@ namespace Backend.Controllers.Identity {
                 }
 
                 user.Name = name;
+                user.FName = fname;
+                user.LName = lname;
+                user.AboutMe = aboutMe;
                 user.Email = email;
                 user.ContactNumber = contactNumber;
 
@@ -262,7 +340,7 @@ namespace Backend.Controllers.Identity {
 
         [HttpDelete("deleteAccount")]
         [Authorize]
-        public IActionResult DeleteAccount() {
+        public IActionResult DeleteAccount([FromBody] DeleteAccountRequest request) {
             // Extract the user ID from the token claims
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -273,9 +351,14 @@ namespace Backend.Controllers.Identity {
                     return NotFound(new { error = "ERROR: User not found." });
                 }
 
-                // Remove the user from the database
-                _context.Users.Remove(user);
-                _context.SaveChanges();
+                var password = Utilities.HashString(request.Password);
+                if (user.Password != password) {
+                    return BadRequest(new { error = "UERROR: Incorrect password." });
+                } else {
+                    // Remove the user from the database
+                    _context.Users.Remove(user);
+                    _context.SaveChanges();
+                }
 
                 Logger.Log($"[SUCCESS] IDENTITY DELETEACCOUNT: User {user.Id} deleted.");
 
@@ -388,6 +471,216 @@ namespace Backend.Controllers.Identity {
             }
         }
 
+        [HttpPost("changePassword")]
+        [Authorize]
+        public IActionResult ChangePassword([FromBody] ChangePasswordRequest request) {
+            // Extract the user ID from the token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Compare the old password with the stored password
+                var hashedOldPassword = Utilities.HashString(request.OldPassword);
+                if (user.Password != hashedOldPassword) {
+                    return BadRequest(new { error = "UERROR: Incorrect password." });
+                }
+
+                // Hash the new password and update the user's password
+                var hashedNewPassword = Utilities.HashString(request.NewPassword);
+                user.Password = hashedNewPassword;
+
+                // Save the changes to the database
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                Logger.Log($"[SUCCESS] IDENTITY CHANGEPASSWORD: User {user.Id} changed password successfully.");
+
+                return Ok(new { message = "SUCCESS: Password changed successfully." });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY CHANGEPASSWORD: Error changing password for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while changing the password.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("editAvatar")]
+        [Authorize]
+        public async Task<IActionResult> EditAvatar(IFormFile file) {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (file == null || file.Length == 0) {
+                return BadRequest("Invalid file. Please upload a valid file.");
+            }
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Generate new file name
+                string newFileName = $"{userId}_Avatar_{file.FileName}";
+
+                // Copy file to a memory stream with new filename
+                using (var memoryStream = new MemoryStream()) {
+                    await file.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0; // Reset position before uploading
+
+                    // Create new IFormFile with the modified filename
+                    var renamedFile = new FormFile(memoryStream, 0, file.Length, file.Name, newFileName) {
+                        Headers = file.Headers,
+                        ContentType = file.ContentType
+                    };
+
+                    // Upload the renamed file
+                    var uploadAvatarResult = await AssetsManager.UploadFileAsync(renamedFile);
+                    if (uploadAvatarResult.StartsWith("ERROR")) {
+                        return StatusCode(500, uploadAvatarResult);
+                    }
+
+                    // Save the filename in the database
+                    user.Avatar = file.FileName;
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+
+                    // Get the file URL
+                    string getAvatarResult = await AssetsManager.GetFileUrlAsync(newFileName);
+                    string avatarUrl = getAvatarResult.StartsWith("SUCCESS: ") ? getAvatarResult.Substring(9) : getAvatarResult;
+
+                    return Ok(new { message = "SUCCESS: Avatar updated successfully.", avatarUrl });
+                } 
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER EDITAVATAR: Error updating avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while updating the avatar.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("removeAvatar")]
+        [Authorize]
+        public async Task<IActionResult> RemoveAvatar() {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Check if the user has an avatar
+                if (string.IsNullOrEmpty(user.Avatar)) {
+                    return BadRequest(new { error = "ERROR: No avatar to remove." });
+                }
+
+                // Delete the avatar file from the storage
+                string fullFileName = $"{userId}_Avatar_{user.Avatar}";
+                var deleteResult = await AssetsManager.DeleteFileAsync(fullFileName);
+                if (deleteResult.StartsWith("ERROR")) {
+                    return StatusCode(500, deleteResult);
+                }
+
+                // Remove the avatar from the user in the database
+                user.Avatar = null;
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Avatar removed successfully." });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER REMOVEAVATAR: Error removing avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while removing the avatar.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("editBanner")]
+        [Authorize]
+        public async Task<IActionResult> EditBanner(IFormFile file) {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (file == null || file.Length == 0) {
+                return BadRequest("Invalid file. Please upload a valid file.");
+            }
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Generate new file name
+                string newFileName = $"{userId}_Banner_{file.FileName}";
+
+                // Copy file to a memory stream with new filename
+                using (var memoryStream = new MemoryStream()) {
+                    await file.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0; // Reset position before uploading
+
+                    // Create new IFormFile with the modified filename
+                    var renamedFile = new FormFile(memoryStream, 0, file.Length, file.Name, newFileName) {
+                        Headers = file.Headers,
+                        ContentType = file.ContentType
+                    };
+
+                    // Upload the renamed file
+                    var uploadBannerResult = await AssetsManager.UploadFileAsync(renamedFile);
+                    if (uploadBannerResult.StartsWith("ERROR")) {
+                        return StatusCode(500, uploadBannerResult);
+                    }
+
+                    // Save the filename in the database
+                    user.Banner = file.FileName;
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+
+                    // Get the file URL
+                    string getBannerResult = await AssetsManager.GetFileUrlAsync(newFileName);
+                    string bannerUrl = getBannerResult.StartsWith("SUCCESS: ") ? getBannerResult.Substring(9) : getBannerResult;
+
+                    return Ok(new { message = "SUCCESS: Banner updated successfully.", bannerUrl });
+                } 
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER EDITAVATAR: Error updating avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while updating the avatar.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("removeBanner")]
+        [Authorize]
+        public async Task<IActionResult> RemoveBanner() {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Check if the user has an banner
+                if (string.IsNullOrEmpty(user.Banner)) {
+                    return BadRequest(new { error = "ERROR: No banner to remove." });
+                }
+
+                // Delete the banner file from the storage
+                string fullFileName = $"{userId}_Banner_{user.Banner}";
+                var deleteResult = await AssetsManager.DeleteFileAsync(fullFileName);
+                if (deleteResult.StartsWith("ERROR")) {
+                    return StatusCode(500, deleteResult);
+                }
+
+                // Remove the banner from the user in the database
+                user.Banner = null;
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Banner removed successfully." });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER REMOVEBANNER: Error removing banner for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while removing the banner.", details = ex.Message });
+            }
+        }
+
         public class VerifyCodeRequest {
             public required string Code { get; set; }
         }
@@ -405,15 +698,25 @@ namespace Backend.Controllers.Identity {
             public required string Password { get; set; }
             public required string ContactNumber { get; set; }
             public required string UserRole { get; set; }
-            public required string Avatar { get; set; }
             public string? StudentID { get; set; } 
-            // public string? ClassID { get; set; } 
         }
 
         public class EditAccountRequest {
             public string? Name { get; set; }
+            public string? FName { get; set; }
+            public string? LName { get; set; }
+            public string? AboutMe { get; set; }
             public string? Email { get; set; }
             public string? ContactNumber { get; set; }
+        }
+
+        public class DeleteAccountRequest {
+            public required string Password { get; set; }
+        }
+
+        public class ChangePasswordRequest {
+            public required string OldPassword { get; set; }
+            public required string NewPassword { get; set; }
         }
     }
 }
