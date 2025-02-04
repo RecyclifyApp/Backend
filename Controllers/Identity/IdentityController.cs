@@ -561,7 +561,7 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("editBanner")]
         [Authorize]
-        public async Task<IActionResult> editBanner(IFormFile file) {
+        public async Task<IActionResult> EditBanner(IFormFile file) {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (file == null || file.Length == 0) {
@@ -608,6 +608,41 @@ namespace Backend.Controllers.Identity {
             } catch (Exception ex) {
                 Logger.Log($"[ERROR] USER EDITAVATAR: Error updating avatar for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while updating the avatar.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("removeBanner")]
+        [Authorize]
+        public async Task<IActionResult> RemoveBanner() {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Check if the user has an banner
+                if (string.IsNullOrEmpty(user.Banner)) {
+                    return BadRequest(new { error = "ERROR: No banner to remove." });
+                }
+
+                // Delete the banner file from the storage
+                string fullFileName = $"{userId}_Banner_{user.Banner}";
+                var deleteResult = await AssetsManager.DeleteFileAsync(fullFileName);
+                if (deleteResult.StartsWith("ERROR")) {
+                    return StatusCode(500, deleteResult);
+                }
+
+                // Remove the banner from the user in the database
+                user.Banner = null;
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Banner removed successfully." });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER REMOVEBANNER: Error removing banner for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while removing the banner.", details = ex.Message });
             }
         }
 
