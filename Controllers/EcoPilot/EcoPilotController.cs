@@ -10,7 +10,7 @@ public class EcoPilotController : ControllerBase
     {
         if (string.IsNullOrEmpty(request.UserPrompt))
         {
-            return BadRequest("User prompt is required.");
+           return BadRequest(new { error = "UERROR: User Prompt is required" });
         }
 
         var api = new OpenAIChatService();
