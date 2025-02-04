@@ -7,7 +7,7 @@ namespace Backend.Models {
         public required string Name { get; set; }
         public required string FName { get; set; }
         public required string LName { get; set; }
-        public string? AboutMe { get; set; }
+        public string AboutMe { get; set; } = "";
         public required string Email { get; set; }
         public required string Password { get; set; }
         public required string ContactNumber { get; set; }
