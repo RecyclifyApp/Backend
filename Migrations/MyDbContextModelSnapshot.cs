@@ -75,6 +75,10 @@ namespace Backend.Migrations
                     b.Property<string>("DateCompleted")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("ContributingStudentID")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<int>("PointsAwarded")
                         .HasColumnType("int");
 
@@ -469,7 +473,13 @@ namespace Backend.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("AboutMe")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Avatar")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Banner")
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactNumber")
