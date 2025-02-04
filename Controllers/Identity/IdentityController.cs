@@ -177,7 +177,8 @@ namespace Backend.Controllers.Identity {
                     user.ContactNumber,
                     user.EmailVerified,
                     user.UserRole,
-                    user.Avatar
+                    user.Avatar,
+                    user.Banner
                 });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = "ERROR: An error occurred while retrieving user details.", details = ex.Message });
