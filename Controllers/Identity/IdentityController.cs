@@ -46,7 +46,39 @@ namespace Backend.Controllers.Identity {
             return tokenHandler.WriteToken(token);
         }
 
-        
+        [HttpGet("getAvatar")]
+        public async Task<IActionResult> GetAvatar([FromQuery] string userId) {
+            try {
+                if (string.IsNullOrEmpty(userId)) {
+                    return BadRequest(new { error = "ERROR: User ID is required." });
+                }
+
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.Avatar)) {
+                    return NotFound(new { error = "ERROR: User has no avatar set." });
+                }
+
+                // Construct the full file name using the naming convention
+                string fullFileName = $"{userId}_Avatar_{user.Avatar}";
+                string result = await AssetsManager.GetFileUrlAsync(fullFileName);
+
+                if (result.StartsWith("ERROR")) {
+                    return StatusCode(500, new { error = result });
+                }
+
+                // Remove "SUCCESS: " prefix from the response
+                string avatarUrl = result.StartsWith("SUCCESS: ") ? result.Substring(9) : result;
+
+                return Ok(new { avatarUrl });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] GETAVATAR: Error retrieving avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the avatar.", details = ex.Message });
+            }
+        }
 
         [HttpGet("getUserDetails")]
         [Authorize]
@@ -449,29 +481,39 @@ namespace Backend.Controllers.Identity {
                     return NotFound(new { error = "ERROR: User not found." });
                 }
 
-                // Delete old avatar if exists
-                if (!string.IsNullOrEmpty(user.Avatar)) {
-                    await AssetsManager.DeleteFileAsync(user.Avatar);
-                }
+                // Generate new file name
+                string newFileName = $"{userId}_Avatar_{file.FileName}";
 
-                // Upload new avatar
-                var uploadAvatarResult = await AssetsManager.UploadFileAsync(file);
-                if (uploadAvatarResult.StartsWith("ERROR")) {
-                    return StatusCode(500, uploadAvatarResult);
-                }
+                // Copy file to a memory stream with new filename
+                using (var memoryStream = new MemoryStream()) {
+                    await file.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0; // Reset position before uploading
 
-                // Save the filename in the database
-                user.Avatar = file.FileName;
-                _context.Users.Update(user);
-                _context.SaveChanges();
+                    // Create new IFormFile with the modified filename
+                    var renamedFile = new FormFile(memoryStream, 0, file.Length, file.Name, newFileName) {
+                        Headers = file.Headers,
+                        ContentType = file.ContentType
+                    };
 
-                // Get the file URL
-                string getAvatarResult = await AssetsManager.GetFileUrlAsync(user.Avatar);
-                string avatarUrl = getAvatarResult.StartsWith("SUCCESS: ") ? getAvatarResult.Substring(9) : getAvatarResult;
+                    // Upload the renamed file
+                    var uploadAvatarResult = await AssetsManager.UploadFileAsync(renamedFile);
+                    if (uploadAvatarResult.StartsWith("ERROR")) {
+                        return StatusCode(500, uploadAvatarResult);
+                    }
 
-                Logger.Log($"[SUCCESS] USER EDITAVATAR: User {user.Id} updated avatar successfully.");
+                    // Save the filename in the database
+                    user.Avatar = file.FileName;
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
 
-                return Ok(new { message = "SUCCESS: Avatar updated successfully.", avatarUrl });
+                    // Get the file URL
+                    string getAvatarResult = await AssetsManager.GetFileUrlAsync(newFileName);
+                    string avatarUrl = getAvatarResult.StartsWith("SUCCESS: ") ? getAvatarResult.Substring(9) : getAvatarResult;
+
+                    Logger.Log($"[SUCCESS] USER EDITAVATAR: User {user.Id} updated avatar successfully.");
+
+                    return Ok(new { message = "SUCCESS: Avatar updated successfully.", avatarUrl });
+                } 
             } catch (Exception ex) {
                 Logger.Log($"[ERROR] USER EDITAVATAR: Error updating avatar for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while updating the avatar.", details = ex.Message });
