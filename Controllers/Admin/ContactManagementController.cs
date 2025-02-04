@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Backend.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Google.Api;
 
 namespace Backend.Controllers
 {
@@ -29,6 +33,7 @@ namespace Backend.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                return Ok(new { message = "SUCCESS: Contact form marked as replied" });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -38,8 +43,40 @@ namespace Backend.Controllers
                 }
                 throw;
             }
+        }
 
-            return Ok(new { message = "SUCCESS: Contact form marked as replied" });
+        [HttpPost("{id}/send-email")]
+        public async Task<IActionResult> SendEmail(int id, [FromBody] EmailRequest emailRequest)
+        {
+            var contactForm = await _context.ContactForms.FindAsync(id);
+            if (contactForm == null)
+            {
+                return NotFound(new { error = "ERROR: Contact form not found" });
+            }
+
+            string to = contactForm.SenderEmail;
+            string subject = emailRequest.Subject;
+            string template = "contact_replied";
+            var variables = new Dictionary<string, string>
+    {
+        { "Name", contactForm.SenderName },
+        { "Message", emailRequest.Body }
+    };
+
+            var emailResult = await Emailer.SendEmailAsync(to, subject, template, variables);
+
+            if (emailResult.StartsWith("ERROR"))
+            {
+                return BadRequest(new { error = emailResult });
+            }
+
+            return Ok(new { message = "SUCCESS: Email sent successfully" });
+        }
+
+        public class EmailRequest
+        {
+            public required string Subject { get; set; }
+            public required string Body { get; set; }
         }
     }
 }
