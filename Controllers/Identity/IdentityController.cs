@@ -527,6 +527,43 @@ namespace Backend.Controllers.Identity {
             }
         }
 
+        [HttpPost("removeAvatar")]
+        [Authorize]
+        public async Task<IActionResult> RemoveAvatar() {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Check if the user has an avatar
+                if (string.IsNullOrEmpty(user.Avatar)) {
+                    return BadRequest(new { error = "ERROR: No avatar to remove." });
+                }
+
+                // Delete the avatar file from the storage
+                string fullFileName = $"{userId}_Avatar_{user.Avatar}";
+                var deleteResult = await AssetsManager.DeleteFileAsync(fullFileName);
+                if (deleteResult.StartsWith("ERROR")) {
+                    return StatusCode(500, deleteResult);
+                }
+
+                // Remove the avatar from the user in the database
+                user.Avatar = null;
+                _context.Users.Update(user);
+                _context.SaveChanges();
+
+                Logger.Log($"[SUCCESS] USER REMOVEAVATAR: User {user.Id} removed avatar successfully.");
+
+                return Ok(new { message = "SUCCESS: Avatar removed successfully." });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER REMOVEAVATAR: Error removing avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while removing the avatar.", details = ex.Message });
+            }
+        }
+
         public class VerifyCodeRequest {
             public required string Code { get; set; }
         }
