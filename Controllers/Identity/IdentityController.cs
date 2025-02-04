@@ -190,7 +190,6 @@ namespace Backend.Controllers.Identity {
                     { "Password", request.Password },
                     { "ContactNumber", request.ContactNumber },
                     { "UserRole", request.UserRole },
-                    { "Avatar", request.Avatar }
                 }
             };
 
@@ -517,8 +516,6 @@ namespace Backend.Controllers.Identity {
                     string getAvatarResult = await AssetsManager.GetFileUrlAsync(newFileName);
                     string avatarUrl = getAvatarResult.StartsWith("SUCCESS: ") ? getAvatarResult.Substring(9) : getAvatarResult;
 
-                    Logger.Log($"[SUCCESS] USER EDITAVATAR: User {user.Id} updated avatar successfully.");
-
                     return Ok(new { message = "SUCCESS: Avatar updated successfully.", avatarUrl });
                 } 
             } catch (Exception ex) {
@@ -555,12 +552,62 @@ namespace Backend.Controllers.Identity {
                 _context.Users.Update(user);
                 _context.SaveChanges();
 
-                Logger.Log($"[SUCCESS] USER REMOVEAVATAR: User {user.Id} removed avatar successfully.");
-
                 return Ok(new { message = "SUCCESS: Avatar removed successfully." });
             } catch (Exception ex) {
                 Logger.Log($"[ERROR] USER REMOVEAVATAR: Error removing avatar for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while removing the avatar.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("editBanner")]
+        [Authorize]
+        public async Task<IActionResult> editBanner(IFormFile file) {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (file == null || file.Length == 0) {
+                return BadRequest("Invalid file. Please upload a valid file.");
+            }
+
+            try {
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Generate new file name
+                string newFileName = $"{userId}_Banner_{file.FileName}";
+
+                // Copy file to a memory stream with new filename
+                using (var memoryStream = new MemoryStream()) {
+                    await file.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0; // Reset position before uploading
+
+                    // Create new IFormFile with the modified filename
+                    var renamedFile = new FormFile(memoryStream, 0, file.Length, file.Name, newFileName) {
+                        Headers = file.Headers,
+                        ContentType = file.ContentType
+                    };
+
+                    // Upload the renamed file
+                    var uploadBannerResult = await AssetsManager.UploadFileAsync(renamedFile);
+                    if (uploadBannerResult.StartsWith("ERROR")) {
+                        return StatusCode(500, uploadBannerResult);
+                    }
+
+                    // Save the filename in the database
+                    user.Banner = file.FileName;
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+
+                    // Get the file URL
+                    string getBannerResult = await AssetsManager.GetFileUrlAsync(newFileName);
+                    string bannerUrl = getBannerResult.StartsWith("SUCCESS: ") ? getBannerResult.Substring(9) : getBannerResult;
+
+                    return Ok(new { message = "SUCCESS: Banner updated successfully.", bannerUrl });
+                } 
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] USER EDITAVATAR: Error updating avatar for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while updating the avatar.", details = ex.Message });
             }
         }
 
@@ -581,9 +628,7 @@ namespace Backend.Controllers.Identity {
             public required string Password { get; set; }
             public required string ContactNumber { get; set; }
             public required string UserRole { get; set; }
-            public required string Avatar { get; set; }
             public string? StudentID { get; set; } 
-            // public string? ClassID { get; set; } 
         }
 
         public class EditAccountRequest {
