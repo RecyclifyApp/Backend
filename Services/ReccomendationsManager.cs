@@ -2,8 +2,8 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
-    public class RecommendationsManager {
-        public static async Task<dynamic?> RecommendQuestsAsync(MyDbContext context, string classID) {
+    public class ReccommendationsManager {
+        public static async Task<dynamic?> RecommendQuestsAsync(MyDbContext context, string classID, int numberOfQuests) {
             var completedQuestIds = await context.ClassPoints
                 .Where(cp => cp.ClassID == classID)
                 .Select(cp => cp.QuestID)
@@ -18,73 +18,86 @@ namespace Backend.Services {
             }
 
             if (!completedQuests.Any()) {
-                return null;
+                var randomQuests = allQuests.OrderBy(q => Guid.NewGuid()).Take(numberOfQuests).ToList();
+                var emptyStats = new { Recycling = 0, Energy = 0, Environment = 0 };
+
+                return new { completedQuestStatistics = emptyStats, result = randomQuests };
             }
+
+            var allQuestTypes = new List<string> { "Recycling", "Energy", "Environment" };
 
             var questTypeFrequency = completedQuests
                 .GroupBy(q => q.QuestType)
                 .ToDictionary(g => g.Key, g => g.Count());
 
+            foreach (var type in allQuestTypes) {
+                if (!questTypeFrequency.ContainsKey(type)) {
+                    questTypeFrequency[type] = 0;
+                }
+            }
+
             var minFrequency = questTypeFrequency.Values.Min();
-            var leastFrequentQuestTypes = questTypeFrequency
+            var leastFrequentTypes = questTypeFrequency
                 .Where(kvp => kvp.Value == minFrequency)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            var questsByLeastFrequentType = new List<Quest>();
-            foreach (var quest in allQuests) {
-                if (leastFrequentQuestTypes.Contains(quest.QuestType) && !completedQuestIds.Contains(quest.QuestID)) {
-                    questsByLeastFrequentType.Add(quest);
-                }
+            var candidateQuests = allQuests
+                .Where(q => leastFrequentTypes.Contains(q.QuestType))
+                .ToList();
+
+            if (!candidateQuests.Any()) {
+                candidateQuests = allQuests.Where(q => !completedQuestIds.Contains(q.QuestID)).ToList();
             }
 
-            var commonWords = GetCommonWords(completedQuests.Select(q => q.QuestDescription).ToList());
+            candidateQuests = candidateQuests.OrderBy(q => Guid.NewGuid()).ToList();
 
-            var similarQuests = new List<Quest>();
-            foreach (var quest in questsByLeastFrequentType) {
-                if (ContainsCommonWords(quest.QuestDescription, commonWords)) {
-                    similarQuests.Add(quest);
-                }
-            }
+            var commonWords = GetCommonWords(completedQuests.Select(q => q.QuestDescription));
 
-            var similarQuestIds = new HashSet<string>(similarQuests.Select(q => q.QuestID));
-            var recommendedQuests = new List<Quest>();
+            var similarQuests = candidateQuests
+                .Where(q => ContainsCommonWords(q.QuestDescription, commonWords))
+                .ToList();
 
-            foreach (var quest in questsByLeastFrequentType) {
-                if (similarQuestIds.Contains(quest.QuestID) || recommendedQuests.Count < 3) {
-                    recommendedQuests.Add(quest);
-                }
-                if (recommendedQuests.Count >= 3) break;
-            }
+            var nonSimilarQuests = candidateQuests
+                .Except(similarQuests)
+                .ToList();
 
-            var completedQuestTypes = completedQuests.Select(q => q.QuestType).ToList();
-            var numberOfRecyclingQuests = completedQuestTypes.Count(t => t == "Recycling");
-            var numberOfEnergyQuests = completedQuestTypes.Count(t => t == "Energy");
-            var numberOfEnvironmentQuests = completedQuestTypes.Count(t => t == "Environment");
+            var finalRecommendations = similarQuests
+                .Concat(nonSimilarQuests)
+                .Take(numberOfQuests)
+                .ToList();
 
-            var completedQuestStatistics = new {
-                Recycling = numberOfRecyclingQuests,
-                Energy = numberOfEnergyQuests,
-                Environment = numberOfEnvironmentQuests
+            var typeCounts = completedQuests
+                .GroupBy(q => q.QuestType)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var stats = new {
+                Recycling = typeCounts.GetValueOrDefault("Recycling", 0),
+                Energy = typeCounts.GetValueOrDefault("Energy", 0),
+                Environment = typeCounts.GetValueOrDefault("Environment", 0)
             };
 
-            return new { completedQuestStatistics, result = recommendedQuests };
+            return new { completedQuestStatistics = stats, result = finalRecommendations };
         }
 
         private static Dictionary<string, int> GetCommonWords(IEnumerable<string> descriptions) {
-            var wordCounts = new Dictionary<string, int>();
+            var wordCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var desc in descriptions) {
-                var words = desc.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var words = desc.Split(new[] { ' ', ',', '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var word in words) {
-                    if (!wordCounts.ContainsKey(word)) wordCounts[word] = 0;
-                    wordCounts[word]++;
+                    if (wordCounts.ContainsKey(word)) {
+                        wordCounts[word]++;
+                    } else {
+                        wordCounts[word] = 1;
+                    }
                 }
             }
             return wordCounts.Where(kvp => kvp.Value > 1).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
         private static bool ContainsCommonWords(string description, Dictionary<string, int> commonWords) {
-            var words = description.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (commonWords.Count == 0) return false;
+            var words = description.Split(new[] { ' ', ',', '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries);
             return words.Any(word => commonWords.ContainsKey(word));
         }
     }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250202095053_CloudDB_V38")]
-    partial class CloudDB_V38
+    [Migration("20250204115310_CloudDB_V41")]
+    partial class CloudDB_V41
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,6 +77,10 @@ namespace Backend.Migrations
 
                     b.Property<string>("DateCompleted")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ContributingStudentID")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<int>("PointsAwarded")
                         .HasColumnType("int");
@@ -430,6 +434,9 @@ namespace Backend.Migrations
                     b.Property<string>("ImageUrls")
                         .HasColumnType("text");
 
+                    b.Property<bool>("TaskRejected")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("TaskVerified")
                         .HasColumnType("tinyint(1)");
 
@@ -469,7 +476,13 @@ namespace Backend.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("AboutMe")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Avatar")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Banner")
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactNumber")
