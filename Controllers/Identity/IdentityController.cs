@@ -80,6 +80,40 @@ namespace Backend.Controllers.Identity {
             }
         }
 
+        [HttpGet("getBanner")]
+        public async Task<IActionResult> GetBanner([FromQuery] string userId) {
+            try {
+                if (string.IsNullOrEmpty(userId)) {
+                    return BadRequest(new { error = "ERROR: User ID is required." });
+                }
+
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.Banner)) {
+                    return NotFound(new { error = "ERROR: User has no banner set." });
+                }
+
+                // Construct the full file name using the naming convention
+                string fullFileName = $"{userId}_Banner_{user.Banner}";
+                string result = await AssetsManager.GetFileUrlAsync(fullFileName);
+
+                if (result.StartsWith("ERROR")) {
+                    return StatusCode(500, new { error = result });
+                }
+
+                // Remove "SUCCESS: " prefix from the response
+                string bannerUrl = result.StartsWith("SUCCESS: ") ? result.Substring(9) : result;
+
+                return Ok(new { bannerUrl });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] GETBANNER: Error retrieving banner for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the banner.", details = ex.Message });
+            }
+        }
+
         [HttpGet("getUserDetails")]
         [Authorize]
         public IActionResult GetUserDetails() {
