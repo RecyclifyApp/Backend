@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250204115310_CloudDB_V41")]
-    partial class CloudDB_V41
+    [Migration("20250204160619_Cloud_dbv41")]
+    partial class Cloud_dbv41
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -477,6 +477,7 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("AboutMe")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Avatar")

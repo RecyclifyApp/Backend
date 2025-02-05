@@ -103,7 +103,7 @@ namespace Backend.Services {
                 var specificStudentObj = new Student {
                     UserID = baseUserObj.Id,
                     StudentID = baseUserObj.Id,
-                    Streak = Utilities.GenerateRandomInt(0, 10),
+                    Streak = 7,
                     League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
                     CurrentPoints = generateCurrentPoints,
                     TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000),

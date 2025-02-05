@@ -474,6 +474,7 @@ namespace Backend.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("AboutMe")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Avatar")
