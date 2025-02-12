@@ -435,7 +435,8 @@ namespace Backend.Controllers.Teachers {
                             t.Student.StudentID,
                             t.Student.UserID,
                             t.Student.User.Name,
-                            t.Student.User.Email
+                            t.Student.User.Email,
+                            t.Student.User.Avatar
                         } : null,
 
                         Class = _context.ClassStudents
