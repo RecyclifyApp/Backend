@@ -417,24 +417,54 @@ namespace Backend.Controllers.Teachers {
         }
 
         // Get Tasks Waiting for Verification
-        [HttpGet("get-waiting-verified-rejected-tasks")]
+        [HttpGet("get-all-tasks")]
         public async Task<IActionResult> GetWaitingVerifiedRejectedTasks(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
-                return BadRequest( new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
+                return BadRequest(new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
             }
 
             try {
-                var tasksWaitingVerification = await _context.TaskProgresses
-                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == true && t.TaskVerified == false)
-                .ToListAsync();
+                var tasksQuery = _context.TaskProgresses
+                    .Where(t => t.AssignedTeacherID == teacherID)
+                    .Include(t => t.Student)
+                    .ThenInclude(s => s!.User) 
+                    .Select(t => new {
+                        t.TaskID,
+                        t.Task,
+                        Student = t.Student != null && t.Student.User != null ? new {
+                            t.Student.StudentID,
+                            t.Student.UserID,
+                            t.Student.User.Name,
+                            t.Student.User.Email
+                        } : null,
 
-                var tasksVerified = await _context.TaskProgresses
-                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == false && t.TaskVerified == true)
-                .ToListAsync();
+                        Class = _context.ClassStudents
+                            .Where(cs => cs.StudentID == t.Student!.StudentID) 
+                            .Select(cs => new {
+                                cs.ClassID,
+                                ClassName = cs.Class != null ? cs.Class.ClassName.ToString() : "Unknown Class"
+                            })
+                            .FirstOrDefault(), 
 
-                var tasksRejected = await _context.TaskProgresses
-                .Where(t => t.AssignedTeacherID == teacherID && t.VerificationPending == false && t.TaskRejected == true)
-                .ToListAsync();
+                        t.DateAssigned,
+                        t.TaskVerified,
+                        t.TaskRejected,
+                        t.VerificationPending,
+                        t.AssignedTeacherID,
+                        t.ImageUrls
+                    });
+
+                var tasksWaitingVerification = await tasksQuery
+                    .Where(t => t.VerificationPending == true && t.TaskVerified == false)
+                    .ToListAsync();
+
+                var tasksVerified = await tasksQuery
+                    .Where(t => t.VerificationPending == false && t.TaskVerified == true)
+                    .ToListAsync();
+
+                var tasksRejected = await tasksQuery
+                    .Where(t => t.VerificationPending == false && t.TaskRejected == true)
+                    .ToListAsync();
 
                 var result = new {
                     tasksWaitingVerification,
@@ -442,7 +472,7 @@ namespace Backend.Controllers.Teachers {
                     tasksRejected
                 };
 
-                return Ok( new { message = "SUCCESS: Tasks retrieved successfully.", data = result });
+                return Ok(new { message = "SUCCESS: Tasks retrieved successfully.", data = result });
 
             } catch (Exception ex) {
                 return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}. Inner Exception: {ex.InnerException?.Message}" });
