@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims; 
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers.Identity {
     [ApiController]
@@ -44,6 +45,104 @@ namespace Backend.Controllers.Identity {
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        [HttpGet("getPublicProfileDetails")]
+        public IActionResult GetPublicProfileDetails([FromQuery] string userId) {
+            try {
+                if (string.IsNullOrEmpty(userId)) {
+                    return BadRequest(new { error = "UERROR: userId is required" });
+                }
+
+                var user = _context.Users
+                    .Include(u => u.Admin)
+                    .FirstOrDefault(u => u.Id == userId);
+
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found" });
+                }
+
+                object responseData = new { };
+
+                switch (user.UserRole) {
+                    case "admin":
+                        // Admins do not have public profiles
+                        responseData = new { };
+                        break;
+                    case "parent":
+                        var parent = _context.Parents
+                            .Include(p => p.Student)
+                                .ThenInclude(s => s.User)
+                            .FirstOrDefault(p => p.UserID == userId);
+
+                        if (parent == null) {
+                            return NotFound(new { error = "ERROR: Parent record not found" });
+                        }
+
+                        var childUser = parent.Student?.User;
+                        responseData = new {
+                            childFName = childUser?.FName ?? "",
+                            childLName = childUser?.LName ?? ""
+                        };
+                        break;
+                    case "teacher":
+                        var teacher = _context.Teachers
+                            .Include(t => t.Classes)
+                            .FirstOrDefault(t => t.UserID == userId);
+
+                        if (teacher == null) {
+                            return NotFound(new { error = "ERROR: Teacher record not found" });
+                        }
+
+                        responseData = new {
+                            classNumbers = teacher.Classes?.Count ?? 0
+                        };
+                        break;
+                    case "student":
+                        var student = _context.Students
+                            .Include(s => s.Parent)
+                                .ThenInclude(p => p.User)
+                            .FirstOrDefault(s => s.UserID == userId);
+
+                        if (student == null) {
+                            return NotFound(new { error = "ERROR: Student record not found" });
+                        }
+
+                        string parentName = "";
+                        if (student.Parent?.User != null) {
+                            parentName = $"{student.Parent.User.FName} {student.Parent.User.LName}".Trim();
+                            parentName = string.IsNullOrEmpty(parentName) ? "" : parentName;
+                        }
+
+                        // Retrieve class name instead of class ID
+                        var classStudent = _context.ClassStudents
+                            .Include(cs => cs.Class) // Include the Class navigation property
+                            .ThenInclude(c => c.Teacher)
+                            .FirstOrDefault(cs => cs.StudentID == student.StudentID);
+
+                        string className = "";
+                        string teacherName = "";
+                        if (classStudent != null) {
+                            className = classStudent.Class?.ClassName.ToString() ?? "";
+                            teacherName = classStudent.Class?.Teacher?.TeacherName ?? "";
+                        }
+
+                        responseData = new {
+                            parentName,
+                            className, // Return class name instead of ID
+                            teacherName,
+                            totalPoints = student.TotalPoints
+                        };
+                        break;
+                    default:
+                        return BadRequest(new { error = "ERROR: Invalid user role" });
+                }
+
+                return Ok(new { message = "SUCCESS: Public profile details retrieved", data = responseData });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] getPublicProfileDetails: Error retrieving public details for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the public details.", details = ex.Message });
+            }
         }
 
         [HttpGet("getAvatar")]
