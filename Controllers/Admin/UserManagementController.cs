@@ -169,15 +169,39 @@ namespace Backend.Controllers.Admin
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound(new { error = "ERROR: User not found" });
+            }
+
+            _context.Users.Remove(user);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "SUCCESS: User deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "ERROR: An error occurred while deleting the user.", details = ex.Message });
+            }
+        }
+
     }
 
-        public class CreateTeacherAccountRequest {
-            public required string Name { get; set; }
-            public required string FName { get; set; }
-            public required string LName { get; set; }
-            public required string Email { get; set; }
-            public required string Password { get; set; }
-            public required string ContactNumber { get; set; }
-            public required string UserRole { get; set; }
-        }
+    public class CreateTeacherAccountRequest
+    {
+        public required string Name { get; set; }
+        public required string FName { get; set; }
+        public required string LName { get; set; }
+        public required string Email { get; set; }
+        public required string Password { get; set; }
+        public required string ContactNumber { get; set; }
+        public required string UserRole { get; set; }
+    }
 }
