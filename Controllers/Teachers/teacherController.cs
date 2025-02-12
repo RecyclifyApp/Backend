@@ -418,7 +418,7 @@ namespace Backend.Controllers.Teachers {
 
         // Get Tasks Waiting for Verification
         [HttpGet("get-all-tasks")]
-        public async Task<IActionResult> GetWaitingVerifiedRejectedTasks(string teacherID) {
+        public async Task<IActionResult> GetAllTasks(string teacherID) {
             if (string.IsNullOrEmpty(teacherID)) {
                 return BadRequest(new { error = "UERROR: Invalid Teacher ID. Please provide a valid Teacher ID." });
             }
