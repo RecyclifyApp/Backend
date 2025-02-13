@@ -47,6 +47,38 @@ namespace Backend.Controllers.Identity {
             return tokenHandler.WriteToken(token);
         }
 
+        [HttpGet("getParentsId")]
+        public IActionResult GetParentsId([FromQuery] string userId) {
+            try {
+                var student = _context.Students.FirstOrDefault(p => p.StudentID == userId);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                var parentId = student.ParentID;
+
+                return Ok(new { parentId });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving parent's ID.", details = ex.Message });
+            }
+        }
+
+        [HttpGet("getChildsId")]
+        public IActionResult GetChildsId([FromQuery] string userId) {
+            try {
+                var parent = _context.Parents.FirstOrDefault(p => p.ParentID == userId);
+                if (parent == null) {
+                    return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                var studentId = parent.ParentID;
+
+                return Ok(new { studentId });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving child's ID.", details = ex.Message });
+            }
+        }
+
         [HttpGet("getPublicUserDetails")]
         public IActionResult GetUserDetails([FromQuery] string userId) {
             try {
