@@ -15,6 +15,7 @@ namespace Backend.Services {
                 "EMAILER_ENABLED",
                 "SMS_ENABLED",
                 "COMPVISION_ENABLED",
+                "OPENAI_CHAT_SERVICE_ENABLED",
                 "EMAIL_SENDER",
                 "EMAIL_PASSWORD",
                 "HTTP_URL",

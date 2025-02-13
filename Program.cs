@@ -96,7 +96,7 @@ namespace Backend {
                             await ToggleLockSystem();
                             break;
                         case 4:
-                            ToggleServices();
+                            await ToggleServices();
                             break;
                         case 5:
                             await ClearFirebaseCloudStorage();
@@ -429,13 +429,13 @@ namespace Backend {
 
                 switch (action) {
                     case 1:
-                        systemLocked.Value = "true";
+                        systemLocked.Value = "True";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: System locked.");
                         break;
                     case 2:
-                        systemLocked.Value = "false";
+                        systemLocked.Value = "False";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: System unlocked.");
@@ -459,9 +459,68 @@ namespace Backend {
             }
         }
 
-        private void ToggleServices() {
-            Console.WriteLine("");
-            Console.WriteLine("Toggling services...");
+        private async Task ToggleServices() {
+            while (true) {
+                var compVisionEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "COMPVISION_ENABLED")
+                    ?? throw new Exception("ERROR: COMPVISION_ENABLED environment variable not found.");
+                var emailerEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "EMAILER_ENABLED")
+                    ?? throw new Exception("ERROR: EMAILER_ENABLED environment variable not found.");
+                var openAIChatServiceEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "OPENAI_CHAT_SERVICE_ENABLED")
+                    ?? throw new Exception("ERROR: OPENAI_CHAT_SERVICE_ENABLED environment variable not found.");
+                var smsServiceEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "SMS_ENABLED")
+                    ?? throw new Exception("ERROR: SMS_ENABLED environment variable not found.");
+
+                Console.WriteLine("");
+                Console.WriteLine("-----Services-----");
+                Console.WriteLine("1. CompVision - " + (compVisionEnabled.Value == "True" ? "Enabled" : "Disabled"));
+                Console.WriteLine("2. Emailer - " + (emailerEnabled.Value == "True" ? "Enabled" : "Disabled"));
+                Console.WriteLine("3. OpenAIChatService - " + (openAIChatServiceEnabled.Value == "True" ? "Enabled" : "Disabled"));
+                Console.WriteLine("4. SmsService - " + (smsServiceEnabled.Value == "True" ? "Enabled" : "Disabled"));
+                Console.WriteLine("5. Exit");
+                Console.WriteLine();
+                Console.Write("Select service to toggle: ");
+
+                if (!int.TryParse(Console.ReadLine(), out int service)) {
+                    Console.WriteLine("");
+                    Console.WriteLine("ERROR: Please enter a valid integer.");
+                    continue;
+                }
+
+                switch (service) {
+                    case 1:
+                        compVisionEnabled.Value = compVisionEnabled.Value == "True" ? "False" : "True";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        break;
+                    case 2:
+                        emailerEnabled.Value = emailerEnabled.Value == "True" ? "False" : "True";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        break;
+                    case 3:
+                        openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "True" ? "False" : "True";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        break;
+                    case 4:
+                        smsServiceEnabled.Value = smsServiceEnabled.Value == "True" ? "False" : "True";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        break;
+                    case 5:
+                        Console.WriteLine("");
+                        Console.WriteLine("Exiting Service Toggle Mode...");
+                        return;
+                    default:
+                        Console.WriteLine("");
+                        Console.WriteLine("ERROR: Please enter a valid integer from 1-5.");
+                        break;
+                }
+            }
         }
 
         private async Task ClearFirebaseCloudStorage() {
