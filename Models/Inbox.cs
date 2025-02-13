@@ -5,7 +5,7 @@ namespace Backend.Models {
     public class Inbox {
         public int Id { get; set; }
         public required string Message { get; set; }
-        public DateTime Date { get; set; }
+        public required string Date { get; set; }
 
         [Required]
         [ForeignKey(nameof(User))]
