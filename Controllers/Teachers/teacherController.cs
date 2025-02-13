@@ -573,6 +573,7 @@ namespace Backend.Controllers.Teachers {
                 var studentInboxMessage = new Inbox {
                     UserID = student.StudentID,
                     Message = $"Your recent task: {taskObj.TaskTitle} has been verified. You earned {taskObj.TaskPoints} points.",
+                    Date = DateTime.Now.ToString("yyyy-MM-dd")
                 };
 
                 _context.Inboxes.Add(studentInboxMessage);
@@ -634,6 +635,7 @@ namespace Backend.Controllers.Teachers {
                 var studentInboxMessage = new Inbox {
                     UserID = studentID,
                     Message = $"Your recent task: {taskObj.TaskTitle} has been rejected. Please try again.",
+                    Date = DateTime.Now.ToString("yyyy-MM-dd")
                 };
 
                 _context.Inboxes.Add(studentInboxMessage);

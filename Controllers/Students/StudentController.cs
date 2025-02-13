@@ -607,6 +607,21 @@ namespace Backend.Controllers {
                 }
             }   
         }
+
+        [HttpGet("get-student-inbox-messages")]
+        public async Task<IActionResult> GetStudentInboxMessages([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentMessages = await _context.Inboxes.Where(i => i.UserID == studentID).ToListAsync();
+                return Ok(new { message = "SUCCESS: Student inbox messages retrieved", data = studentMessages });
+            }
+        }
             
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
