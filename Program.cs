@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
@@ -92,7 +93,7 @@ namespace Backend {
                             await DeleteAccount();
                             break;
                         case 3:
-                            ToggleLockSystem();
+                            await ToggleLockSystem();
                             break;
                         case 4:
                             ToggleServices();
@@ -408,9 +409,54 @@ namespace Backend {
             }
         }
 
-        private void ToggleLockSystem() {
-            Console.WriteLine("");
-            Console.WriteLine("Toggling Lock system...");
+        private async Task ToggleLockSystem() {
+            try {
+                var systemLocked = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "SYSTEM_LOCKED") ?? throw new Exception("ERROR: SYSTEM_LOCKED environment variable not found.");
+                Console.WriteLine("");
+                Console.WriteLine("System Lock Status: " + systemLocked.Value);
+                Console.WriteLine("");
+                Console.WriteLine("1. Lock System");
+                Console.WriteLine("2. Unlock System");
+                Console.WriteLine("3. Exit");
+
+                Console.WriteLine();
+                Console.Write("Enter action: ");
+                if (!int.TryParse(Console.ReadLine(), out int action)) {
+                    Console.WriteLine("");
+                    Console.WriteLine("ERROR: Please enter a valid integer.");
+                    return;
+                }
+
+                switch (action) {
+                    case 1:
+                        systemLocked.Value = "true";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: System locked.");
+                        break;
+                    case 2:
+                        systemLocked.Value = "false";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: System unlocked.");
+                        break;
+                    case 3:
+                        Console.WriteLine("");
+                        Console.WriteLine("Exiting System Lock Mode...");
+                        break;
+                    default:
+                        Console.WriteLine("");
+                        Console.WriteLine("ERROR: Please enter a valid integer from 1-3.");
+                        break;
+                } 
+
+                return;
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine($"ERROR: {ex.Message}");
+
+                return;
+            }
         }
 
         private void ToggleServices() {
