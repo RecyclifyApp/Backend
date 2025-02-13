@@ -172,7 +172,7 @@ namespace Backend.Controllers.Admin
             return tokenHandler.WriteToken(token);
         }
 
-public async Task<string> CreateClass(string className, string classDescription, string teacherID) {
+private async Task<string> CreateClass(string className, string classDescription, string teacherID) {
     if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(teacherID)) {
         return "UERROR: Invalid class details. Please provide valid class details.";
     }
