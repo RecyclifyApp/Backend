@@ -108,6 +108,8 @@ namespace Backend.Controllers.Admin
 
                 Logger.Log($"[SUCCESS] ADMIN CREATETEACHERACCOUNT: User {user.Id} created.");
 
+                await CreateClass(request.classNumber.ToString(), request.classDescription, user.Id);
+
                 return Ok(new
                 {
                     message = "SUCCESS: Account created successfully.",
@@ -170,6 +172,78 @@ namespace Backend.Controllers.Admin
             return tokenHandler.WriteToken(token);
         }
 
+public async Task<string> CreateClass(string className, string classDescription, string teacherID) {
+    if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(teacherID)) {
+        return "UERROR: Invalid class details. Please provide valid class details.";
+    }
+
+    // Check if class name is an integer (E.g. 101)
+    if (!int.TryParse(className, out int intClassName)) {
+        return "UERROR: Class name must be an integer.";
+    }
+
+    // Find Teacher
+    var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.TeacherID == teacherID);
+    if (teacher == null) {
+        return "ERROR: Teacher not found.";
+    }
+
+    // Find Class Existence
+    var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
+    if (classExist != null) {
+        return "UERROR: Class already exists.";
+    }
+
+    try {
+        var classID = Utilities.GenerateUniqueID();
+        var newClass = new Class {
+            ClassID = classID,
+            ClassName = intClassName,
+            ClassDescription = classDescription,
+            ClassImage = "",
+            ClassPoints = 0,
+            WeeklyClassPoints = new List<WeeklyClassPoints>(),
+            TeacherID = teacherID,
+            Teacher = teacher,
+            JoinCode = Utilities.GenerateRandomInt(100000, 999999)
+        };
+
+        _context.Classes.Add(newClass);
+
+        var recommendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, 3);
+
+        if (recommendResponse != null) {
+            foreach (var quest in recommendResponse.result) {
+                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
+                if (assignedTeacher == null) {
+                    return "ERROR: Class's teacher not found";
+                }
+
+                var questProgress = new QuestProgress {
+                    QuestID = quest.QuestID,
+                    ClassID = classID,
+                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                    AmountCompleted = 0,
+                    Completed = false,
+                    Quest = quest,
+                    AssignedTeacherID = assignedTeacher.TeacherID,
+                    AssignedTeacher = assignedTeacher
+                };
+
+                _context.QuestProgresses.Add(questProgress);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        return "SUCCESS: Class created successfully.";
+
+    } catch (Exception ex) {
+        return $"ERROR: An error occurred: {ex.Message}";
+    }
+}
+
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -203,5 +277,7 @@ namespace Backend.Controllers.Admin
         public required string Password { get; set; }
         public required string ContactNumber { get; set; }
         public required string UserRole { get; set; }
+        public required int classNumber { get; set; }
+        public required string classDescription { get; set; }
     }
 }
