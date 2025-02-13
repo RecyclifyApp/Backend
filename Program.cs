@@ -4,6 +4,7 @@ using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Task = System.Threading.Tasks.Task;
@@ -89,7 +90,7 @@ namespace Backend {
                             await CreateAccount();
                             break;
                         case 2:
-                            DeleteAccount();
+                            await DeleteAccount();
                             break;
                         case 3:
                             LockSystem();
@@ -237,7 +238,7 @@ namespace Backend {
                             ClassDescription = classDescription,
                             ClassPoints = Utilities.GenerateRandomInt(500, 1000),
                             TeacherID = teacherKvp[0]["Id"].ToString() ?? "",
-                            Teacher = _context.Teachers.Find(teacherKvp[0]["Id"].ToString()) ?? throw new Exception("Teacher not found."),
+                            Teacher = _context.Teachers.Find(teacherKvp[0]["Id"].ToString()) ?? throw new Exception("ERROR: Teacher not found."),
                             WeeklyClassPoints = new List<WeeklyClassPoints>(),
                             JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                         };
@@ -395,9 +396,20 @@ namespace Backend {
             }
         }
 
-        private void DeleteAccount() {
+        private async Task DeleteAccount() {
             Console.WriteLine("");
-            Console.WriteLine("Deleting account...");
+            Console.Write("Enter UserID: ");
+            string userID = Console.ReadLine() ?? "";
+            try {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userID) ?? throw new Exception("ERROR: No such user.");
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+                Console.WriteLine("");
+                Console.WriteLine("SUCCESS: Account deleted.");
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine($"ERROR: {ex.Message}");
+            }
         }
 
         private void LockSystem() {
