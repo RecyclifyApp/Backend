@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
@@ -121,7 +120,7 @@ namespace Backend {
                             break;
                         default:
                             Console.WriteLine("");
-                            Console.WriteLine("ERROR: Please enter a valid integer from 1-10.");
+                            Console.WriteLine("ERROR: Please enter a valid integer from 1-9.");
                             break;
                     }
                 }
@@ -476,7 +475,10 @@ namespace Backend {
                 Console.WriteLine("2. Emailer - " + (emailerEnabled.Value == "True" ? "Enabled" : "Disabled"));
                 Console.WriteLine("3. OpenAIChatService - " + (openAIChatServiceEnabled.Value == "True" ? "Enabled" : "Disabled"));
                 Console.WriteLine("4. SmsService - " + (smsServiceEnabled.Value == "True" ? "Enabled" : "Disabled"));
-                Console.WriteLine("5. Exit");
+                Console.WriteLine("------WARNING------");
+                Console.WriteLine("5. DISABLE ALL SERVICES");
+                Console.WriteLine("6. ENABLE ALL SERVICES");
+                Console.WriteLine("7. Exit");
                 Console.WriteLine();
                 Console.Write("Select service to toggle: ");
 
@@ -513,11 +515,67 @@ namespace Backend {
                         break;
                     case 5:
                         Console.WriteLine("");
+
+                        for (int i = 6; i > 0; i--) {
+                            for (int j = 0; j < 10; j++) {
+                                if (Console.KeyAvailable) {
+                                    var key = Console.ReadKey(true);
+                                    if (key.Key == ConsoleKey.Enter) {
+                                        Console.WriteLine("");
+                                        Console.WriteLine("");
+                                        Console.WriteLine("[ABORT] - Process terminated.");
+                                        return;
+                                    }
+                                }
+                                Thread.Sleep(100);
+                            }
+                            Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
+                        }
+
+                        compVisionEnabled.Value = "False";
+                        emailerEnabled.Value = "False";
+                        openAIChatServiceEnabled.Value = "False";
+                        smsServiceEnabled.Value = "False";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
+                        break;
+                    case 6:
+                        Console.WriteLine("");
+
+                        for (int i = 6; i > 0; i--) {
+                            for (int j = 0; j < 10; j++) {
+                                if (Console.KeyAvailable) {
+                                    var key = Console.ReadKey(true);
+                                    if (key.Key == ConsoleKey.Enter) {
+                                        Console.WriteLine("");
+                                        Console.WriteLine("");
+                                        Console.WriteLine("[ABORT] - Process terminated.");
+                                        return;
+                                    }
+                                }
+                                Thread.Sleep(100);
+                            }
+                            Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
+                        }
+
+                        compVisionEnabled.Value = "True";
+                        emailerEnabled.Value = "True";
+                        openAIChatServiceEnabled.Value = "True";
+                        smsServiceEnabled.Value = "True";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
+                        break;
+                    case 7:
+                        Console.WriteLine("");
                         Console.WriteLine("Exiting Service Toggle Mode...");
                         return;
                     default:
                         Console.WriteLine("");
-                        Console.WriteLine("ERROR: Please enter a valid integer from 1-5.");
+                        Console.WriteLine("ERROR: Please enter a valid integer from 1-6.");
                         break;
                 }
             }
