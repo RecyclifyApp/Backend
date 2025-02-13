@@ -18,6 +18,8 @@ Bootcheck.Run();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<Captcha>();
+builder.Services.AddScoped<Captcha>();
 
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowSpecificOrigins", policy => {

@@ -11,8 +11,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Backend.Controllers.Identity {
     [ApiController]
     [Route("/api/[controller]")]
-    public class IdentityController (MyDbContext context, IConfiguration configuration) : ControllerBase {
+    public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService) : ControllerBase {
         private readonly MyDbContext _context = context;
+        private readonly Captcha _captchaService = captchaService;
         private readonly IConfiguration _configuration = configuration;
 
         private string CreateToken(User user) {
@@ -386,6 +387,20 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("createAccount")]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request) {
+            if (string.IsNullOrEmpty(request.RecaptchaResponse)) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA response is required." });
+            }
+
+            var (captchaSuccess, captchaScore) = await _captchaService.ValidateCaptchaAsync(request.RecaptchaResponse);
+            if (!captchaSuccess) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA validation failed." });
+            }
+
+            // Optional: you can decide to take action based on the score if needed
+            if (captchaScore < 0.5) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA score too low. Please try again." });
+            }
+
             string email = request.UserRole == "student" ? request.Email + "@mymail.nyp.edu.sg" : request.Email;
             var keyValuePairs = new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
@@ -454,7 +469,9 @@ namespace Backend.Controllers.Identity {
                         user.LName,
                         user.Email,
                         user.UserRole
-                    }
+                    },
+                    captchaSuccess,
+                    captchaScore
                 });
             } catch (ArgumentException ex) {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
@@ -862,6 +879,7 @@ namespace Backend.Controllers.Identity {
         }
 
         public class CreateAccountRequest {
+            public required string RecaptchaResponse { get; set; } 
             public required string Name { get; set; }
             public required string FName { get; set; }
             public required string LName { get; set; }
