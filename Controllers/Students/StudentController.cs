@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -343,7 +344,7 @@ namespace Backend.Controllers {
 
                     _context.Redemptions.Add(redemption);
                     student.CurrentPoints -= reward.RequiredPoints;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     var studentName = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Name ?? "Student";
                     var studentEmail = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Email ?? "student@mymail.nyp.edu.sg";
@@ -363,6 +364,16 @@ namespace Backend.Controllers {
                     };
 
                     await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RewardRedemption", emailVars);
+
+                    var studentInboxMessage = new Inbox {
+                        UserID = student.StudentID,
+                        Message = $"You have redeemed {reward.RewardTitle}. Please check your email for the attached QR Code or claim it in My Rewards.",
+                        Date = DateTime.Now.ToString("yyyy-MM-dd")
+                    };
+
+                    _context.Inboxes.Add(studentInboxMessage);
+                    await _context.SaveChangesAsync();
+
                     return Ok(new { message = "SUCCESS: Reward redeemed successfully", data = student.CurrentPoints });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
@@ -428,7 +439,16 @@ namespace Backend.Controllers {
                 try {
                     redemption.ClaimedOn = DateTime.Now;
                     redemption.RedemptionStatus = "Claimed";
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+
+                    var studentInboxMessage = new Inbox {
+                        UserID = student.StudentID,
+                        Message = $"You have claimed {reward.RewardTitle}. Enjoy!",
+                        Date = DateTime.Now.ToString("yyyy-MM-dd")
+                    };
+
+                    _context.Inboxes.Add(studentInboxMessage);
+                    await _context.SaveChangesAsync();
 
                     return Ok(new { message = "SUCCESS: Reward claimed successfully" });
                 } catch (Exception ex) {
@@ -438,7 +458,7 @@ namespace Backend.Controllers {
         }
 
         [HttpPost("award-gift")]
-        public IActionResult AwardGift([FromBody] string studentID) {
+        public async Task<IActionResult> AwardGift([FromBody] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
                 return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
@@ -453,7 +473,17 @@ namespace Backend.Controllers {
                     student.CurrentPoints += randomPoints;
                     student.TotalPoints += randomPoints;
                     student.LastClaimedStreak = DateTime.Now.ToString("yyyy-MM-dd");
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+
+                    var studentInboxMessage = new Inbox {
+                        UserID = student.StudentID,
+                        Message = $"You have received bonus {randomPoints} leafs. Keep up your streak!",
+                        Date = DateTime.Now.ToString("yyyy-MM-dd")
+                    };
+
+                    _context.Inboxes.Add(studentInboxMessage);
+                    await _context.SaveChangesAsync();
+
                     return Ok(new { message = "SUCCESS: Gift awarded successfully", data = new { pointsAwarded = randomPoints, currentPoints = student.CurrentPoints } });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
