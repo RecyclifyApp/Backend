@@ -63,18 +63,17 @@ namespace Backend {
                 while (running) {
                     Console.WriteLine();
                     Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console---------------------------------");
-                    Console.WriteLine("Population Sequence: Wipe Database -> Populate Database -> Create Accounts -> Populate Students");
+                    Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate Database -> Create New Accounts -> Populate Students");
                     Console.WriteLine("-------------------------------------------------------------------------------------------------------------------");
-                    Console.WriteLine("1. Create account");
-                    Console.WriteLine("2. Delete account");
-                    Console.WriteLine("3. Lock / Unlock system");
-                    Console.WriteLine("4. Enable services");
-                    Console.WriteLine("5. Disable services");
-                    Console.WriteLine("6. Clear Firebase Cloud Storage");
-                    Console.WriteLine("7. Wipe database");
-                    Console.WriteLine("8. Populate Database");
-                    Console.WriteLine("9. Populate Students");
-                    Console.WriteLine("10. Exit");
+                    Console.WriteLine("1. Create new account");
+                    Console.WriteLine("2. Delete existing account");
+                    Console.WriteLine("3. Lock / Unlock System");
+                    Console.WriteLine("4. Toggle services");
+                    Console.WriteLine("5. Clear Firebase Cloud Storage");
+                    Console.WriteLine("6. Wipe CloudSQL Database");
+                    Console.WriteLine("7. Populate CloudSQL Database");
+                    Console.WriteLine("8. Populate Students");
+                    Console.WriteLine("9. Exit Console");
 
                     Console.WriteLine();
                     Console.Write("Enter action: ");
@@ -96,24 +95,21 @@ namespace Backend {
                             ToggleLockSystem();
                             break;
                         case 4:
-                            EnableServices();
+                            ToggleServices();
                             break;
                         case 5:
-                            DisableServices();
+                            await ClearFirebaseCloudStorage();
                             break;
                         case 6:
-                            ClearFirebaseCloudStorage();
-                            break;
-                        case 7:
                             await WipeDatabase();
                             break;
-                        case 8:
+                        case 7:
                             await PopulateDatabase();
                             break;
-                        case 9:
+                        case 8:
                             await PopulateStudents();
                             break;
-                        case 10:
+                        case 9:
                             Console.WriteLine("");
                             Console.WriteLine("Exiting superuser script...");
                             Console.WriteLine("");
@@ -398,7 +394,7 @@ namespace Backend {
 
         private async Task DeleteAccount() {
             Console.WriteLine("");
-            Console.Write("Enter UserID: ");
+            Console.Write("Enter UserID of account to be deleted: ");
             string userID = Console.ReadLine() ?? "";
             try {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userID) ?? throw new Exception("ERROR: No such user.");
@@ -417,48 +413,105 @@ namespace Backend {
             Console.WriteLine("Toggling Lock system...");
         }
 
-        private void EnableServices() {
+        private void ToggleServices() {
             Console.WriteLine("");
-            Console.WriteLine("Enabling services...");
+            Console.WriteLine("Toggling services...");
         }
 
-        private void DisableServices() {
+        private async Task ClearFirebaseCloudStorage() {
             Console.WriteLine("");
-            Console.WriteLine("Disabling services...");
-        }
 
-        private void ClearFirebaseCloudStorage() {
-            Console.WriteLine("");
-            Console.WriteLine("Clearing Firebase Cloud Storage...");
+            for (int i = 6; i > 0; i--) {
+                for (int j = 0; j < 10; j++) {
+                    if (Console.KeyAvailable) {
+                        var key = Console.ReadKey(true);
+                        if (key.Key == ConsoleKey.Enter) {
+                            Console.WriteLine("");
+                            Console.WriteLine("");
+                            Console.WriteLine("[ABORT] - Process terminated.");
+                            return;
+                        }
+                    }
+                    Thread.Sleep(100);
+                }
+                Console.Write($"\r[Press ENTER to CANCEL] Wiping Firebase Cloud Storage in {i - 1} seconds...   ");
+            }
+
+            try {
+                Console.WriteLine("");
+                Console.WriteLine("");
+                Console.WriteLine("Database Wipe in progress...");
+
+                await AssetsManager.ClearFirebaseCloudStorage();
+
+                Console.WriteLine("");
+                Console.WriteLine("SUCCESS: FIREBASE CLOUD STORAGE WIPED.");
+
+                return;
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine($"ERROR: {ex.Message}");
+
+                return;
+            }
         }
 
         private async Task WipeDatabase() {
-            _context.Admins.RemoveRange(_context.Admins);
-            _context.Classes.RemoveRange(_context.Classes);
-            _context.ClassPoints.RemoveRange(_context.ClassPoints);
-            _context.ClassStudents.RemoveRange(_context.ClassStudents);
-            _context.ContactForms.RemoveRange(_context.ContactForms);
-            _context.DailyStudentPoints.RemoveRange(_context.DailyStudentPoints);
-            _context.Inboxes.RemoveRange(_context.Inboxes);
-            _context.Parents.RemoveRange(_context.Parents);
-            _context.Quests.RemoveRange(_context.Quests);
-            _context.QuestProgresses.RemoveRange(_context.QuestProgresses);
-            _context.Redemptions.RemoveRange(_context.Redemptions);
-            _context.RewardItems.RemoveRange(_context.RewardItems);
-            _context.Students.RemoveRange(_context.Students);
-            _context.StudentPoints.RemoveRange(_context.StudentPoints);
-            _context.Tasks.RemoveRange(_context.Tasks);
-            _context.TaskProgresses.RemoveRange(_context.TaskProgresses);
-            _context.Teachers.RemoveRange(_context.Teachers);
-            _context.Users.RemoveRange(_context.Users);
-            _context.WeeklyClassPoints.RemoveRange(_context.WeeklyClassPoints);
-
-            await _context.SaveChangesAsync();
-
             Console.WriteLine("");
-            Console.WriteLine("SUCCESS: DATABASE WIPED.");
 
-            return;
+            for (int i = 6; i > 0; i--) {
+                for (int j = 0; j < 10; j++) {
+                    if (Console.KeyAvailable) {
+                        var key = Console.ReadKey(true);
+                        if (key.Key == ConsoleKey.Enter) {
+                            Console.WriteLine("");
+                            Console.WriteLine("");
+                            Console.WriteLine("[ABORT] - Process terminated.");
+                            return;
+                        }
+                    }
+                    Thread.Sleep(100);
+                }
+                Console.Write($"\r[Press ENTER to CANCEL] Wiping CloudSQL Database in {i - 1} seconds...   ");
+            }
+
+            try {
+                Console.WriteLine("");
+                Console.WriteLine("");
+                Console.WriteLine("Database Wipe in progress...");
+
+                _context.Admins.RemoveRange(_context.Admins);
+                _context.Classes.RemoveRange(_context.Classes);
+                _context.ClassPoints.RemoveRange(_context.ClassPoints);
+                _context.ClassStudents.RemoveRange(_context.ClassStudents);
+                _context.ContactForms.RemoveRange(_context.ContactForms);
+                _context.DailyStudentPoints.RemoveRange(_context.DailyStudentPoints);
+                _context.Inboxes.RemoveRange(_context.Inboxes);
+                _context.Parents.RemoveRange(_context.Parents);
+                _context.Quests.RemoveRange(_context.Quests);
+                _context.QuestProgresses.RemoveRange(_context.QuestProgresses);
+                _context.Redemptions.RemoveRange(_context.Redemptions);
+                _context.RewardItems.RemoveRange(_context.RewardItems);
+                _context.Students.RemoveRange(_context.Students);
+                _context.StudentPoints.RemoveRange(_context.StudentPoints);
+                _context.Tasks.RemoveRange(_context.Tasks);
+                _context.TaskProgresses.RemoveRange(_context.TaskProgresses);
+                _context.Teachers.RemoveRange(_context.Teachers);
+                _context.Users.RemoveRange(_context.Users);
+                _context.WeeklyClassPoints.RemoveRange(_context.WeeklyClassPoints);
+
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine("");
+                Console.WriteLine("SUCCESS: CLOUDSQL DATABASE WIPED.");
+
+                return;
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine($"ERROR: {ex.Message}");
+
+                return;
+            }
         }
 
         private async Task PopulateDatabase() {
