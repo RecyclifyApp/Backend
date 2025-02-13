@@ -440,7 +440,7 @@ namespace Backend {
             try {
                 Console.WriteLine("");
                 Console.WriteLine("");
-                Console.WriteLine("Database Wipe in progress...");
+                Console.WriteLine("Database Wipe in progress. This may take a while...");
 
                 await AssetsManager.ClearFirebaseCloudStorage();
 
@@ -516,6 +516,9 @@ namespace Backend {
 
         private async Task PopulateDatabase() {
             try {
+                Console.WriteLine("");
+                Console.WriteLine("Populating Database. This may take a while...");
+                
                 await PopulateTasksAndQuests();
                 await PopulateRewardItems();
 
