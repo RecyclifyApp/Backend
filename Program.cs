@@ -294,28 +294,18 @@ namespace Backend {
             Console.Write($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}/swagger/index.html");
             Console.WriteLine();
 
-            if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase)) 
-            {
-                // Start the server in the background
+            if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase))  {
                 var serverTask = app.RunAsync();
 
-                // Optional: Add a delay to ensure server starts (adjust as needed)
-                await Task.Delay(500);
-
-                // Execute the superuser script while the server is running
-                using (var scope = app.Services.CreateScope()) 
-                {
+                using (var scope = app.Services.CreateScope())  {
                     var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
                     var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                     var script = new SuperuserScript(dbContext, config);
                     script.Run();
                 }
 
-                // Keep the application running until the server task ends
                 await serverTask;
-            }
-            else if (args.Length == 0) 
-            {
+            } else if (args.Length == 0) {
                 app.Run();
             }
         }
