@@ -47,6 +47,46 @@ namespace Backend.Controllers.Identity {
             return tokenHandler.WriteToken(token);
         }
 
+        [HttpGet("getPublicUserDetails")]
+        public IActionResult GetUserDetails([FromQuery] string userId) {
+            try {
+                // Retrieve the user details from the database using the provided userId
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Base user details
+                var response = new {
+                    user.Id,
+                    user.AboutMe,
+                    user.FName,
+                    user.LName,
+                    user.UserRole,
+                    user.Avatar,
+                    user.Banner
+                };
+
+                if (user.UserRole == "teacher" || user.UserRole == "parent") {
+                    return Ok(new {
+                        user.Id,
+                        user.AboutMe,
+                        user.FName,
+                        user.LName,
+                        user.UserRole,
+                        user.Avatar,
+                        user.Banner,
+                        user.Email,
+                        user.ContactNumber
+                    });
+                }
+
+                return Ok(response);
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving user details.", details = ex.Message });
+            }
+        }
+
         [HttpGet("getPublicProfileDetails")]
         public IActionResult GetPublicProfileDetails([FromQuery] string userId) {
             try {
@@ -95,7 +135,7 @@ namespace Backend.Controllers.Identity {
                         }
 
                         responseData = new {
-                            classNumbers = teacher.Classes?.Count ?? 0
+                            classNumbers = teacher.Classes?.Select(c => c.ClassName).ToList() ?? new List<int>()
                         };
                         break;
                     case "student":
@@ -138,7 +178,7 @@ namespace Backend.Controllers.Identity {
                         return BadRequest(new { error = "ERROR: Invalid user role" });
                 }
 
-                return Ok(new { message = "SUCCESS: Public profile details retrieved", data = responseData });
+                return Ok(new { responseData });
             } catch (Exception ex) {
                 Logger.Log($"[ERROR] getPublicProfileDetails: Error retrieving public details for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the public details.", details = ex.Message });
