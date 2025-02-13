@@ -24,7 +24,10 @@ namespace Backend.Services {
                 "FIREBASE_STORAGE_BUCKET_URL",
                 "CLOUDSQL_CONNECTION_STRING",
                 "JWT_KEY",
-                "OPENAI_API_KEY"
+                "OPENAI_API_KEY",
+                "SUPERUSER_USERNAME",
+                "SUPERUSER_PASSWORD",
+                "SUPERUSER_PIN"
             };
 
             missingVariables = environmentVariables
