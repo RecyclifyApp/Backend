@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250213025833_CloudDB_V41")]
-    partial class CloudDB_V41
+    [Migration("20250213180450_CloudDB_V42")]
+    partial class CloudDB_V42
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -149,6 +149,20 @@ namespace Backend.Migrations
                     b.HasKey("StudentID", "Date");
 
                     b.ToTable("DailyStudentPoints");
+                });
+
+            modelBuilder.Entity("Backend.Models.EnvironmentConfig", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("EnvironmentConfigs");
                 });
 
             modelBuilder.Entity("Backend.Models.Inbox", b =>

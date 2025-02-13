@@ -148,6 +148,20 @@ namespace Backend.Migrations
                     b.ToTable("DailyStudentPoints");
                 });
 
+            modelBuilder.Entity("Backend.Models.EnvironmentConfig", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("EnvironmentConfigs");
+                });
+
             modelBuilder.Entity("Backend.Models.Inbox", b =>
                 {
                     b.Property<int>("Id")

@@ -518,7 +518,7 @@ namespace Backend {
             try {
                 Console.WriteLine("");
                 Console.WriteLine("Populating Database. This may take a while...");
-                
+
                 await PopulateTasksAndQuests();
                 await PopulateRewardItems();
 
@@ -1302,14 +1302,12 @@ namespace Backend {
             } else if (args.Length == 0) {
                 Console.WriteLine("");
                 Console.WriteLine("SERVER MODE: STANDARD");
-            } else {
-                Console.WriteLine("");
-                Console.WriteLine("Invalid command line argument.");
-                Environment.Exit(0);
-                return;
             }
 
-            Bootcheck.Run();
+            using (var scope = builder.Services.BuildServiceProvider().CreateScope()) {
+                var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+                await Bootcheck.Run(dbContext);
+            }
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
