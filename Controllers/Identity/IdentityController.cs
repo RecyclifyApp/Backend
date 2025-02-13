@@ -71,7 +71,7 @@ namespace Backend.Controllers.Identity {
                     return NotFound(new { error = "ERROR: Student not found." });
                 }
 
-                var studentId = parent.ParentID;
+                var studentId = parent.StudentID;
 
                 return Ok(new { studentId });
             } catch (Exception ex) {
