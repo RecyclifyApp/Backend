@@ -67,7 +67,7 @@ namespace Backend {
                     Console.WriteLine("-------------------------------------------------------------------------------------------------------------------");
                     Console.WriteLine("1. Create account");
                     Console.WriteLine("2. Delete account");
-                    Console.WriteLine("3. Lock system");
+                    Console.WriteLine("3. Lock / Unlock system");
                     Console.WriteLine("4. Enable services");
                     Console.WriteLine("5. Disable services");
                     Console.WriteLine("6. Clear Firebase Cloud Storage");
@@ -93,7 +93,7 @@ namespace Backend {
                             await DeleteAccount();
                             break;
                         case 3:
-                            LockSystem();
+                            ToggleLockSystem();
                             break;
                         case 4:
                             EnableServices();
@@ -412,9 +412,9 @@ namespace Backend {
             }
         }
 
-        private void LockSystem() {
+        private void ToggleLockSystem() {
             Console.WriteLine("");
-            Console.WriteLine("Locking system...");
+            Console.WriteLine("Toggling Lock system...");
         }
 
         private void EnableServices() {
