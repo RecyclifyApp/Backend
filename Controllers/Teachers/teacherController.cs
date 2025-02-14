@@ -1026,13 +1026,11 @@ namespace Backend.Controllers.Teachers
                     return StatusCode(500, new { error = "ERROR: HttpClient is not initialized." });
                 }
 
-                var apiKey = Environment.GetEnvironmentVariable("ACCREDIBLE_API_KEY"); // Replace with your actual Accredible API Key
+                var apiKey = Environment.GetEnvironmentVariable("ACCREDIBLE_API_KEY"); 
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
-                // Send the POST request
                 var response = await _httpClient.PostAsync("https://api.accredible.com/v1/credentials", requestContent);
 
-                // Check if the request was successful
                 if (response.IsSuccessStatusCode)
                 {
                     return Ok(new { message = "SUCCESS: Certificate sent successfully." });
