@@ -49,14 +49,6 @@ namespace Backend.Controllers
                 return BadRequest(new { error = "Image file is missing!" });
             }
 
-            // Log the received data
-            Console.WriteLine($"RewardTitle: {rewardItemRequest.RewardTitle}");
-            Console.WriteLine($"RewardDescription: {rewardItemRequest.RewardDescription}");
-            Console.WriteLine($"RequiredPoints: {rewardItemRequest.RequiredPoints}");
-            Console.WriteLine($"RewardQuantity: {rewardItemRequest.RewardQuantity}");
-            Console.WriteLine($"IsAvailable: {rewardItemRequest.IsAvailable}");
-            Console.WriteLine($"ImageFile: {rewardItemRequest.ImageFile?.FileName}");
-
             // Ensure required fields are provided
             if (string.IsNullOrWhiteSpace(rewardItemRequest.RewardTitle) ||
                 string.IsNullOrWhiteSpace(rewardItemRequest.RewardDescription) ||
@@ -66,7 +58,7 @@ namespace Backend.Controllers
                 return BadRequest(new { error = "UERROR: All fields are required and must be valid" });
             }
 
-            string imageUrl = null;
+            string? imageUrl = null;
 
             // Handle image upload if a file is provided
             if (rewardItemRequest.ImageFile != null && rewardItemRequest.ImageFile.Length > 0)
@@ -122,7 +114,7 @@ namespace Backend.Controllers
             _context.RewardItems.Add(rewardItem);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "SUCCESS: Reward item created successfully", data = rewardItem });
+            return Ok(new { message = "SUCCESS: Reward item created successfully"});
         }
 
 
