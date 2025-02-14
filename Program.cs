@@ -549,10 +549,11 @@ namespace Backend {
                             Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
                         }
 
-                        compVisionEnabled.Value = "False";
-                        emailerEnabled.Value = "False";
-                        openAIChatServiceEnabled.Value = "False";
-                        smsServiceEnabled.Value = "False";
+                        compVisionEnabled.Value = "false";
+                        emailerEnabled.Value = "false";
+                        openAIChatServiceEnabled.Value = "false";
+                        smsServiceEnabled.Value = "false";
+                        msAuthEnabled.Value = "false";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("");
@@ -577,10 +578,11 @@ namespace Backend {
                             Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
                         }
 
-                        compVisionEnabled.Value = "True";
-                        emailerEnabled.Value = "True";
-                        openAIChatServiceEnabled.Value = "True";
-                        smsServiceEnabled.Value = "True";
+                        compVisionEnabled.Value = "true";
+                        emailerEnabled.Value = "true";
+                        openAIChatServiceEnabled.Value = "true";
+                        smsServiceEnabled.Value = "true";
+                        msAuthEnabled.Value = "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("");
