@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Task = System.Threading.Tasks.Task;
-using System.Net;
-using System.Net.Http;
 
 namespace Backend {
     class SuperuserScript {
@@ -1484,6 +1482,8 @@ namespace Backend {
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddControllers();
+            builder.Services.AddHttpClient();
+            builder.Services.AddScoped<Captcha>();
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
