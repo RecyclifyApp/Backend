@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using System.Net;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,7 @@ Bootcheck.Run();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
-builder.Services.AddHttpClient<Captcha>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<Captcha>();
 
 builder.Services.AddCors(options => {
