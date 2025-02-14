@@ -71,12 +71,6 @@ namespace Backend.Controllers {
             }
         }
 
-        [HttpPost("populate-database")]
-        public async Task<IActionResult> PopulateDatabase() {
-            await DatabaseManager.CleanAndPopulateDatabase(_context);
-            return Ok(new { message = "Database populated successfully" });
-        }
-
         [HttpPost("send-email")]
         public async Task<IActionResult> SendEmail(string recipientEmail, string title, string template) {
             var emailVars = new Dictionary<string, string> {
