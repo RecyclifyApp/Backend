@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
+using Backend;
 
 [Route("api/chat-completion")]
 [ApiController]
-public class EcoPilotController : ControllerBase
+public class EcoPilotController(MyDbContext context) : ControllerBase
 {
+    private readonly MyDbContext _context = context;
+
     [HttpPost("prompt")]
     public async Task<IActionResult> QueryCycloBotWithUserPrompt([FromBody] UserPromptRequest request)
     {
@@ -13,7 +16,7 @@ public class EcoPilotController : ControllerBase
            return BadRequest(new { error = "UERROR: User Prompt is required" });
         }
 
-        var api = new OpenAIChatService();
+        var api = new OpenAIChatService(_context);
         var response = await api.PromptAsync(request.UserPrompt);
         return Ok(response);
     }
