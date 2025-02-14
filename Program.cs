@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Backend.Filters;
 using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
@@ -8,8 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Task = System.Threading.Tasks.Task;
-using System.Net;
-using System.Net.Http;
 
 namespace Backend {
     class SuperuserScript {
@@ -64,9 +63,9 @@ namespace Backend {
                 bool running = true;
                 while (running) {
                     Console.WriteLine();
-                    Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console---------------------------------");
-                    Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate Database -> Create New Accounts -> Populate Students");
-                    Console.WriteLine("-------------------------------------------------------------------------------------------------------------------");
+                    Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console----------------------------------------------");
+                    Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate CloudSQL Database -> Create New Teacher Account -> Populate Students");
+                    Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
                     Console.WriteLine("1. Create new account");
                     Console.WriteLine("2. Delete existing account");
                     Console.WriteLine("3. Lock / Unlock System");
@@ -437,13 +436,13 @@ namespace Backend {
 
                 switch (action) {
                     case 1:
-                        systemLocked.Value = "True";
+                        systemLocked.Value = "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: System locked.");
                         break;
                     case 2:
-                        systemLocked.Value = "False";
+                        systemLocked.Value = "false";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: System unlocked.");
@@ -477,6 +476,8 @@ namespace Backend {
                     ?? throw new Exception("ERROR: OPENAI_CHAT_SERVICE_ENABLED environment variable not found.");
                 var smsServiceEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "SMS_ENABLED")
                     ?? throw new Exception("ERROR: SMS_ENABLED environment variable not found.");
+                var msAuthEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled")
+                    ?? throw new Exception("ERROR: MSAuthEnabled environment variable not found.");
 
                 Console.WriteLine("");
                 Console.WriteLine("-----Services-----");
@@ -484,10 +485,11 @@ namespace Backend {
                 Console.WriteLine("2. Emailer - " + (emailerEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("3. OpenAIChatService - " + (openAIChatServiceEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("4. SmsService - " + (smsServiceEnabled.Value == "true" ? "Enabled" : "Disabled"));
+                Console.WriteLine("5. Microsoft Auth - " + (msAuthEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("------WARNING------");
-                Console.WriteLine("5. DISABLE ALL SERVICES");
-                Console.WriteLine("6. ENABLE ALL SERVICES");
-                Console.WriteLine("7. Exit");
+                Console.WriteLine("6. DISABLE ALL SERVICES");
+                Console.WriteLine("7. ENABLE ALL SERVICES");
+                Console.WriteLine("8. Exit");
                 Console.WriteLine();
                 Console.Write("Select service to toggle: ");
 
@@ -523,6 +525,12 @@ namespace Backend {
                         Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
                         break;
                     case 5:
+                        msAuthEnabled.Value = msAuthEnabled.Value == "true" ? "false" : "true";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: Microsoft Auth service " + (msAuthEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                        break;
+                    case 6:
                         Console.WriteLine("");
 
                         for (int i = 6; i > 0; i--) {
@@ -541,16 +549,17 @@ namespace Backend {
                             Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
                         }
 
-                        compVisionEnabled.Value = "False";
-                        emailerEnabled.Value = "False";
-                        openAIChatServiceEnabled.Value = "False";
-                        smsServiceEnabled.Value = "False";
+                        compVisionEnabled.Value = "false";
+                        emailerEnabled.Value = "false";
+                        openAIChatServiceEnabled.Value = "false";
+                        smsServiceEnabled.Value = "false";
+                        msAuthEnabled.Value = "false";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
                         break;
-                    case 6:
+                    case 7:
                         Console.WriteLine("");
 
                         for (int i = 6; i > 0; i--) {
@@ -569,22 +578,23 @@ namespace Backend {
                             Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
                         }
 
-                        compVisionEnabled.Value = "True";
-                        emailerEnabled.Value = "True";
-                        openAIChatServiceEnabled.Value = "True";
-                        smsServiceEnabled.Value = "True";
+                        compVisionEnabled.Value = "true";
+                        emailerEnabled.Value = "true";
+                        openAIChatServiceEnabled.Value = "true";
+                        smsServiceEnabled.Value = "true";
+                        msAuthEnabled.Value = "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
                         break;
-                    case 7:
+                    case 8:
                         Console.WriteLine("");
                         Console.WriteLine("Exiting Service Toggle Mode...");
                         return;
                     default:
                         Console.WriteLine("");
-                        Console.WriteLine("ERROR: Please enter a valid integer from 1-6.");
+                        Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
                         break;
                 }
             }
@@ -691,6 +701,7 @@ namespace Backend {
                 Console.WriteLine("");
                 Console.WriteLine("Populating Database. This may take a while...");
 
+                await PopulateCloudConfigs();
                 await PopulateTasksAndQuests();
                 await PopulateRewardItems();
 
@@ -702,6 +713,31 @@ namespace Backend {
                 Console.WriteLine("");
                 Console.WriteLine($"ERROR: {ex.Message}");
 
+                return;
+            }
+        }
+
+        private async Task PopulateCloudConfigs() {
+            try {
+                var environmentVariables = Bootcheck.RetrieveEnvironmentVariables();
+                _context.EnvironmentConfigs.RemoveRange(_context.EnvironmentConfigs);
+
+                foreach (var envVar in environmentVariables) {
+                    var value = Environment.GetEnvironmentVariable(envVar) ?? "Not set";
+                    var config = new EnvironmentConfig {
+                        Name = envVar,
+                        Value = value
+                    };
+                    
+                    _context.EnvironmentConfigs.Add(config);
+                }
+                await _context.SaveChangesAsync();
+
+                return;
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine("ERROR: Failed to save environment variables to database.");
+                Logger.Log("SUPERUSERSCRIPT - Failed to save environment variables to database. ERROR: " + ex.Message);
                 return;
             }
         }
@@ -1250,6 +1286,9 @@ namespace Backend {
                 return;
             }
 
+            Console.WriteLine("");
+            Console.WriteLine("Populating Students...");
+
             try {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
@@ -1478,12 +1517,15 @@ namespace Backend {
 
             using (var scope = builder.Services.BuildServiceProvider().CreateScope()) {
                 var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
-                await Bootcheck.Run(dbContext);
+                Bootcheck.Run(dbContext);
             }
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddControllers();
+            builder.Services.AddHttpClient();
+            builder.Services.AddScoped<Captcha>();
+            builder.Services.AddScoped<CheckSystemLockedFilter>();
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {

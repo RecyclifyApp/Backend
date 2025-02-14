@@ -1,5 +1,6 @@
 using Backend.Models;
 using Backend.Services;
+using Backend.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
@@ -9,6 +10,7 @@ namespace Backend.Controllers.Teachers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
 
     public class TeacherController(MyDbContext context, HttpClient httpClient) : ControllerBase
     {

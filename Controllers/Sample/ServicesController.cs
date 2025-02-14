@@ -1,11 +1,12 @@
 using Backend.Services;
-using Backend.Models;
+using Backend.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers {
     [ApiController]
     [Route("api/[controller]")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class ServicesController : ControllerBase {
         private readonly MyDbContext _context;
 
@@ -68,12 +69,6 @@ namespace Backend.Controllers {
             } catch (Exception ex) {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
-        }
-
-        [HttpPost("populate-database")]
-        public async Task<IActionResult> PopulateDatabase() {
-            await DatabaseManager.CleanAndPopulateDatabase(_context);
-            return Ok(new { message = "Database populated successfully" });
         }
 
         [HttpPost("send-email")]
