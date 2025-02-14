@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
 using Backend.Models;
+using Backend.Filters;
 using Microsoft.IdentityModel.Tokens; 
 using System.IdentityModel.Tokens.Jwt; 
 using System.Security.Claims; 
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers.Identity {
     [ApiController]
     [Route("/api/[controller]")]
-    public class IdentityController (MyDbContext context, IConfiguration configuration) : ControllerBase {
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
+    public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService) : ControllerBase {
         private readonly MyDbContext _context = context;
+        private readonly Captcha _captchaService = captchaService;
         private readonly IConfiguration _configuration = configuration;
 
         private string CreateToken(User user) {
@@ -44,6 +48,176 @@ namespace Backend.Controllers.Identity {
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        [HttpGet("getParentsId")]
+        public IActionResult GetParentsId([FromQuery] string userId) {
+            try {
+                var student = _context.Students.FirstOrDefault(p => p.StudentID == userId);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                var parentId = student.ParentID;
+
+                return Ok(new { parentId });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving parent's ID.", details = ex.Message });
+            }
+        }
+
+        [HttpGet("getChildsId")]
+        public IActionResult GetChildsId([FromQuery] string userId) {
+            try {
+                var parent = _context.Parents.FirstOrDefault(p => p.ParentID == userId);
+                if (parent == null) {
+                    return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                var studentId = parent.StudentID;
+
+                return Ok(new { studentId });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving child's ID.", details = ex.Message });
+            }
+        }
+
+        [HttpGet("getPublicUserDetails")]
+        public IActionResult GetUserDetails([FromQuery] string userId) {
+            try {
+                // Retrieve the user details from the database using the provided userId
+                var user = _context.Users.Find(userId);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                // Base user details
+                var response = new {
+                    user.Id,
+                    user.AboutMe,
+                    user.FName,
+                    user.LName,
+                    user.UserRole,
+                    user.Avatar,
+                    user.Banner
+                };
+
+                if (user.UserRole == "teacher" || user.UserRole == "parent") {
+                    return Ok(new {
+                        user.Id,
+                        user.AboutMe,
+                        user.FName,
+                        user.LName,
+                        user.UserRole,
+                        user.Avatar,
+                        user.Banner,
+                        user.Email,
+                        user.ContactNumber
+                    });
+                }
+
+                return Ok(response);
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving user details.", details = ex.Message });
+            }
+        }
+
+        [HttpGet("getPublicProfileDetails")]
+        public IActionResult GetPublicProfileDetails([FromQuery] string userId) {
+            try {
+                if (string.IsNullOrEmpty(userId)) {
+                    return BadRequest(new { error = "UERROR: userId is required" });
+                }
+
+                var user = _context.Users
+                    .Include(u => u.Admin)
+                    .FirstOrDefault(u => u.Id == userId);
+
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found" });
+                }
+
+                object responseData = new { };
+
+                switch (user.UserRole) {
+                    case "admin":
+                        // Admins do not have public profiles
+                        responseData = new { };
+                        break;
+                    case "parent":
+                        var parent = _context.Parents
+                            .Include(p => p.Student)
+                                .ThenInclude(s => s.User)
+                            .FirstOrDefault(p => p.UserID == userId);
+
+                        if (parent == null) {
+                            return NotFound(new { error = "ERROR: Parent record not found" });
+                        }
+
+                        var childUser = parent.Student?.User;
+                        responseData = new {
+                            childFName = childUser?.FName ?? "",
+                            childLName = childUser?.LName ?? ""
+                        };
+                        break;
+                    case "teacher":
+                        var teacher = _context.Teachers
+                            .Include(t => t.Classes)
+                            .FirstOrDefault(t => t.UserID == userId);
+
+                        if (teacher == null) {
+                            return NotFound(new { error = "ERROR: Teacher record not found" });
+                        }
+
+                        responseData = new {
+                            classNumbers = teacher.Classes?.Select(c => c.ClassName).ToList() ?? new List<int>()
+                        };
+                        break;
+                    case "student":
+                        var student = _context.Students
+                            .Include(s => s.Parent)
+                                .ThenInclude(p => p.User)
+                            .FirstOrDefault(s => s.UserID == userId);
+
+                        if (student == null) {
+                            return NotFound(new { error = "ERROR: Student record not found" });
+                        }
+
+                        string parentName = "";
+                        if (student.Parent?.User != null) {
+                            parentName = $"{student.Parent.User.FName} {student.Parent.User.LName}".Trim();
+                            parentName = string.IsNullOrEmpty(parentName) ? "" : parentName;
+                        }
+
+                        // Retrieve class name instead of class ID
+                        var classStudent = _context.ClassStudents
+                            .Include(cs => cs.Class) // Include the Class navigation property
+                            .ThenInclude(c => c.Teacher)
+                            .FirstOrDefault(cs => cs.StudentID == student.StudentID);
+
+                        string className = "";
+                        string teacherName = "";
+                        if (classStudent != null) {
+                            className = classStudent.Class?.ClassName.ToString() ?? "";
+                            teacherName = classStudent.Class?.Teacher?.TeacherName ?? "";
+                        }
+
+                        responseData = new {
+                            parentName,
+                            className, // Return class name instead of ID
+                            teacherName,
+                            totalPoints = student.TotalPoints
+                        };
+                        break;
+                    default:
+                        return BadRequest(new { error = "ERROR: Invalid user role" });
+                }
+
+                return Ok(new { responseData });
+            } catch (Exception ex) {
+                Logger.Log($"[ERROR] getPublicProfileDetails: Error retrieving public details for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: An error occurred while retrieving the public details.", details = ex.Message });
+            }
         }
 
         [HttpGet("getAvatar")]
@@ -215,6 +389,20 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("createAccount")]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request) {
+            if (string.IsNullOrEmpty(request.RecaptchaResponse)) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA response is required." });
+            }
+
+            var (captchaSuccess, captchaScore) = await _captchaService.ValidateCaptchaAsync(request.RecaptchaResponse);
+            if (!captchaSuccess) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA validation failed." });
+            }
+
+            // Optional: you can decide to take action based on the score if needed
+            if (captchaScore < 0.5) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA score too low. Please try again." });
+            }
+
             string email = request.UserRole == "student" ? request.Email + "@mymail.nyp.edu.sg" : request.Email;
             var keyValuePairs = new List<Dictionary<string, object>> {
                 new Dictionary<string, object> {
@@ -262,6 +450,7 @@ namespace Backend.Controllers.Identity {
                     { "emailVerificationToken", code }
                 };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Welcome to Recyclify",
@@ -283,7 +472,9 @@ namespace Backend.Controllers.Identity {
                         user.LName,
                         user.Email,
                         user.UserRole
-                    }
+                    },
+                    captchaSuccess,
+                    captchaScore
                 });
             } catch (ArgumentException ex) {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
@@ -415,6 +606,7 @@ namespace Backend.Controllers.Identity {
                     { "emailVerificationToken", code }
                 };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Email Verification",
@@ -691,6 +883,7 @@ namespace Backend.Controllers.Identity {
         }
 
         public class CreateAccountRequest {
+            public required string RecaptchaResponse { get; set; } 
             public required string Name { get; set; }
             public required string FName { get; set; }
             public required string LName { get; set; }
