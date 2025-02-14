@@ -4,7 +4,6 @@ using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -64,7 +63,7 @@ namespace Backend {
                 while (running) {
                     Console.WriteLine();
                     Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console---------------------------------");
-                    Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate Database -> Create New Accounts -> Populate Students");
+                    Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate CloudSQL Database -> Create New Teacher Account -> Populate Students");
                     Console.WriteLine("-------------------------------------------------------------------------------------------------------------------");
                     Console.WriteLine("1. Create new account");
                     Console.WriteLine("2. Delete existing account");
@@ -718,9 +717,8 @@ namespace Backend {
         }
 
         private async Task PopulateCloudConfigs() {
-            var environmentVariables = Bootcheck.RetrieveEnvironmentVariables();
-
             try {
+                var environmentVariables = Bootcheck.RetrieveEnvironmentVariables();
                 _context.EnvironmentConfigs.RemoveRange(_context.EnvironmentConfigs);
 
                 foreach (var envVar in environmentVariables) {
@@ -733,11 +731,13 @@ namespace Backend {
                     _context.EnvironmentConfigs.Add(config);
                 }
                 await _context.SaveChangesAsync();
+
+                return;
             } catch (Exception ex) {
                 Console.WriteLine("");
                 Console.WriteLine("ERROR: Failed to save environment variables to database.");
                 Logger.Log("SUPERUSERSCRIPT - Failed to save environment variables to database. ERROR: " + ex.Message);
-                Environment.Exit(1);
+                return;
             }
         }
 
@@ -1284,6 +1284,9 @@ namespace Backend {
                 Console.WriteLine("ERROR: No Classes found. Wipe Database and try creating a new Teacher Account again.");
                 return;
             }
+
+            Console.WriteLine("");
+            Console.WriteLine("Populating Students...");
 
             try {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
