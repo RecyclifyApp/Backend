@@ -8,7 +8,6 @@ namespace Backend.Services {
         public Captcha(HttpClient httpClient) {
             _httpClient = httpClient;
 
-            // Load environment variables from .env file
             _recaptchaSecretKey = Environment.GetEnvironmentVariable("CAPTCHA_SECRET_KEY") ?? throw new InvalidOperationException("CAPTCHA_SECRET_KEY is not set in .env file.");
         }
 

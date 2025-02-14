@@ -1,7 +1,6 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Services {
     public static class AssetsManager {

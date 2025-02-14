@@ -1,10 +1,4 @@
-// This is a Bootcheck service that checks if all the necessary environment variables are set and if the service account key file is valid.
-// System will stop if bootcheck fails.
-
 using Google.Apis.Auth.OAuth2;
-using Backend.Models;
-using Task = System.Threading.Tasks.Task;
-using System.Threading.Tasks;
 
 namespace Backend.Services {
     public static class Bootcheck {
