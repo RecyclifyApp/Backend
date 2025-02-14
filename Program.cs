@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Task = System.Threading.Tasks.Task;
+using System.Net;
+using System.Net.Http;
 
 namespace Backend {
     class SuperuserScript {
