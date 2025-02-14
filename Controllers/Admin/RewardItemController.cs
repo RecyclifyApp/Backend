@@ -31,14 +31,18 @@ namespace Backend.Controllers
         [HttpGet("{rewardID}")]
         public async Task<IActionResult> GetRewardItem(string rewardID)
         {
-            var rewardItem = await _context.RewardItems.FindAsync(rewardID);
-            if (rewardItem == null || !rewardItem.IsAvailable)
+            var rewardItem = await _context.RewardItems
+                .Where(item => item.RewardID == rewardID)
+                .FirstOrDefaultAsync(); // Get a single matching reward item
+
+            if (rewardItem == null)
             {
                 return NotFound(new { error = "ERROR: Reward item not found" });
             }
 
             return Ok(new { message = "SUCCESS: Reward item retrieved", data = rewardItem });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> CreateRewardItem([FromForm] RewardItemRequest rewardItemRequest)
@@ -114,7 +118,7 @@ namespace Backend.Controllers
             _context.RewardItems.Add(rewardItem);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "SUCCESS: Reward item created successfully"});
+            return Ok(new { message = "SUCCESS: Reward item created successfully" });
         }
 
 
@@ -145,6 +149,19 @@ namespace Backend.Controllers
             _context.Entry(rewardItem).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return Ok(new { message = "SUCCESS: Availability toggled successfully", data = rewardItem });
+        }
+
+        [HttpGet("{rewardID}/getImageUrl")]
+        public async Task<IActionResult> GetImageUrl(string rewardID)  // Change type if necessary
+        {
+            var rewardItem = await _context.RewardItems.FindAsync(rewardID);
+
+            if (rewardItem == null)
+            {
+                return NotFound(new { message = "ERROR: Reward item not found", data = (string?)null });
+            }
+
+            return Ok(new { message = "SUCCESS: Image URL retrieved", data = rewardItem.ImageUrl });
         }
     }
 }
