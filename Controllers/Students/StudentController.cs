@@ -3,6 +3,7 @@ using Backend.Filters;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers {
     [ApiController]
@@ -11,6 +12,7 @@ namespace Backend.Controllers {
     public class studentController(MyDbContext context) : ControllerBase {
         private readonly MyDbContext _context = context;
 
+        [Authorize]
         [HttpGet("get-student")]
         public IActionResult GetStudent([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -40,6 +42,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("get-student-classID")]
         public IActionResult GetStudentClassID([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -59,6 +62,7 @@ namespace Backend.Controllers {
             }
         }   
 
+        [Authorize]
         [HttpGet("get-student-leafs")]
         public IActionResult GetStudentLeafs([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -73,6 +77,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("get-all-students")]
         public async Task<IActionResult> GetAllStudents([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -108,6 +113,7 @@ namespace Backend.Controllers {
             return Ok(new { message = "SUCCESS: All students retrieved", data = allStudents });
         }
 
+        [Authorize]
         [HttpGet("get-student-tasks")]
         public async Task<IActionResult> GetStudentTasks([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -183,6 +189,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("get-student-chart-statistics")]
         public IActionResult GetStudentChartStatistics([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -208,6 +215,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("get-class-students")]
         public async Task<IActionResult> GetStudents([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -249,6 +257,7 @@ namespace Backend.Controllers {
             return Ok(new { message = "SUCCESS: All rewards retrieved", data = allRewards });
         }
 
+        [Authorize]
         [HttpPost("submit-task")]
         public async Task<IActionResult> SubmitTask([FromForm] IFormFile file, [FromForm] string taskID, [FromForm] string studentID) {
             if (file == null || file.Length == 0) {
@@ -314,6 +323,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpPost("redeem-reward")]
         public async Task<IActionResult> RedeemReward([FromForm] string studentID, [FromForm] string rewardID) {
             if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(rewardID)) {
@@ -383,6 +393,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("get-student-rewards")]
         public async Task<IActionResult> GetStudentRewards([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -459,6 +470,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpPost("award-gift")]
         public async Task<IActionResult> AwardGift([FromBody] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -493,6 +505,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpPost("join-class")]
         public async Task<IActionResult> JoinClass([FromForm] string studentID, [FromForm] int joinCode) {
             if (string.IsNullOrEmpty(studentID) || joinCode <= 0) {
@@ -534,6 +547,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("check-student-enrolment")]
         public async Task<IActionResult> CheckStudentEnrolment([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
@@ -553,6 +567,7 @@ namespace Backend.Controllers {
             }
         }
 
+        [Authorize]
         [HttpGet("get-class-quests")]
         public async Task<IActionResult> GetClassQuests([FromQuery] string classID) {
             if (string.IsNullOrEmpty(classID)) {
@@ -640,6 +655,7 @@ namespace Backend.Controllers {
             }   
         }
 
+        [Authorize]
         [HttpGet("get-student-inbox-messages")]
         public async Task<IActionResult> GetStudentInboxMessages([FromQuery] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
