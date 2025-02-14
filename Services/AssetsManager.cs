@@ -107,5 +107,25 @@ namespace Backend.Services {
                 return $"ERROR: {ex.Message}";
             }
         }
+
+        public static async Task<string> ClearFirebaseCloudStorage () {
+            var bucketName = Environment.GetEnvironmentVariable("FIREBASE_STORAGE_BUCKET_URL");
+
+            if (string.IsNullOrEmpty(bucketName)) {
+                return "ERROR: FIREBASE_STORAGE_BUCKET_URL environment variable not set.";
+            }
+
+            try {
+                var objects = _storageClient.ListObjects(bucketName);
+                foreach (var obj in objects) {
+                    await _storageClient.DeleteObjectAsync(bucketName, obj.Name);
+                }
+
+                return "SUCCESS: All files deleted from bucket.";
+            } catch (Exception ex) {
+                Logger.Log($"ASSETSMANAGER ERROR: {ex.Message}");
+                return $"ERROR: {ex.Message}";
+            }
+        }
     }
 }

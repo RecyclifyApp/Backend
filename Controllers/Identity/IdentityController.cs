@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
 using Backend.Models;
+using Backend.Filters;
 using Microsoft.IdentityModel.Tokens; 
 using System.IdentityModel.Tokens.Jwt; 
 using System.Security.Claims; 
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Backend.Controllers.Identity {
     [ApiController]
     [Route("/api/[controller]")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService) : ControllerBase {
         private readonly MyDbContext _context = context;
         private readonly Captcha _captchaService = captchaService;
@@ -448,6 +450,7 @@ namespace Backend.Controllers.Identity {
                     { "emailVerificationToken", code }
                 };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Welcome to Recyclify",
@@ -603,6 +606,7 @@ namespace Backend.Controllers.Identity {
                     { "emailVerificationToken", code }
                 };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Email Verification",

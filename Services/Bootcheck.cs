@@ -1,31 +1,38 @@
-// This is a Bootcheck service that checks if all the necessary environment variables are set and if the service account key file is valid.
-// System will stop if bootcheck fails.
-
 using Google.Apis.Auth.OAuth2;
 
 namespace Backend.Services {
     public static class Bootcheck {
-        public static void Run() {
+        private static readonly string[] environmentVariables = {
+            "DB_MODE",
+            "EMAILER_ENABLED",
+            "SMS_ENABLED",
+            "COMPVISION_ENABLED",
+            "OPENAI_CHAT_SERVICE_ENABLED",
+            "MSAuthEnabled",
+            "EMAIL_SENDER",
+            "EMAIL_PASSWORD",
+            "HTTP_URL",
+            "HTTPS_URL",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_REGISTERED_PHONE_NUMBER",
+            "GOOGLE_APPLICATION_CREDENTIALS",
+            "FIREBASE_APPLICATION_CREDENTIALS",
+            "FIREBASE_STORAGE_BUCKET_URL",
+            "CLOUDSQL_CONNECTION_STRING",
+            "JWT_KEY",
+            "OPENAI_API_KEY",
+            "SUPERUSER_USERNAME",
+            "SUPERUSER_PASSWORD",
+            "SUPERUSER_PIN",
+            "SYSTEM_LOCKED",
+            "ACCREDIBLE_API_KEY",
+            "ACCREDIBLE_RECYCLIFY_CERTIFICATE_GROUP_ID",
+            "CAPTCHA_SECRET_KEY",
+            "RapidAPIKey"
+        };
+        public static void Run(MyDbContext context) {
             var missingVariables = new List<string>();
-            var environmentVariables = new string[] {
-                "DB_MODE",
-                "EMAILER_ENABLED",
-                "SMS_ENABLED",
-                "COMPVISION_ENABLED",
-                "EMAIL_SENDER",
-                "EMAIL_PASSWORD",
-                "HTTP_URL",
-                "HTTPS_URL",
-                "TWILIO_ACCOUNT_SID",
-                "TWILIO_AUTH_TOKEN",
-                "TWILIO_REGISTERED_PHONE_NUMBER",
-                "GOOGLE_APPLICATION_CREDENTIALS",
-                "FIREBASE_APPLICATION_CREDENTIALS",
-                "FIREBASE_STORAGE_BUCKET_URL",
-                "CLOUDSQL_CONNECTION_STRING",
-                "JWT_KEY",
-                "OPENAI_API_KEY"
-            };
 
             missingVariables = environmentVariables
                 .Where(var => string.IsNullOrEmpty(Environment.GetEnvironmentVariable(var)))
@@ -47,8 +54,9 @@ namespace Backend.Services {
                     try {
                         GoogleCredential.FromFile(firebaseCredentialsPath);
                         GoogleCredential.FromFile(gcpCredentialsPath);
+
                         Console.WriteLine("");
-                        Console.WriteLine("BOOTCHECK COMPLETE. SYSTEM READY.");
+                        Console.WriteLine("BOOTCHECK COMPLETE: CLOUD CONFIGS READY. SYSTEM STARTING...");
                         Console.WriteLine("");
                     } catch (Exception ex) {
                         Console.WriteLine("");
@@ -58,6 +66,10 @@ namespace Backend.Services {
                     }
                 }
             }
+        }
+
+        public static string[] RetrieveEnvironmentVariables() {
+            return environmentVariables;
         }
     }
 }

@@ -1,5 +1,6 @@
 using Backend.Models;
 using Backend.Services;
+using Backend.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
@@ -9,6 +10,7 @@ namespace Backend.Controllers.Teachers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
 
     public class TeacherController(MyDbContext context, HttpClient httpClient) : ControllerBase
     {
@@ -474,6 +476,7 @@ namespace Backend.Controllers.Teachers
                     {
                         try
                         {
+                            var Emailer = new Emailer(_context);
                             await Emailer.SendEmailAsync(studentEmail, "Update from Recyclify", "StudentUpdateEmail", emailVars);
                         }
                         catch (Exception ex)
@@ -481,10 +484,12 @@ namespace Backend.Controllers.Teachers
                             return StatusCode(500, new { error = $"ERROR: An error occurred: {ex.Message}" });
                         }
                     }
+
                     if (!string.IsNullOrEmpty(parentEmail) && recipient == "parents")
                     {
                         try
                         {
+                            var Emailer = new Emailer(_context);
                             await Emailer.SendEmailAsync(parentEmail, "Update from Recyclify", "ParentUpdateEmail", emailVars);
                         }
                         catch (Exception ex)
@@ -746,6 +751,7 @@ namespace Backend.Controllers.Teachers
                     { "taskPoints", taskObj.TaskPoints.ToString() }
                 };
 
+                var Emailer = new Emailer(_context);
                 await Emailer.SendEmailAsync(studentEmail, $"You've earned {taskObj.TaskPoints} leafs!", "SuccessfulTaskVerification", emailVars);
 
                 return Ok(new { message = "SUCCESS: Task verified successfully." });
@@ -819,6 +825,7 @@ namespace Backend.Controllers.Teachers
                     { "rejectionReason", rejectionReason }
                 };
 
+                var Emailer = new Emailer(_context);
                 await Emailer.SendEmailAsync(studentEmail, $"Your task: {taskObj.TaskTitle} has been rejected.", "SuccessfulTaskRejection", emailVars);
 
                 return Ok(new { message = "SUCCESS: Task rejected successfully." });
