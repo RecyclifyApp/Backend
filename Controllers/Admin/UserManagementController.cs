@@ -97,6 +97,7 @@ namespace Backend.Controllers.Admin
             { "emailVerificationToken", code }
         };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Welcome to Recyclify",

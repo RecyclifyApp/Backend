@@ -4,6 +4,7 @@ using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -475,6 +476,8 @@ namespace Backend {
                     ?? throw new Exception("ERROR: OPENAI_CHAT_SERVICE_ENABLED environment variable not found.");
                 var smsServiceEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "SMS_ENABLED")
                     ?? throw new Exception("ERROR: SMS_ENABLED environment variable not found.");
+                var msAuthEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled")
+                    ?? throw new Exception("ERROR: MSAuthEnabled environment variable not found.");
 
                 Console.WriteLine("");
                 Console.WriteLine("-----Services-----");
@@ -482,10 +485,11 @@ namespace Backend {
                 Console.WriteLine("2. Emailer - " + (emailerEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("3. OpenAIChatService - " + (openAIChatServiceEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("4. SmsService - " + (smsServiceEnabled.Value == "true" ? "Enabled" : "Disabled"));
+                Console.WriteLine("5. Microsoft Auth - " + (msAuthEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("------WARNING------");
-                Console.WriteLine("5. DISABLE ALL SERVICES");
-                Console.WriteLine("6. ENABLE ALL SERVICES");
-                Console.WriteLine("7. Exit");
+                Console.WriteLine("6. DISABLE ALL SERVICES");
+                Console.WriteLine("7. ENABLE ALL SERVICES");
+                Console.WriteLine("8. Exit");
                 Console.WriteLine();
                 Console.Write("Select service to toggle: ");
 
@@ -521,6 +525,12 @@ namespace Backend {
                         Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
                         break;
                     case 5:
+                        msAuthEnabled.Value = msAuthEnabled.Value == "true" ? "false" : "true";
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("");
+                        Console.WriteLine("SUCCESS: Microsoft Auth service " + (msAuthEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                        break;
+                    case 6:
                         Console.WriteLine("");
 
                         for (int i = 6; i > 0; i--) {
@@ -548,7 +558,7 @@ namespace Backend {
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
                         break;
-                    case 6:
+                    case 7:
                         Console.WriteLine("");
 
                         for (int i = 6; i > 0; i--) {
@@ -576,13 +586,13 @@ namespace Backend {
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
                         break;
-                    case 7:
+                    case 8:
                         Console.WriteLine("");
                         Console.WriteLine("Exiting Service Toggle Mode...");
                         return;
                     default:
                         Console.WriteLine("");
-                        Console.WriteLine("ERROR: Please enter a valid integer from 1-6.");
+                        Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
                         break;
                 }
             }
@@ -689,6 +699,7 @@ namespace Backend {
                 Console.WriteLine("");
                 Console.WriteLine("Populating Database. This may take a while...");
 
+                await PopulateCloudConfigs();
                 await PopulateTasksAndQuests();
                 await PopulateRewardItems();
 
@@ -701,6 +712,30 @@ namespace Backend {
                 Console.WriteLine($"ERROR: {ex.Message}");
 
                 return;
+            }
+        }
+
+        private async Task PopulateCloudConfigs() {
+            var environmentVariables = Bootcheck.RetrieveEnvironmentVariables();
+
+            try {
+                _context.EnvironmentConfigs.RemoveRange(_context.EnvironmentConfigs);
+
+                foreach (var envVar in environmentVariables) {
+                    var value = Environment.GetEnvironmentVariable(envVar) ?? "Not set";
+                    var config = new EnvironmentConfig {
+                        Name = envVar,
+                        Value = value
+                    };
+                    
+                    _context.EnvironmentConfigs.Add(config);
+                }
+                await _context.SaveChangesAsync();
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine("ERROR: Failed to save environment variables to database.");
+                Logger.Log("SUPERUSERSCRIPT - Failed to save environment variables to database. ERROR: " + ex.Message);
+                Environment.Exit(1);
             }
         }
 
@@ -1476,7 +1511,7 @@ namespace Backend {
 
             using (var scope = builder.Services.BuildServiceProvider().CreateScope()) {
                 var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
-                await Bootcheck.Run(dbContext);
+                Bootcheck.Run(dbContext);
             }
 
             builder.Services.AddEndpointsApiExplorer();

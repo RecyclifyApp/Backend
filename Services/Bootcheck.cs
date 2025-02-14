@@ -8,34 +8,37 @@ using System.Threading.Tasks;
 
 namespace Backend.Services {
     public static class Bootcheck {
-        public static async Task Run(MyDbContext context) {
+        private static readonly string[] environmentVariables = {
+            "DB_MODE",
+            "EMAILER_ENABLED",
+            "SMS_ENABLED",
+            "COMPVISION_ENABLED",
+            "OPENAI_CHAT_SERVICE_ENABLED",
+            "MSAuthEnabled",
+            "EMAIL_SENDER",
+            "EMAIL_PASSWORD",
+            "HTTP_URL",
+            "HTTPS_URL",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_REGISTERED_PHONE_NUMBER",
+            "GOOGLE_APPLICATION_CREDENTIALS",
+            "FIREBASE_APPLICATION_CREDENTIALS",
+            "FIREBASE_STORAGE_BUCKET_URL",
+            "CLOUDSQL_CONNECTION_STRING",
+            "JWT_KEY",
+            "OPENAI_API_KEY",
+            "SUPERUSER_USERNAME",
+            "SUPERUSER_PASSWORD",
+            "SUPERUSER_PIN",
+            "SYSTEM_LOCKED",
+            "ACCREDIBLE_API_KEY",
+            "ACCREDIBLE_RECYCLIFY_CERTIFICATE_GROUP_ID",
+            "CAPTCHA_SECRET_KEY",
+            "RapidAPIKey"
+        };
+        public static void Run(MyDbContext context) {
             var missingVariables = new List<string>();
-            var environmentVariables = new string[] {
-                "DB_MODE",
-                "EMAILER_ENABLED",
-                "SMS_ENABLED",
-                "COMPVISION_ENABLED",
-                "OPENAI_CHAT_SERVICE_ENABLED",
-                "EMAIL_SENDER",
-                "EMAIL_PASSWORD",
-                "HTTP_URL",
-                "HTTPS_URL",
-                "TWILIO_ACCOUNT_SID",
-                "TWILIO_AUTH_TOKEN",
-                "TWILIO_REGISTERED_PHONE_NUMBER",
-                "GOOGLE_APPLICATION_CREDENTIALS",
-                "FIREBASE_APPLICATION_CREDENTIALS",
-                "FIREBASE_STORAGE_BUCKET_URL",
-                "CLOUDSQL_CONNECTION_STRING",
-                "JWT_KEY",
-                "OPENAI_API_KEY",
-                "SUPERUSER_USERNAME",
-                "SUPERUSER_PASSWORD",
-                "SUPERUSER_PIN",
-                "SYSTEM_LOCKED",
-                "ACCREDIBLE_API_KEY",
-                "ACCREDIBLE_RECYCLIFY_CERTIFICATE_GROUP_ID"
-            };
 
             missingVariables = environmentVariables
                 .Where(var => string.IsNullOrEmpty(Environment.GetEnvironmentVariable(var)))
@@ -58,8 +61,6 @@ namespace Backend.Services {
                         GoogleCredential.FromFile(firebaseCredentialsPath);
                         GoogleCredential.FromFile(gcpCredentialsPath);
 
-                        await SaveEnvironmentVariables(context, environmentVariables);
-
                         Console.WriteLine("");
                         Console.WriteLine("BOOTCHECK COMPLETE: CLOUD CONFIGS READY. SYSTEM STARTING...");
                         Console.WriteLine("");
@@ -73,26 +74,8 @@ namespace Backend.Services {
             }
         }
 
-        private static async Task SaveEnvironmentVariables(MyDbContext context, string[] environmentVariables) {
-            try {
-                context.EnvironmentConfigs.RemoveRange(context.EnvironmentConfigs);
-
-                foreach (var envVar in environmentVariables) {
-                    var value = Environment.GetEnvironmentVariable(envVar) ?? "Not set";
-                    var config = new EnvironmentConfig {
-                        Name = envVar,
-                        Value = value
-                    };
-                    
-                    context.EnvironmentConfigs.Add(config);
-                }
-                await context.SaveChangesAsync();
-            } catch (Exception ex) {
-                Console.WriteLine("");
-                Console.WriteLine("ERROR: Failed to save environment variables to database.");
-                Logger.Log("BOOTCHECK - Failed to save environment variables to database. ERROR: " + ex.Message);
-                Environment.Exit(1);
-            }
+        public static string[] RetrieveEnvironmentVariables() {
+            return environmentVariables;
         }
     }
 }
