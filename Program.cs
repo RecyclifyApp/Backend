@@ -305,6 +305,7 @@ namespace Backend {
 
                     var parentKvp = new List<Dictionary<string, object>> {
                         new Dictionary<string, object> {
+                            { "Id", Utilities.GenerateUniqueID() },
                             { "Name", parentFName + " " + parentLName },
                             { "FName", parentFName },
                             { "LName", parentLName },
@@ -346,6 +347,7 @@ namespace Backend {
 
                     var studentKvp = new List<Dictionary<string, object>> {
                         new Dictionary<string, object> {
+                            { "Id", Utilities.GenerateUniqueID() },
                             { "Name", studentFName + " " + studentLName },
                             { "FName", studentFName },
                             { "LName", studentLName },
