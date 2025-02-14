@@ -62,9 +62,9 @@ namespace Backend {
                 bool running = true;
                 while (running) {
                     Console.WriteLine();
-                    Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console---------------------------------");
+                    Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console----------------------------------------------");
                     Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate CloudSQL Database -> Create New Teacher Account -> Populate Students");
-                    Console.WriteLine("-------------------------------------------------------------------------------------------------------------------");
+                    Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
                     Console.WriteLine("1. Create new account");
                     Console.WriteLine("2. Delete existing account");
                     Console.WriteLine("3. Lock / Unlock System");

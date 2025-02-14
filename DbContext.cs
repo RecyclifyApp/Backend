@@ -25,6 +25,7 @@ namespace Backend {
         public required DbSet<ContactForm> ContactForms { get; set; }
         public required DbSet<ClassStudents> ClassStudents { get; set; }
         public required DbSet<EnvironmentConfig> EnvironmentConfigs { get; set; }
+        public required DbSet<Event> Events { get; set; }
 
         public MyDbContext(IConfiguration configuration) : base() {
             _configuration = configuration;
