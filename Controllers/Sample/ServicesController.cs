@@ -171,10 +171,11 @@ namespace Backend.Controllers {
                 return BadRequest(new { error = "No file uploaded" });
             } else {
                 try {
-                    var recognitionResult = await CompVision.Recognise(file);
+                    var compVision = new CompVision(_context);
+                    var recognitionResult = await compVision.Recognise(file);
                     return Ok(recognitionResult);
                 } catch (Exception ex) {
-                    return StatusCode(500, new { error = ex });
+                    return StatusCode(500, new { error = ex.Message });
                 }
             }
         }

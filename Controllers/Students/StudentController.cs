@@ -659,10 +659,11 @@ namespace Backend.Controllers {
                 return BadRequest(new { error = "UERROR: No file uploaded" });
             } else {
                 try {
+                    var CompVision = new CompVision(_context);
                     var recognitionResult = await CompVision.Recognise(file);
                     return Ok(recognitionResult);
                 } catch (Exception ex) {
-                    return StatusCode(500, new { error = ex });
+                    return StatusCode(500, new { error = ex.Message });
                 }
             }
         }

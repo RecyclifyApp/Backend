@@ -478,10 +478,10 @@ namespace Backend {
 
                 Console.WriteLine("");
                 Console.WriteLine("-----Services-----");
-                Console.WriteLine("1. CompVision - " + (compVisionEnabled.Value == "True" ? "Enabled" : "Disabled"));
-                Console.WriteLine("2. Emailer - " + (emailerEnabled.Value == "True" ? "Enabled" : "Disabled"));
-                Console.WriteLine("3. OpenAIChatService - " + (openAIChatServiceEnabled.Value == "True" ? "Enabled" : "Disabled"));
-                Console.WriteLine("4. SmsService - " + (smsServiceEnabled.Value == "True" ? "Enabled" : "Disabled"));
+                Console.WriteLine("1. CompVision - " + (compVisionEnabled.Value == "true" ? "Enabled" : "Disabled"));
+                Console.WriteLine("2. Emailer - " + (emailerEnabled.Value == "true" ? "Enabled" : "Disabled"));
+                Console.WriteLine("3. OpenAIChatService - " + (openAIChatServiceEnabled.Value == "true" ? "Enabled" : "Disabled"));
+                Console.WriteLine("4. SmsService - " + (smsServiceEnabled.Value == "true" ? "Enabled" : "Disabled"));
                 Console.WriteLine("------WARNING------");
                 Console.WriteLine("5. DISABLE ALL SERVICES");
                 Console.WriteLine("6. ENABLE ALL SERVICES");
@@ -497,28 +497,28 @@ namespace Backend {
 
                 switch (service) {
                     case 1:
-                        compVisionEnabled.Value = compVisionEnabled.Value == "True" ? "False" : "True";
+                        compVisionEnabled.Value = compVisionEnabled.Value == "true" ? "false" : "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
                         break;
                     case 2:
-                        emailerEnabled.Value = emailerEnabled.Value == "True" ? "False" : "True";
+                        emailerEnabled.Value = emailerEnabled.Value == "true" ? "false" : "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
                         break;
                     case 3:
-                        openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "True" ? "False" : "True";
+                        openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "true" ? "false" : "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
                         break;
                     case 4:
-                        smsServiceEnabled.Value = smsServiceEnabled.Value == "True" ? "False" : "True";
+                        smsServiceEnabled.Value = smsServiceEnabled.Value == "true" ? "false" : "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "True" ? "ENABLED." : "DISABLED."));
+                        Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
                         break;
                     case 5:
                         Console.WriteLine("");
