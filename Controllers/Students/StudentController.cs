@@ -363,6 +363,7 @@ namespace Backend.Controllers {
                         { "qrcode", qrCodeUrl }
                     };
 
+                    var Emailer = new Emailer(_context);
                     await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RewardRedemption", emailVars);
 
                     var studentInboxMessage = new Inbox {

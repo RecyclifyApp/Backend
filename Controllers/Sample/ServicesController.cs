@@ -83,6 +83,7 @@ namespace Backend.Controllers {
             };
 
             try {
+                var Emailer = new Emailer(_context);
                 var emailResult = await Emailer.SendEmailAsync(recipientEmail, title, template, emailVars);
 
                 if (emailResult.StartsWith("ERROR"))
