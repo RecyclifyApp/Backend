@@ -448,6 +448,7 @@ namespace Backend.Controllers.Identity {
                     { "emailVerificationToken", code }
                 };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Welcome to Recyclify",
@@ -603,6 +604,7 @@ namespace Backend.Controllers.Identity {
                     { "emailVerificationToken", code }
                 };
 
+                var Emailer = new Emailer(_context);
                 var result = await Emailer.SendEmailAsync(
                     user.Email,
                     "Email Verification",

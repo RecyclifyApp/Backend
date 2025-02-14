@@ -1,6 +1,7 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Services {
     public static class AssetsManager {
@@ -102,6 +103,26 @@ namespace Backend.Services {
 
                 var fileUrl = $"https://firebasestorage.googleapis.com/v0/b/{bucketName}/o/{fileName}?alt=media";
                 return $"SUCCESS: {fileUrl}";
+            } catch (Exception ex) {
+                Logger.Log($"ASSETSMANAGER ERROR: {ex.Message}");
+                return $"ERROR: {ex.Message}";
+            }
+        }
+
+        public static async Task<string> ClearFirebaseCloudStorage () {
+            var bucketName = Environment.GetEnvironmentVariable("FIREBASE_STORAGE_BUCKET_URL");
+
+            if (string.IsNullOrEmpty(bucketName)) {
+                return "ERROR: FIREBASE_STORAGE_BUCKET_URL environment variable not set.";
+            }
+
+            try {
+                var objects = _storageClient.ListObjects(bucketName);
+                foreach (var obj in objects) {
+                    await _storageClient.DeleteObjectAsync(bucketName, obj.Name);
+                }
+
+                return "SUCCESS: All files deleted from bucket.";
             } catch (Exception ex) {
                 Logger.Log($"ASSETSMANAGER ERROR: {ex.Message}");
                 return $"ERROR: {ex.Message}";

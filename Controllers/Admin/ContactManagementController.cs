@@ -62,7 +62,7 @@ namespace Backend.Controllers
         { "Name", contactForm.SenderName },
         { "Message", emailRequest.Body }
     };
-
+            var Emailer = new Emailer(_context);
             var emailResult = await Emailer.SendEmailAsync(to, subject, template, variables);
 
             if (emailResult.StartsWith("ERROR"))

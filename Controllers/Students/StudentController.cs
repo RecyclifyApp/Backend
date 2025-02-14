@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -343,7 +344,7 @@ namespace Backend.Controllers {
 
                     _context.Redemptions.Add(redemption);
                     student.CurrentPoints -= reward.RequiredPoints;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     var studentName = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Name ?? "Student";
                     var studentEmail = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Email ?? "student@mymail.nyp.edu.sg";
@@ -362,7 +363,18 @@ namespace Backend.Controllers {
                         { "qrcode", qrCodeUrl }
                     };
 
+                    var Emailer = new Emailer(_context);
                     await Emailer.SendEmailAsync(studentEmail, "Your reward is here!", "RewardRedemption", emailVars);
+
+                    var studentInboxMessage = new Inbox {
+                        UserID = student.StudentID,
+                        Message = $"You have redeemed {reward.RewardTitle}. Please check your email for the attached QR Code or claim it in My Rewards.",
+                        Date = DateTime.Now.ToString("yyyy-MM-dd")
+                    };
+
+                    _context.Inboxes.Add(studentInboxMessage);
+                    await _context.SaveChangesAsync();
+
                     return Ok(new { message = "SUCCESS: Reward redeemed successfully", data = student.CurrentPoints });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
@@ -428,7 +440,16 @@ namespace Backend.Controllers {
                 try {
                     redemption.ClaimedOn = DateTime.Now;
                     redemption.RedemptionStatus = "Claimed";
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+
+                    var studentInboxMessage = new Inbox {
+                        UserID = student.StudentID,
+                        Message = $"You have claimed {reward.RewardTitle}. Enjoy!",
+                        Date = DateTime.Now.ToString("yyyy-MM-dd")
+                    };
+
+                    _context.Inboxes.Add(studentInboxMessage);
+                    await _context.SaveChangesAsync();
 
                     return Ok(new { message = "SUCCESS: Reward claimed successfully" });
                 } catch (Exception ex) {
@@ -438,7 +459,7 @@ namespace Backend.Controllers {
         }
 
         [HttpPost("award-gift")]
-        public IActionResult AwardGift([FromBody] string studentID) {
+        public async Task<IActionResult> AwardGift([FromBody] string studentID) {
             if (string.IsNullOrEmpty(studentID)) {
                 return BadRequest(new { error = "UERROR: Required parameters missing" });
             } else {
@@ -453,7 +474,17 @@ namespace Backend.Controllers {
                     student.CurrentPoints += randomPoints;
                     student.TotalPoints += randomPoints;
                     student.LastClaimedStreak = DateTime.Now.ToString("yyyy-MM-dd");
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+
+                    var studentInboxMessage = new Inbox {
+                        UserID = student.StudentID,
+                        Message = $"You have received bonus {randomPoints} leafs. Keep up your streak!",
+                        Date = DateTime.Now.ToString("yyyy-MM-dd")
+                    };
+
+                    _context.Inboxes.Add(studentInboxMessage);
+                    await _context.SaveChangesAsync();
+
                     return Ok(new { message = "SUCCESS: Gift awarded successfully", data = new { pointsAwarded = randomPoints, currentPoints = student.CurrentPoints } });
                 } catch (Exception ex) {
                     return StatusCode(500, new { error = ex.Message });
@@ -607,6 +638,21 @@ namespace Backend.Controllers {
                 }
             }   
         }
+
+        [HttpGet("get-student-inbox-messages")]
+        public async Task<IActionResult> GetStudentInboxMessages([FromQuery] string studentID) {
+            if (string.IsNullOrEmpty(studentID)) {
+                return BadRequest(new { error = "UERROR: Required parameters missing" });
+            } else {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentID == studentID);
+                if (student == null) {
+                    return NotFound(new { error = "ERROR: Student not found" });
+                }
+
+                var studentMessages = await _context.Inboxes.Where(i => i.UserID == studentID).ToListAsync();
+                return Ok(new { message = "SUCCESS: Student inbox messages retrieved", data = studentMessages });
+            }
+        }
             
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
@@ -614,10 +660,11 @@ namespace Backend.Controllers {
                 return BadRequest(new { error = "UERROR: No file uploaded" });
             } else {
                 try {
+                    var CompVision = new CompVision(_context);
                     var recognitionResult = await CompVision.Recognise(file);
                     return Ok(recognitionResult);
                 } catch (Exception ex) {
-                    return StatusCode(500, new { error = ex });
+                    return StatusCode(500, new { error = ex.Message });
                 }
             }
         }

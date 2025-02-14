@@ -1,38 +1,31 @@
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
-    public static class SmsService {
-        private static bool ContextChecked = false;
+    public class SmsService {
+        private readonly MyDbContext _context;
+        public SmsService(MyDbContext context) {
+            _context = context;
+        }
+
         private static readonly string? _accountSid = Environment.GetEnvironmentVariable("TWILIO_ACCOUNT_SID");
         private static readonly string? _authToken = Environment.GetEnvironmentVariable("TWILIO_AUTH_TOKEN");
         private static readonly string? _fromNumber = Environment.GetEnvironmentVariable("TWILIO_REGISTERED_PHONE_NUMBER");
 
-        public static bool CheckPermission() {
-            return Environment.GetEnvironmentVariable("SMS_ENABLED") == "True";
+        private async Task CheckPermissionAsync() {
+            var smsEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "SMS_ENABLED");
+            if (smsEnabled == null) {
+                throw new InvalidOperationException("ERROR: SMS_ENABLED configuration is missing.");
+            }
+            if (smsEnabled.Value == "false") {
+                throw new Exception("ERROR: SMS Dispatcher Service is Disabled.");
+            }
         }
 
-        public static void CheckContext() {
-            if (CheckPermission()) {
-                if (string.IsNullOrEmpty(_accountSid) || string.IsNullOrEmpty(_authToken) || string.IsNullOrEmpty(_fromNumber)) {
-                    throw new Exception("ERROR: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_REGISTERED_PHONE_NUMBER environment variables not set.");
-                }
-            } else {
-                throw new Exception("ERROR: SmsService is not enabled.");
-            }
-
-            ContextChecked = true;
-        }
-
-        public static async Task<string> SendSmsAsync(string toNumber, string message) {
-            if (!ContextChecked) {
-                return "ERROR: System context was not checked before sending email. Skipping SMS.";
-            }
-
-            if (!CheckPermission()) {
-                return "ERROR: SMS is not enabled. Skipping SMS.";
-            }
+        public async Task<string> SendSmsAsync(string toNumber, string message) {
+            await CheckPermissionAsync();
 
             try {
                 TwilioClient.Init(_accountSid, _authToken);
