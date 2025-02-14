@@ -113,9 +113,8 @@ namespace Backend.Controllers {
 
         [HttpPost("send-sms")]
         public async Task<IActionResult> SendSMS(string recipientNo, string message) {
-            SmsService.CheckContext();
-            
             try {
+                var SmsService = new SmsService(_context);
                 var smsResult = await SmsService.SendSmsAsync(recipientNo, message);
 
                 if (smsResult.StartsWith("ERROR"))
