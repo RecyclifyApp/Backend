@@ -1,12 +1,14 @@
 using System.Threading.Tasks;
 using Backend.Models;
+using Backend.Filters;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class studentController(MyDbContext context) : ControllerBase {
         private readonly MyDbContext _context = context;
 

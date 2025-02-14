@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Backend.Filters;
 using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
@@ -435,13 +436,13 @@ namespace Backend {
 
                 switch (action) {
                     case 1:
-                        systemLocked.Value = "True";
+                        systemLocked.Value = "true";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: System locked.");
                         break;
                     case 2:
-                        systemLocked.Value = "False";
+                        systemLocked.Value = "false";
                         await _context.SaveChangesAsync();
                         Console.WriteLine("");
                         Console.WriteLine("SUCCESS: System unlocked.");
@@ -1524,6 +1525,7 @@ namespace Backend {
             builder.Services.AddControllers();
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<Captcha>();
+            builder.Services.AddScoped<CheckSystemLockedFilter>();
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
