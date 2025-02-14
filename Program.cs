@@ -20,6 +20,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<Captcha>();
 
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowSpecificOrigins", policy => {
