@@ -1,11 +1,12 @@
 using Backend.Services;
-using Backend.Models;
+using Backend.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers {
     [ApiController]
     [Route("api/[controller]")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class ServicesController : ControllerBase {
         private readonly MyDbContext _context;
 
@@ -70,12 +71,6 @@ namespace Backend.Controllers {
             }
         }
 
-        [HttpPost("populate-database")]
-        public async Task<IActionResult> PopulateDatabase() {
-            await DatabaseManager.CleanAndPopulateDatabase(_context);
-            return Ok(new { message = "Database populated successfully" });
-        }
-
         [HttpPost("send-email")]
         public async Task<IActionResult> SendEmail(string recipientEmail, string title, string template) {
             var emailVars = new Dictionary<string, string> {
@@ -83,6 +78,7 @@ namespace Backend.Controllers {
             };
 
             try {
+                var Emailer = new Emailer(_context);
                 var emailResult = await Emailer.SendEmailAsync(recipientEmail, title, template, emailVars);
 
                 if (emailResult.StartsWith("ERROR"))
@@ -112,9 +108,8 @@ namespace Backend.Controllers {
 
         [HttpPost("send-sms")]
         public async Task<IActionResult> SendSMS(string recipientNo, string message) {
-            SmsService.CheckContext();
-            
             try {
+                var SmsService = new SmsService(_context);
                 var smsResult = await SmsService.SendSmsAsync(recipientNo, message);
 
                 if (smsResult.StartsWith("ERROR"))
@@ -171,10 +166,11 @@ namespace Backend.Controllers {
                 return BadRequest(new { error = "No file uploaded" });
             } else {
                 try {
-                    var recognitionResult = await CompVision.Recognise(file);
+                    var compVision = new CompVision(_context);
+                    var recognitionResult = await compVision.Recognise(file);
                     return Ok(recognitionResult);
                 } catch (Exception ex) {
-                    return StatusCode(500, new { error = ex });
+                    return StatusCode(500, new { error = ex.Message });
                 }
             }
         }

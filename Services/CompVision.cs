@@ -2,21 +2,23 @@ using Google.Cloud.Vision.V1;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services {
     public class CompVision {
-        private static bool ContextChecked = false;
-        
-        private static bool CheckPermission() {
-            return Environment.GetEnvironmentVariable("COMPVISION_ENABLED") == "True";
+        private readonly MyDbContext _context;
+        public CompVision(MyDbContext context) {
+            _context = context;
         }
-
-        private static void CheckContext() {
-            if (!CheckPermission()) {
-                throw new Exception("ERROR: CompVision is not enabled.");
+        
+        private async Task CheckPermissionAsync() {
+            var compVisionEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "COMPVISION_ENABLED");
+            if (compVisionEnabled == null) {
+                throw new InvalidOperationException("ERROR: COMPVISION_ENABLED configuration is missing.");
             }
-
-            ContextChecked = true;
+            if (compVisionEnabled.Value == "false") {
+                throw new Exception("ERROR: Image Recognition Service is Disabled.");
+            }
         }
 
         private static readonly Dictionary<string, List<string>> categoryMap = LoadJson<Dictionary<string, List<string>>>("data/category_map.json");
@@ -25,7 +27,7 @@ namespace Backend.Services {
             using (var reader = new StreamReader(path)) {
                 var result = JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
                 if (result == null) {
-                    throw new InvalidOperationException("Deserialization returned null");
+                    throw new InvalidOperationException("ERROR: Something went wrong while de-serialising the JSON.");
                 }
                 return result;
             }
@@ -108,11 +110,8 @@ namespace Backend.Services {
             return bestCategory.Value > 0 ? bestCategory.Key : null;
         }
 
-        public static async Task<object> Recognise(IFormFile file) {
-            CheckContext();
-            if (!ContextChecked) {
-                return "ERROR: System context was not checked before proce4ssing image for recognition. Skipping image recognition.";
-            }
+        public async Task<object> Recognise(IFormFile file) {
+            await CheckPermissionAsync();
 
             var tempPath = Path.Combine(Path.GetTempPath(), file.FileName);
             var stream = file.OpenReadStream();
@@ -160,6 +159,9 @@ namespace Backend.Services {
                 } else {
                     return new { result = "No", category = "No match", items = detectedObjects };
                 }
+            } catch (Exception ex) {
+                Logger.Log($"IMAGE RECOGNITION ERROR: {ex.Message}");
+                return new { error = "An error occurred while processing the image: " + ex.Message };
             } finally {
                 if (File.Exists(tempPath)) {
                     File.Delete(tempPath);

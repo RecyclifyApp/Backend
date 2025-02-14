@@ -1,38 +1,30 @@
 using MailKit.Net.Smtp;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 
 namespace Backend.Services {
-    public static class Emailer {
-        private static bool ContextChecked = false;
+    public class Emailer {
+        private readonly MyDbContext _context;
+        public Emailer(MyDbContext context) {
+            _context = context;
+        }
+
         private static readonly string? SenderEmail = Environment.GetEnvironmentVariable("EMAIL_SENDER");
 
         private static readonly string? EmailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
 
-        private static bool CheckPermission() {
-            return Environment.GetEnvironmentVariable("EMAILER_ENABLED") == "True";
+        private async Task CheckPermissionAsync() {
+            var emailerEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "EMAILER_ENABLED");
+            if (emailerEnabled == null) {
+                throw new InvalidOperationException("ERROR: EMAILER_ENABLED configuration is missing.");
+            }
+            if (emailerEnabled.Value == "false") {
+                throw new Exception("ERROR: Emailer Service is Disabled.");
+            }
         }
 
-        private static void CheckContext() {
-            if (CheckPermission()) {
-                if (string.IsNullOrEmpty(SenderEmail) || string.IsNullOrEmpty(EmailPassword)) {
-                    throw new Exception("ERROR: EMAIL_ADDRESS or EMAIL_PASSWORD environment variables not set.");
-                }
-            } else {
-                throw new Exception("ERROR: Emailer is not enabled.");
-            }
-
-            ContextChecked = true;
-        }
-
-        public static async Task<string> SendEmailAsync(string to, string subject, string template, Dictionary<string, string> variables) {
-            CheckContext();
-            if (!ContextChecked) {
-                return "ERROR: System context was not checked before sending email. Skipping email.";
-            }
-
-            if (!CheckPermission()) {
-                return "ERROR: Emailing services are not enabled. Skipping email.";
-            }
+        public async Task<string> SendEmailAsync(string to, string subject, string template, Dictionary<string, string> variables) {
+            await CheckPermissionAsync();
 
             try {
                 var email = new MimeMessage();
