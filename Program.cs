@@ -251,6 +251,11 @@ namespace Backend {
                         _context.Classes.Add(teacherClass);
 
                         var questList = _context.Quests.ToList();
+
+                        if (questList.Count < 3) {
+                            throw new Exception("ERROR: Not enough quests in database. Please Populate CloudSQL Database first.");
+                        }
+
                         for (int i = 0; i < 3; i++) {
                             var randomQuest = questList[random.Next(questList.Count)];
                             var classQuestProgress = new QuestProgress {
