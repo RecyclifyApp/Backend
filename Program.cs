@@ -641,28 +641,9 @@ namespace Backend {
         }
 
         private async Task WipeDatabase() {
-            Console.WriteLine("");
-
-            for (int i = 6; i > 0; i--) {
-                for (int j = 0; j < 10; j++) {
-                    if (Console.KeyAvailable) {
-                        var key = Console.ReadKey(true);
-                        if (key.Key == ConsoleKey.Enter) {
-                            Console.WriteLine("");
-                            Console.WriteLine("");
-                            Console.WriteLine("[ABORT] - Process terminated.");
-                            return;
-                        }
-                    }
-                    Thread.Sleep(100);
-                }
-                Console.Write($"\r[Press ENTER to CANCEL] Wiping CloudSQL Database in {i - 1} seconds...   ");
-            }
-
             try {
                 Console.WriteLine("");
-                Console.WriteLine("");
-                Console.WriteLine("Database Wipe in progress...");
+                Console.Write("Wiping Database...");
 
                 _context.Admins.RemoveRange(_context.Admins);
                 _context.Classes.RemoveRange(_context.Classes);
@@ -689,6 +670,7 @@ namespace Backend {
                 await _context.SaveChangesAsync();
 
                 Console.WriteLine("");
+                Console.WriteLine("");
                 Console.WriteLine("SUCCESS: CLOUDSQL DATABASE WIPED.");
 
                 return;
@@ -702,9 +684,6 @@ namespace Backend {
 
         private async Task PopulateDatabase() {
             try {
-                Console.WriteLine("");
-                Console.WriteLine("Populating Database. This may take a while...");
-
                 await WipeDatabase();
                 await PopulateCloudConfigs();
                 await PopulateTasksAndQuests();
@@ -712,6 +691,7 @@ namespace Backend {
                 await PopulatePresentationUsers();
                 await PopulateStudents();
 
+                Console.WriteLine("");
                 Console.WriteLine("");
                 Console.WriteLine("SUCCESS: Database populated.");
 
@@ -725,6 +705,8 @@ namespace Backend {
         }
 
         private async Task PopulateCloudConfigs() {
+            Console.WriteLine("");
+            Console.Write("Populating Cloud Configs...");
             try {
                 var environmentVariables = Bootcheck.RetrieveEnvironmentVariables();
                 _context.EnvironmentConfigs.RemoveRange(_context.EnvironmentConfigs);
@@ -749,6 +731,8 @@ namespace Backend {
         }
 
         private async Task PopulateTasksAndQuests() {
+            Console.WriteLine("");
+            Console.Write("Populating Tasks and Quests...");
             try {
                 var quest1ID = Utilities.GenerateUniqueID();
                 var quest2ID = Utilities.GenerateUniqueID();
@@ -1147,6 +1131,8 @@ namespace Backend {
         }
 
         private async Task PopulateRewardItems() {
+            Console.WriteLine("");
+            Console.Write("Populating Reward Items. This may take a while...");
             try {
                 var defaultRewards = new List<RewardItem> {
                     new RewardItem {
@@ -1279,6 +1265,8 @@ namespace Backend {
         }
 
         private async Task PopulatePresentationUsers() {
+            Console.WriteLine("");
+            Console.Write("Populating Presentation Users...");
             try {
                 _context.Users.RemoveRange(_context.Users);
                 _context.Admins.RemoveRange(_context.Admins);
@@ -1381,9 +1369,6 @@ namespace Backend {
                     }
                 });
 
-                Console.WriteLine("");
-                Console.WriteLine("SUCCESS: Presentation Users created.");
-
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
@@ -1408,7 +1393,7 @@ namespace Backend {
             }
 
             Console.WriteLine("");
-            Console.WriteLine("Populating Students...");
+            Console.Write("Populating Students...");
 
             try {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
@@ -1616,9 +1601,6 @@ namespace Backend {
                 }
 
                 await _context.SaveChangesAsync();
-
-                Console.WriteLine("");
-                Console.WriteLine("SUCCESS: Students created and assigned to classes.");
 
                 return;
             } catch (Exception ex) {
