@@ -24,5 +24,6 @@ namespace Backend.Models {
         public DateTime? TaskLastSet { get; set; }
         public required int Streak { get; set; } = 0;
         public string? LastClaimedStreak { get; set; }
+        public string? LastActiveDate { get; set; }
     }
 }

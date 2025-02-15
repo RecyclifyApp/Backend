@@ -632,8 +632,18 @@ namespace Backend.Controllers.Teachers
                     return BadRequest(new { error = "UERROR: Points already awarded for this task." });
                 }
 
+                if (student.LastActiveDate == DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"))
+                {
+                    student.Streak += 1;
+                }
+                else if (student.LastActiveDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                {
+                    student.Streak = 1;
+                }
+
                 student.CurrentPoints += taskObj.TaskPoints;
                 student.TotalPoints += taskObj.TaskPoints;
+                student.LastActiveDate = DateTime.Now.ToString("yyyy-MM-dd");
                 _context.Students.Update(student);
 
                 var addStudentPoints = new StudentPoints
