@@ -106,14 +106,13 @@ namespace Backend.Services {
             };
 
             if (baseUser == "student") {
-                var generateCurrentPoints = Utilities.GenerateRandomInt(0, 500);
                 var specificStudentObj = new Student {
                     UserID = baseUserObj.Id,
                     StudentID = baseUserObj.Id,
-                    Streak = 7,
-                    League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
-                    CurrentPoints = generateCurrentPoints,
-                    TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000),
+                    Streak = 0,
+                    League = "Bronze",
+                    CurrentPoints = 0,
+                    TotalPoints = 0,
                 };
 
                 context.Students.Add(specificStudentObj);
