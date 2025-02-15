@@ -356,6 +356,7 @@ namespace Backend.Controllers.Identity {
                     user.Email,
                     user.ContactNumber,
                     user.EmailVerified,
+                    user.PhoneVerified,
                     user.UserRole,
                     user.Avatar,
                     user.Banner
@@ -452,18 +453,25 @@ namespace Backend.Controllers.Identity {
                     qrCodeUrl = enrollResult.ToString();
                 }
 
-                // Generate 6-digit code
-                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
-                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+                // Generate email verification code
+                var emailCode = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var emailExpiry = DateTime.UtcNow.AddMinutes(15).ToString("o");
+                
+                // Generate SMS verification code
+                var smsCode = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var smsExpiry = DateTime.UtcNow.AddMinutes(15).ToString("o");
 
-                // Store in database
-                user.EmailVerificationToken = code;
-                user.EmailVerificationTokenExpiry = expiry;
+                // Store both codes
+                user.EmailVerificationToken = emailCode;
+                user.EmailVerificationTokenExpiry = emailExpiry;
+                user.PhoneVerificationToken = smsCode;
+                user.PhoneVerificationTokenExpiry = smsExpiry;
                 _context.SaveChanges();
 
+                // Send Email verification
                 var emailVars = new Dictionary<string, string> {
                     { "username", user.Name },
-                    { "emailVerificationToken", code }
+                    { "emailVerificationToken", emailCode }
                 };
 
                 var Emailer = new Emailer(_context);
@@ -472,6 +480,14 @@ namespace Backend.Controllers.Identity {
                     "Welcome to Recyclify",
                     "WelcomeEmail",
                     emailVars
+                );
+
+                // Send SMS verification
+                var smsService = new SmsService(_context);
+                var smsMessage = $"Your Recyclify verification code is: {smsCode}";
+                var smsResult = await smsService.SendSmsAsync(
+                    user.ContactNumber, 
+                    smsMessage
                 );
 
                 string token = CreateToken(user);
