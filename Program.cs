@@ -1301,7 +1301,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1316,7 +1317,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1331,7 +1333,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1346,7 +1349,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1361,7 +1365,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1376,7 +1381,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1391,7 +1397,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1406,7 +1413,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1421,7 +1429,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1436,7 +1445,8 @@ namespace Backend {
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 

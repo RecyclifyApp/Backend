@@ -20,6 +20,10 @@ namespace Backend.Controllers.Identity {
         private readonly MSAuth _msAuth = msAuthService;
         private readonly IConfiguration _configuration = configuration;
 
+        private async Task<bool> IsMSAuthEnabledAsync() {
+            var config = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled");
+            return config?.Value == "true";
+        }
         private string CreateToken(User user) {
             string? secret = Environment.GetEnvironmentVariable("JWT_KEY");
             if (string.IsNullOrEmpty(secret)) {
@@ -499,9 +503,7 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("verifyMfa")]
         [Authorize]
-        public async Task<IActionResult> VerifyMfa([FromBody] MfaVerificationRequest request) {
-            Console.WriteLine("MFA VERIFICATION REQUEST");
-            Console.WriteLine(request);
+        public async Task<IActionResult> VerifyMfa([FromBody] VerifyCodeRequest request) {
             try {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var user = await _context.Users.FindAsync(userId);
@@ -697,6 +699,104 @@ namespace Backend.Controllers.Identity {
             catch (Exception ex) {
                 Logger.Log($"[ERROR] IDENTITY VERIFYEMAIL: Failed to verify email for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: Failed to verify email", details = ex.Message });
+            }
+        }
+
+        [HttpPost("contactVerification")]
+        [Authorize]
+        public async Task<IActionResult> SendContactVerificationCode()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _context.Users.Find(userId);
+
+            try
+            {
+                if (user == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.ContactNumber))
+                {
+                    return BadRequest(new { error = "ERROR: Phone number not found." });
+                }
+
+                // Generate 6-digit code
+                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+
+                // Store in database
+                user.PhoneVerificationToken = code;
+                user.PhoneVerificationTokenExpiry = expiry;
+                _context.SaveChanges();
+
+                // Send SMS
+                var message = $"Your verification code is: {code}";
+                var smsService = new SmsService(_context);
+                var smsResult = await smsService.SendSmsAsync(user.ContactNumber, message);
+
+                if (smsResult.StartsWith("ERROR") || smsResult.StartsWith("UERROR"))
+                {
+                    string errorDetails = smsResult.Substring(
+                        smsResult.StartsWith("ERROR") ? "ERROR".Length : "UERROR".Length
+                    ).TrimStart();
+                    return StatusCode(500, new { error = $"Failed to send SMS. {errorDetails}" });
+                }
+                else
+                {
+                    return Ok(new { message = "SUCCESS: Verification code sent" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERROR] CONTACT SENDVERIFICATIONCODE: Error processing verification request for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to process verification request", details = ex.Message });
+            }
+        }
+
+        [HttpPost("verifyContact")]
+        [Authorize]
+        public IActionResult VerifyContact([FromBody] VerifyCodeRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _context.Users.Find(userId);
+
+            try
+            {
+                if (user == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.PhoneVerificationToken) || string.IsNullOrEmpty(user.PhoneVerificationTokenExpiry))
+                {
+                    return BadRequest(new { error = "ERROR: No verification code issued" });
+                }
+
+                // Check code match
+                if (user.PhoneVerificationToken != request.Code)
+                {
+                    return BadRequest(new { error = "UERROR: Invalid verification code" });
+                }
+
+                // Check expiration
+                if (!DateTime.TryParse(user.PhoneVerificationTokenExpiry, out var expiryDate) || expiryDate < DateTime.UtcNow)
+                {
+                    return BadRequest(new { error = "UERROR: Verification code expired" });
+                }
+
+                // Mark phone as verified
+                user.PhoneVerified = true;
+                user.PhoneVerificationToken = null;
+                user.PhoneVerificationTokenExpiry = null;
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Phone number verified successfully" });
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERROR] CONTACT VERIFYCONTACT: Failed to verify phone number for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to verify phone number", details = ex.Message });
             }
         }
 
@@ -947,15 +1047,6 @@ namespace Backend.Controllers.Identity {
         public class ChangePasswordRequest {
             public required string OldPassword { get; set; }
             public required string NewPassword { get; set; }
-        }
-
-        public class MfaVerificationRequest {
-            public string Code { get; set; }
-        }
-
-        private async Task<bool> IsMSAuthEnabledAsync() {
-            var config = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled");
-            return config?.Value == "true";
         }
     }
 }

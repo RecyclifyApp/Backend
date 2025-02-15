@@ -94,7 +94,8 @@ namespace Backend.Services {
                 ContactNumber = contactNumber,
                 UserRole = userRole,
                 Avatar = avatar,
-                EmailVerified = false
+                EmailVerified = false,
+                PhoneVerified = false
             };
 
             if (baseUser == "student") {

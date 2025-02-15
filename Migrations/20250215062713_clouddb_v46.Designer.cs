@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250215014944_clouddb_v45")]
-    partial class clouddb_v45
+    [Migration("20250215062713_clouddb_v46")]
+    partial class clouddb_v46
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -569,6 +569,15 @@ namespace Backend.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneVerified")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("UserRole")
                         .IsRequired()

@@ -567,6 +567,15 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PhoneVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneVerified")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("UserRole")
                         .IsRequired()
                         .HasColumnType("longtext");

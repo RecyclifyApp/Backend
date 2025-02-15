@@ -18,6 +18,9 @@ namespace Backend.Models {
         public required bool EmailVerified { get; set; } = false;
         public string? EmailVerificationToken { get; set; }
         public string? EmailVerificationTokenExpiry { get; set; }
+        public required bool PhoneVerified { get; set; } = false;
+        public string? PhoneVerificationToken { get; set; }
+        public string? PhoneVerificationTokenExpiry { get; set; }
         public ICollection<Inbox>? Inboxes { get; set; }
         public Admin? Admin { get; set; }
     }
