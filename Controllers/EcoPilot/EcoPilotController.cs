@@ -142,7 +142,7 @@ namespace EcoPilotApp
         }
 
         [HttpPost("prompt")]
-        public async Task<IActionResult> QueryCycloBotWithUserPrompt([FromBody] UserPromptRequest request)
+        public async Task<IActionResult> QueryEcoPilotWithUserPrompt([FromBody] UserPromptRequest request)
         {
             if (string.IsNullOrEmpty(request.UserPrompt))
             {
