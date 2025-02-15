@@ -367,7 +367,21 @@ namespace Backend.Controllers.Identity {
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request) {
+        public async Task<IActionResult> Login([FromBody] LoginRequest request) {
+            if (string.IsNullOrEmpty(request.RecaptchaResponse)) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA response is required." });
+            }
+
+            var (captchaSuccess, captchaScore) = await _captchaService.ValidateCaptchaAsync(request.RecaptchaResponse);
+            if (!captchaSuccess) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA validation failed." });
+            }
+
+            // Optional: you can decide to take action based on the score if needed
+            if (captchaScore < 0.5) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA score too low. Please try again." });
+            }
+
             var user = _context.Users.SingleOrDefault(u =>
                 (u.Email == request.Identifier || u.Name == request.Identifier) &&
                 u.Password == Utilities.HashString(request.Password));
@@ -1031,6 +1045,7 @@ namespace Backend.Controllers.Identity {
         }
                                 
         public class LoginRequest {
+            public required string RecaptchaResponse { get; set; } 
             public required string Identifier { get; set; }
             public required string Password { get; set; }
         }
