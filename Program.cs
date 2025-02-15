@@ -65,7 +65,7 @@ namespace Backend {
                 while (running) {
                     Console.WriteLine();
                     Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console----------------------------------------------");
-                    Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate CloudSQL Database -> Create New Teacher Account -> Populate Students");
+                    Console.WriteLine("Populate CloudSQL Database now handles all population logic. Please run this command first before other actions.");
                     Console.WriteLine("--------------------------------------------------------------------------------------------------------------------------------");
                     Console.WriteLine("1. Create new account");
                     Console.WriteLine("2. Delete existing account");
