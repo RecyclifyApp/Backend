@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Backend.Services;
+using Backend.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers
@@ -19,6 +20,7 @@ namespace Backend.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class EventsController(MyDbContext _context) : ControllerBase
     {
 
