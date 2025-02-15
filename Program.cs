@@ -74,8 +74,7 @@ namespace Backend {
                     Console.WriteLine("5. Clear Firebase Cloud Storage");
                     Console.WriteLine("6. Wipe CloudSQL Database");
                     Console.WriteLine("7. Populate CloudSQL Database");
-                    Console.WriteLine("8. Populate Students");
-                    Console.WriteLine("9. Exit Console");
+                    Console.WriteLine("8. Exit Console");
 
                     Console.WriteLine();
                     Console.Write("Enter action: ");
@@ -109,9 +108,6 @@ namespace Backend {
                             await PopulateDatabase();
                             break;
                         case 8:
-                            await PopulateStudents();
-                            break;
-                        case 9:
                             Console.WriteLine("");
                             Console.WriteLine("Exiting superuser script...");
                             Console.WriteLine("");
@@ -122,7 +118,7 @@ namespace Backend {
                             break;
                         default:
                             Console.WriteLine("");
-                            Console.WriteLine("ERROR: Please enter a valid integer from 1-9.");
+                            Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
                             break;
                     }
                 }
@@ -687,6 +683,8 @@ namespace Backend {
                 _context.Teachers.RemoveRange(_context.Teachers);
                 _context.Users.RemoveRange(_context.Users);
                 _context.WeeklyClassPoints.RemoveRange(_context.WeeklyClassPoints);
+                _context.EnvironmentConfigs.RemoveRange(_context.EnvironmentConfigs);
+                _context.Events.RemoveRange(_context.Events);
 
                 await _context.SaveChangesAsync();
 
@@ -707,9 +705,12 @@ namespace Backend {
                 Console.WriteLine("");
                 Console.WriteLine("Populating Database. This may take a while...");
 
+                await WipeDatabase();
                 await PopulateCloudConfigs();
                 await PopulateTasksAndQuests();
                 await PopulateRewardItems();
+                await PopulatePresentationUsers();
+                await PopulateStudents();
 
                 Console.WriteLine("");
                 Console.WriteLine("SUCCESS: Database populated.");
@@ -1267,6 +1268,121 @@ namespace Backend {
 
                 _context.RewardItems.AddRange(defaultRewards);
                 await _context.SaveChangesAsync();
+
+                return;
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
+
+                return;
+            }
+        }
+
+        private async Task PopulatePresentationUsers() {
+            try {
+                _context.Users.RemoveRange(_context.Users);
+                _context.Admins.RemoveRange(_context.Admins);
+                _context.Teachers.RemoveRange(_context.Teachers);
+                _context.Students.RemoveRange(_context.Students);
+
+                await _context.SaveChangesAsync();
+
+                await DatabaseManager.CreateUserRecords(_context, "admin", new List<Dictionary<string, object>> {
+                    new Dictionary<string, object> {
+                        { "Name", "Nicholas Chew" },
+                        { "FName", "Nicholas" },
+                        { "LName", "Chew" },
+                        { "Email", "3xpect1916@gmail.com" },
+                        { "Password", Environment.GetEnvironmentVariable("DEFAULT_ADMIN_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_ADMIN_PASSWORD environment variable not found.") },
+                        { "ContactNumber", "88133912" },
+                        { "UserRole", "admin" },
+                        { "Avatar", "" }
+                    }
+                });
+
+                var teacherID = Utilities.GenerateUniqueID();
+                var teacherClassID = Utilities.GenerateUniqueID();
+                await DatabaseManager.CreateUserRecords(_context, "teacher", new List<Dictionary<string, object>> {
+                    new Dictionary<string, object> {
+                        { "Id", teacherID },
+                        { "Name", "Lincoln Lim" },
+                        { "FName", "Lincoln" },
+                        { "LName", "Lim" },
+                        { "Email", "lincolnlim267@gmail.com" },
+                        { "Password", Environment.GetEnvironmentVariable("DEFAULT_TEACHER_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_TEACHER_PASSWORD environment variable not found.") },
+                        { "ContactNumber", "80136850" },
+                        { "UserRole", "teacher" },
+                        { "Avatar", "" }
+                    }
+                });
+
+                var teacherClass = new Class {
+                    ClassID = teacherClassID,
+                    ClassName = 101,
+                    ClassDescription = "Class 101",
+                    ClassPoints = Utilities.GenerateRandomInt(500, 1000),
+                    TeacherID = teacherID,
+                    Teacher = _context.Teachers.Find(teacherID) ?? throw new Exception("ERROR: Teacher not found."),
+                    WeeklyClassPoints = new List<WeeklyClassPoints>(),
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
+                };
+
+                teacherClass.WeeklyClassPoints = new List<WeeklyClassPoints> {
+                    new WeeklyClassPoints {
+                        ClassID = teacherClassID,
+                        Date = DateTime.Now.AddDays(new Random().Next((DateTime.Now - new DateTime(2020, 1, 1)).Days)),
+                        PointsGained = Utilities.GenerateRandomInt(500, 1000),
+                        Class = teacherClass
+                    }
+                };
+
+                await _context.Classes.AddAsync(teacherClass);
+
+                var studentObjPassword = Environment.GetEnvironmentVariable("DEFAULT_STUDENT_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_STUDENT_PASSWORD environment variable not found.");
+                var baseUserObj = new User {
+                    Id = Utilities.GenerateUniqueID(),
+                    Name = "Joshua Long",
+                    FName = "Joshua",
+                    LName = "Long",
+                    Email = "joshu5739yx@gmail.com",
+                    Password = Utilities.HashString(studentObjPassword),
+                    ContactNumber = "83880976",
+                    UserRole = "student",
+                    Avatar = "",
+                    EmailVerified = false,
+                    PhoneVerified = false
+                };
+
+                var specificStudentObj = new Student {
+                    UserID = baseUserObj.Id,
+                    StudentID = baseUserObj.Id,
+                    Streak = 0,
+                    League = "Bronze",
+                    CurrentPoints = 0,
+                    TotalPoints = 0,
+                };
+
+                await _context.Users.AddAsync(baseUserObj);
+                await _context.Students.AddAsync(specificStudentObj);
+
+                await _context.SaveChangesAsync();
+
+                await DatabaseManager.CreateUserRecords(_context, "parent", new List<Dictionary<string, object>> {
+                    new Dictionary<string, object> {
+                        { "Name", "Tan Qian Peng" },
+                        { "FName", "Qian Peng" },
+                        { "LName", "Tan" },
+                        { "Email", "234504H@mymail.nyp.edu.sg" },
+                        { "Password", Environment.GetEnvironmentVariable("DEFAULT_PARENT_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_PARENT_PASSWORD environment variable not found.") },
+                        { "ContactNumber", "87810955" },
+                        { "UserRole", "parent" },
+                        { "Avatar", "" },
+                        { "StudentID", specificStudentObj.StudentID }
+                    }
+                });
+
+                Console.WriteLine("");
+                Console.WriteLine("SUCCESS: Presentation Users created.");
 
                 return;
             } catch (Exception ex) {

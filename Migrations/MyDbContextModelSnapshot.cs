@@ -375,6 +375,9 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("LastActiveDate")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("LastClaimedStreak")
                         .HasColumnType("longtext");
 
