@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services; // Assuming your existing OpenAIChatService is in this namespace
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
+using System.IO;
 
 namespace EcoPilotApp
 {
@@ -29,30 +33,66 @@ namespace EcoPilotApp
 
         public VectorStoreService()
         {
-            // Initialize your recycling-related documents.
-            _documents = LoadRecyclingDocuments();
+            // Load documents from CSV file
+            _documents = LoadRecyclingDocuments("data/Recyclify.csv");
         }
 
-        private List<Document> LoadRecyclingDocuments()
+        private List<Document> LoadRecyclingDocuments(string filePath)
         {
-            // Replace these with your actual recycling knowledge base documents.
-            return new List<Document>
+            var documents = new List<Document>();
+
+            try
             {
-                new Document("Recycling helps reduce waste and conserve natural resources. It is an essential part of a sustainable future.", new Dictionary<string,string>{{"source", "recycling1"}}),
-                new Document("Plastic recycling is crucial to reduce ocean pollution and protect marine life.", new Dictionary<string,string>{{"source", "recycling2"}}),
-                new Document("Paper recycling saves trees and reduces energy consumption in manufacturing.", new Dictionary<string,string>{{"source", "recycling3"}})
-                // Add more documents as needed.
-            };
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                using (var reader = new StreamReader(filePath))
+                using (var csv = new CsvReader(reader, config))
+                {
+                    if (csv.Read())
+                    {
+                        csv.ReadHeader(); // Ensure headers are read first
+                    }
+
+                    while (csv.Read())
+                    {
+                        var content = csv.GetField<string>("content");
+                        var source = csv.GetField<string>("source");
+
+                        if (!string.IsNullOrEmpty(content) && !string.IsNullOrEmpty(source))
+                        {
+                            documents.Add(new Document(content, new Dictionary<string, string> { { "source", source } }));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading CSV file: {ex.Message}");
+            }
+
+            return documents;
         }
 
-        // Dummy search: In production, replace with proper embeddings and cosine similarity.
         public Task<List<Document>> SearchAsync(string query, int k)
         {
-            // For demonstration, simply return the first k documents.
-            return Task.FromResult(_documents.Take(k).ToList());
+            // Rank documents by keyword match count
+            var rankedDocs = _documents
+                .Select(doc => new
+                {
+                    Document = doc,
+                    Score = query.Split(' ').Count(word => doc.Content.Contains(word, StringComparison.OrdinalIgnoreCase))
+                })
+                .OrderByDescending(d => d.Score)
+                .Take(k)
+                .Select(d => d.Document)
+                .ToList();
+
+            return Task.FromResult(rankedDocs);
         }
     }
-
     // RAG-enabled chat service: Retrieves relevant documents and augments the user's prompt.
     public class RagOpenAIChatService
     {
