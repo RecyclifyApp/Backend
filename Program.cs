@@ -1530,6 +1530,9 @@ namespace Backend {
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<Captcha>();
             builder.Services.AddScoped<CheckSystemLockedFilter>();
+            builder.Services.AddScoped<OpenAIChatService>();
+            builder.Services.AddSingleton<IVectorStoreService, VectorStoreService>();
+            builder.Services.AddTransient<RagOpenAIChatService>();
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
