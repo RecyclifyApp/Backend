@@ -574,12 +574,14 @@ namespace Backend.Controllers.Identity {
                 var email = user.Email; // Default to the current email
                 if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email) {
                     email = DatabaseManager.ValidateEmail(request.Email.Trim(), user.UserRole, _context);
+                    user.EmailVerified = false;
                 }
 
                 // Validate contact number only if it has changed
                 var contactNumber = user.ContactNumber; // Default to the current contact number
                 if (!string.IsNullOrWhiteSpace(request.ContactNumber) && request.ContactNumber.Trim() != user.ContactNumber) {
                     contactNumber = DatabaseManager.ValidateContactNumber(request.ContactNumber.Trim(), _context);
+                    user.PhoneVerified = false;
                 }
 
                 user.Name = name;
@@ -761,9 +763,10 @@ namespace Backend.Controllers.Identity {
                 _context.SaveChanges();
 
                 // Send SMS
+                var contactNumber = "+65" + user.ContactNumber;
                 var message = $"Your verification code is: {code}";
                 var smsService = new SmsService(_context);
-                var smsResult = await smsService.SendSmsAsync(user.ContactNumber, message);
+                var smsResult = await smsService.SendSmsAsync(contactNumber, message);
 
                 if (smsResult.StartsWith("ERROR") || smsResult.StartsWith("UERROR"))
                 {
