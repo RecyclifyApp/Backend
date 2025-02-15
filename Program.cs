@@ -183,7 +183,7 @@ namespace Backend {
                         Console.WriteLine("-------------------------------------------");
                     } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -287,7 +287,7 @@ namespace Backend {
                         Console.WriteLine("-------------------------------------------");
                     } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -329,7 +329,7 @@ namespace Backend {
                         Console.WriteLine("-------------------------------------------");
                     } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -385,7 +385,7 @@ namespace Backend {
                         Console.WriteLine("-------------------------------------------");
                     } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -412,7 +412,7 @@ namespace Backend {
                 Console.WriteLine("SUCCESS: Account deleted.");
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
             }
         }
 
@@ -460,7 +460,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -499,103 +499,108 @@ namespace Backend {
                     continue;
                 }
 
-                switch (service) {
-                    case 1:
-                        compVisionEnabled.Value = compVisionEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 2:
-                        emailerEnabled.Value = emailerEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 3:
-                        openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 4:
-                        smsServiceEnabled.Value = smsServiceEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 5:
-                        msAuthEnabled.Value = msAuthEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: Microsoft Auth service " + (msAuthEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 6:
-                        Console.WriteLine("");
+                try {
+                    switch (service) {
+                        case 1:
+                            compVisionEnabled.Value = compVisionEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 2:
+                            emailerEnabled.Value = emailerEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 3:
+                            openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 4:
+                            smsServiceEnabled.Value = smsServiceEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 5:
+                            msAuthEnabled.Value = msAuthEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: Microsoft Auth service " + (msAuthEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 6:
+                            Console.WriteLine("");
 
-                        for (int i = 6; i > 0; i--) {
-                            for (int j = 0; j < 10; j++) {
-                                if (Console.KeyAvailable) {
-                                    var key = Console.ReadKey(true);
-                                    if (key.Key == ConsoleKey.Enter) {
-                                        Console.WriteLine("");
-                                        Console.WriteLine("");
-                                        Console.WriteLine("[ABORT] - Process terminated.");
-                                        return;
+                            for (int i = 6; i > 0; i--) {
+                                for (int j = 0; j < 10; j++) {
+                                    if (Console.KeyAvailable) {
+                                        var key = Console.ReadKey(true);
+                                        if (key.Key == ConsoleKey.Enter) {
+                                            Console.WriteLine("");
+                                            Console.WriteLine("");
+                                            Console.WriteLine("[ABORT] - Process terminated.");
+                                            return;
+                                        }
                                     }
+                                    Thread.Sleep(100);
                                 }
-                                Thread.Sleep(100);
+                                Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
                             }
-                            Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
-                        }
 
-                        compVisionEnabled.Value = "false";
-                        emailerEnabled.Value = "false";
-                        openAIChatServiceEnabled.Value = "false";
-                        smsServiceEnabled.Value = "false";
-                        msAuthEnabled.Value = "false";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
-                        break;
-                    case 7:
-                        Console.WriteLine("");
+                            compVisionEnabled.Value = "false";
+                            emailerEnabled.Value = "false";
+                            openAIChatServiceEnabled.Value = "false";
+                            smsServiceEnabled.Value = "false";
+                            msAuthEnabled.Value = "false";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
+                            break;
+                        case 7:
+                            Console.WriteLine("");
 
-                        for (int i = 6; i > 0; i--) {
-                            for (int j = 0; j < 10; j++) {
-                                if (Console.KeyAvailable) {
-                                    var key = Console.ReadKey(true);
-                                    if (key.Key == ConsoleKey.Enter) {
-                                        Console.WriteLine("");
-                                        Console.WriteLine("");
-                                        Console.WriteLine("[ABORT] - Process terminated.");
-                                        return;
+                            for (int i = 6; i > 0; i--) {
+                                for (int j = 0; j < 10; j++) {
+                                    if (Console.KeyAvailable) {
+                                        var key = Console.ReadKey(true);
+                                        if (key.Key == ConsoleKey.Enter) {
+                                            Console.WriteLine("");
+                                            Console.WriteLine("");
+                                            Console.WriteLine("[ABORT] - Process terminated.");
+                                            return;
+                                        }
                                     }
+                                    Thread.Sleep(100);
                                 }
-                                Thread.Sleep(100);
+                                Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
                             }
-                            Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
-                        }
 
-                        compVisionEnabled.Value = "true";
-                        emailerEnabled.Value = "true";
-                        openAIChatServiceEnabled.Value = "true";
-                        smsServiceEnabled.Value = "true";
-                        msAuthEnabled.Value = "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
-                        break;
-                    case 8:
-                        Console.WriteLine("");
-                        Console.WriteLine("Exiting Service Toggle Mode...");
-                        return;
-                    default:
-                        Console.WriteLine("");
-                        Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
-                        break;
+                            compVisionEnabled.Value = "true";
+                            emailerEnabled.Value = "true";
+                            openAIChatServiceEnabled.Value = "true";
+                            smsServiceEnabled.Value = "true";
+                            msAuthEnabled.Value = "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
+                            break;
+                        case 8:
+                            Console.WriteLine("");
+                            Console.WriteLine("Exiting Service Toggle Mode...");
+                            return;
+                        default:
+                            Console.WriteLine("");
+                            Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
+                            break;
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine("");
+                    Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                 }
             }
         }
@@ -632,7 +637,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -690,7 +695,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -711,7 +716,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -736,8 +741,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine("ERROR: Failed to save environment variables to database.");
-                Logger.Log("SUPERUSERSCRIPT - Failed to save environment variables to database. ERROR: " + ex.Message);
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                 return;
             }
         }
@@ -1134,7 +1138,7 @@ namespace Backend {
                 return;
             } catch(Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -1266,7 +1270,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -1502,7 +1506,7 @@ namespace Backend {
                 return;
             } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
@@ -1537,6 +1541,9 @@ namespace Backend {
             builder.Services.AddScoped<Captcha>();
             builder.Services.AddScoped<CheckSystemLockedFilter>();
             builder.Services.AddScoped<MSAuth>();
+            builder.Services.AddScoped<OpenAIChatService>();
+            builder.Services.AddSingleton<IVectorStoreService, VectorStoreService>();
+            builder.Services.AddTransient<RagOpenAIChatService>();
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
@@ -1616,7 +1623,7 @@ namespace Backend {
                             Console.WriteLine("Failed to connect to CloudSQL.");
                         }
                     } catch (Exception ex) {
-                        Console.WriteLine($"Error connecting to CloudSQL: {ex.Message}");
+                        Console.WriteLine($"Error connecting to CloudSQL: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
                 } else if (Environment.GetEnvironmentVariable("DB_MODE") == "local") {
                     try {
@@ -1627,7 +1634,7 @@ namespace Backend {
                             Console.WriteLine("Failed to connect to local SQLite.");
                         }
                     } catch (Exception ex) {
-                        Console.WriteLine($"Error connecting to local SQLite: {ex.Message}");
+                        Console.WriteLine($"Error connecting to local SQLite: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
                 } else {
                     Console.WriteLine("Invalid DB_MODE configuration.");

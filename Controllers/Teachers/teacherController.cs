@@ -306,7 +306,8 @@ namespace Backend.Controllers.Teachers
                             User = new
                             {
                                 u.Name,
-                                u.Email
+                                u.Email,
+                                u.Avatar
                             }
                         }
                     )
