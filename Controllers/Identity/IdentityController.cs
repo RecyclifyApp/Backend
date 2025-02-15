@@ -8,16 +8,23 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using FirebaseAdmin.Auth;
 
 namespace Backend.Controllers.Identity {
     [ApiController]
     [Route("/api/[controller]")]
     [ServiceFilter(typeof(CheckSystemLockedFilter))]
-    public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService) : ControllerBase {
+    public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService, MSAuth msAuthService) : ControllerBase {
         private readonly MyDbContext _context = context;
         private readonly Captcha _captchaService = captchaService;
+        private readonly MSAuth _msAuth = msAuthService;
         private readonly IConfiguration _configuration = configuration;
 
+        private async Task<bool> IsMSAuthEnabledAsync() {
+            var config = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled");
+            return config?.Value == "true";
+        }
         private string CreateToken(User user) {
             string? secret = Environment.GetEnvironmentVariable("JWT_KEY");
             if (string.IsNullOrEmpty(secret)) {
@@ -350,6 +357,7 @@ namespace Backend.Controllers.Identity {
                     user.Email,
                     user.ContactNumber,
                     user.EmailVerified,
+                    user.PhoneVerified,
                     user.UserRole,
                     user.Avatar,
                     user.Banner
@@ -360,7 +368,21 @@ namespace Backend.Controllers.Identity {
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request) {
+        public async Task<IActionResult> Login([FromBody] LoginRequest request) {
+            if (string.IsNullOrEmpty(request.RecaptchaResponse)) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA response is required." });
+            }
+
+            var (captchaSuccess, captchaScore) = await _captchaService.ValidateCaptchaAsync(request.RecaptchaResponse);
+            if (!captchaSuccess) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA validation failed." });
+            }
+
+            // Optional: you can decide to take action based on the score if needed
+            if (captchaScore < 0.5) {
+                return BadRequest(new { error = "UERROR: reCAPTCHA score too low. Please try again." });
+            }
+
             var user = _context.Users.SingleOrDefault(u =>
                 (u.Email == request.Identifier || u.Name == request.Identifier) &&
                 u.Password == Utilities.HashString(request.Password));
@@ -369,22 +391,46 @@ namespace Backend.Controllers.Identity {
                 return Unauthorized(new { error = "UERROR: Invalid login credentials." });
             }
 
-            // Generate JWT Token
-            string token = CreateToken(user);
+            if (await IsMSAuthEnabledAsync()) {
+                return Ok(new { message = "SUCCESS: Account credentials valid.", userId = user.Id }); 
+            } else {
+                // Generate JWT Token
+                string token = CreateToken(user);
 
-            Logger.Log($"[SUCCESS] IDENTITY LOGIN: User {user.Id} logged in.");
+                Logger.Log($"[SUCCESS] IDENTITY LOGIN: User {user.Id} logged in.");
 
-            // Return the token and user details
-            return Ok(new {
-                message = "SUCCESS: Login successful",
-                token,
-                user = new {
-                    user.Id,
-                    user.Name,
-                    user.Email,
-                    user.UserRole
+                // Return the token and user details
+                return Ok(new {
+                    message = "SUCCESS: Login successful",
+                    token,
+                    user = new {
+                        user.Id,
+                        user.Name,
+                        user.Email,
+                        user.UserRole
+                    }
+                });
+            }
+        }
+
+        [HttpPost("loginVerifyMfa")]
+        public async Task<IActionResult> LoginVerifyMfa([FromBody] LoginVerifyCodeRequest request) {
+            try {
+                var userId = request.UserId;
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null || string.IsNullOrEmpty(user.MfaSecret))
+                    return Unauthorized(new { error = "Invalid request." });
+
+                var validationResult = await _msAuth.Validate(request.Code, user.MfaSecret);
+                if (validationResult is bool isValid && isValid) {
+                    string token = CreateToken(user);
+                    return Ok(new { token, user = new { user.Id, user.Name, user.UserRole } });
                 }
-            });
+
+                return Unauthorized(new { error = "Invalid code." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "An error occurred while verifying MFA.", details = ex.Message });
+            }
         }
 
         [HttpPost("createAccount")]
@@ -436,18 +482,35 @@ namespace Backend.Controllers.Identity {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
-                // Generate 6-digit code
-                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
-                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+                // MFA Setup
+                string qrCodeUrl = null;
+                if (await IsMSAuthEnabledAsync()) {
+                    var newSecretResult = await _msAuth.NewSecret();
+                    string secret = newSecretResult.ToString().Trim();
+                    var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret);
+                    user.MfaSecret = secret;
+                    qrCodeUrl = enrollResult.ToString();
+                }
 
-                // Store in database
-                user.EmailVerificationToken = code;
-                user.EmailVerificationTokenExpiry = expiry;
+                // Generate email verification code
+                var emailCode = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var emailExpiry = DateTime.UtcNow.AddMinutes(15).ToString("o");
+                
+                // Generate SMS verification code
+                var smsCode = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var smsExpiry = DateTime.UtcNow.AddMinutes(15).ToString("o");
+
+                // Store both codes
+                user.EmailVerificationToken = emailCode;
+                user.EmailVerificationTokenExpiry = emailExpiry;
+                user.PhoneVerificationToken = smsCode;
+                user.PhoneVerificationTokenExpiry = smsExpiry;
                 _context.SaveChanges();
 
+                // Send Email verification
                 var emailVars = new Dictionary<string, string> {
                     { "username", user.Name },
-                    { "emailVerificationToken", code }
+                    { "emailVerificationToken", emailCode }
                 };
 
                 var Emailer = new Emailer(_context);
@@ -456,6 +519,14 @@ namespace Backend.Controllers.Identity {
                     "Welcome to Recyclify",
                     "WelcomeEmail",
                     emailVars
+                );
+
+                // Send SMS verification
+                var smsService = new SmsService(_context);
+                var smsMessage = $"Your Recyclify verification code is: {smsCode}";
+                var smsResult = await smsService.SendSmsAsync(
+                    user.ContactNumber, 
+                    smsMessage
                 );
 
                 string token = CreateToken(user);
@@ -474,13 +545,115 @@ namespace Backend.Controllers.Identity {
                         user.UserRole
                     },
                     captchaSuccess,
-                    captchaScore
+                    captchaScore,
+                    qrCodeUrl
                 });
             } catch (ArgumentException ex) {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
             } catch (Exception ex) {
-                Console.WriteLine(ex);
                 return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("verifyMfa")]
+        [Authorize]
+        public async Task<IActionResult> VerifyMfa([FromBody] VerifyCodeRequest request) {
+            try {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null || string.IsNullOrEmpty(user.MfaSecret))
+                    return Unauthorized(new { error = "Invalid request." });
+
+                var validationResult = await _msAuth.Validate(request.Code, user.MfaSecret);
+                if (validationResult is bool isValid && isValid) {
+                    string token = CreateToken(user);
+                    return Ok(new { token, user = new { user.Id, user.Name, user.Email } });
+                }
+
+                return Unauthorized(new { error = "Invalid code." });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "An error occurred while verifying MFA.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("sendResetKey")]
+        public async Task<IActionResult> SendResetKey([FromBody] SendResetKeyRequest request) {
+            var user = _context.Users.SingleOrDefault(u =>
+                u.Email == request.Identifier || u.Name == request.Identifier);
+
+            try {
+                if (user == null) {
+                    return NotFound(new { error = "UERROR: User not found." });
+                }
+
+                // Generate reset key (6-digit code)
+                var resetKey = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+
+                // Store in database
+                user.resetKey = resetKey;
+                user.resetKeyExpiry = expiry;
+                _context.SaveChanges();
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", user.Name },
+                    { "resetKey", resetKey }
+                };
+
+                var Emailer = new Emailer(_context);
+                var result = await Emailer.SendEmailAsync(
+                    user.Email,
+                    "Password Reset",
+                    "PasswordReset",
+                    emailVars
+                );
+
+                return result.StartsWith("SUCCESS") 
+                    ? Ok(new { message = "SUCCESS: Reset key sent" })
+                    : BadRequest(new { error = result });
+            }
+            catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY SENDRESETKEY: Error processing reset request for user {user.Id}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to process reset request", details = ex.Message });
+            }
+        }
+
+        [HttpPost("resetPassword")]
+        public IActionResult ResetPassword([FromBody] ResetPasswordRequest request) {
+            var user = _context.Users.SingleOrDefault(u =>
+                u.Email == request.Identifier || u.Name == request.Identifier);
+
+            try {
+                if (user == null) {
+                    return NotFound(new { error = "UERROR: User not found." });
+                }
+
+                // Validate reset key
+                if (user.resetKey != request.ResetKey) {
+                    return BadRequest(new { error = "UERROR: Invalid reset key." });
+                }
+
+                // Check expiry
+                if (DateTime.UtcNow > DateTime.Parse(user.resetKeyExpiry)) {
+                    return BadRequest(new { error = "UERROR: Reset key expired." });
+                }
+
+                // Hash new password
+                user.Password = Utilities.HashString(request.NewPassword);
+                
+                // Clear reset key
+                user.resetKey = null;
+                user.resetKeyExpiry = null;
+
+                _context.SaveChanges();
+
+                Logger.Log($"[SUCCESS] IDENTITY RESETPASSWORD: {user.Id} recovered account.");
+
+                return Ok(new { message = "SUCCESS: Password has been reset." });
+            }
+            catch (Exception ex) {
+                Logger.Log($"[ERROR] IDENTITY RESETPASSWORD: Error processing password reset for user {user.Id}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to reset password", details = ex.Message });
             }
         }
 
@@ -504,13 +677,15 @@ namespace Backend.Controllers.Identity {
                 // Validate email only if it has changed
                 var email = user.Email; // Default to the current email
                 if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email) {
-                    email = DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
+                    email = DatabaseManager.ValidateEmail(request.Email.Trim(), user.UserRole, _context);
+                    user.EmailVerified = false;
                 }
 
                 // Validate contact number only if it has changed
                 var contactNumber = user.ContactNumber; // Default to the current contact number
                 if (!string.IsNullOrWhiteSpace(request.ContactNumber) && request.ContactNumber.Trim() != user.ContactNumber) {
                     contactNumber = DatabaseManager.ValidateContactNumber(request.ContactNumber.Trim(), _context);
+                    user.PhoneVerified = false;
                 }
 
                 user.Name = name;
@@ -660,6 +835,105 @@ namespace Backend.Controllers.Identity {
             catch (Exception ex) {
                 Logger.Log($"[ERROR] IDENTITY VERIFYEMAIL: Failed to verify email for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: Failed to verify email", details = ex.Message });
+            }
+        }
+
+        [HttpPost("contactVerification")]
+        [Authorize]
+        public async Task<IActionResult> SendContactVerificationCode()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _context.Users.Find(userId);
+
+            try
+            {
+                if (user == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.ContactNumber))
+                {
+                    return BadRequest(new { error = "ERROR: Phone number not found." });
+                }
+
+                // Generate 6-digit code
+                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
+                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
+
+                // Store in database
+                user.PhoneVerificationToken = code;
+                user.PhoneVerificationTokenExpiry = expiry;
+                _context.SaveChanges();
+
+                // Send SMS
+                var contactNumber = "+65" + user.ContactNumber;
+                var message = $"Your verification code is: {code}";
+                var smsService = new SmsService(_context);
+                var smsResult = await smsService.SendSmsAsync(contactNumber, message);
+
+                if (smsResult.StartsWith("ERROR") || smsResult.StartsWith("UERROR"))
+                {
+                    string errorDetails = smsResult.Substring(
+                        smsResult.StartsWith("ERROR") ? "ERROR".Length : "UERROR".Length
+                    ).TrimStart();
+                    return StatusCode(500, new { error = $"Failed to send SMS. {errorDetails}" });
+                }
+                else
+                {
+                    return Ok(new { message = "SUCCESS: Verification code sent" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERROR] CONTACT SENDVERIFICATIONCODE: Error processing verification request for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to process verification request", details = ex.Message });
+            }
+        }
+
+        [HttpPost("verifyContact")]
+        [Authorize]
+        public IActionResult VerifyContact([FromBody] VerifyCodeRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _context.Users.Find(userId);
+
+            try
+            {
+                if (user == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                if (string.IsNullOrEmpty(user.PhoneVerificationToken) || string.IsNullOrEmpty(user.PhoneVerificationTokenExpiry))
+                {
+                    return BadRequest(new { error = "ERROR: No verification code issued" });
+                }
+
+                // Check code match
+                if (user.PhoneVerificationToken != request.Code)
+                {
+                    return BadRequest(new { error = "UERROR: Invalid verification code" });
+                }
+
+                // Check expiration
+                if (!DateTime.TryParse(user.PhoneVerificationTokenExpiry, out var expiryDate) || expiryDate < DateTime.UtcNow)
+                {
+                    return BadRequest(new { error = "UERROR: Verification code expired" });
+                }
+
+                // Mark phone as verified
+                user.PhoneVerified = true;
+                user.PhoneVerificationToken = null;
+                user.PhoneVerificationTokenExpiry = null;
+                _context.SaveChanges();
+
+                return Ok(new { message = "SUCCESS: Phone number verified successfully", userRole = user.UserRole });
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERROR] CONTACT VERIFYCONTACT: Failed to verify phone number for user {userId}. Error: {ex.Message}");
+                return StatusCode(500, new { error = "ERROR: Failed to verify phone number", details = ex.Message });
             }
         }
 
@@ -873,11 +1147,27 @@ namespace Backend.Controllers.Identity {
             }
         }
 
+        public class SendResetKeyRequest {
+            public required string Identifier { get; set; }
+        }
+
+        public class ResetPasswordRequest {
+            public required string ResetKey { get; set; }
+            public required string Identifier { get; set; }
+            public required string NewPassword { get; set; }
+        }
+
+        public class LoginVerifyCodeRequest {
+            public required string UserId { get; set; }
+            public required string Code { get; set; }
+        }
+
         public class VerifyCodeRequest {
             public required string Code { get; set; }
         }
                                 
         public class LoginRequest {
+            public required string RecaptchaResponse { get; set; } 
             public required string Identifier { get; set; }
             public required string Password { get; set; }
         }

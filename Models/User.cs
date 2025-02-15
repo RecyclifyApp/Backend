@@ -14,9 +14,15 @@ namespace Backend.Models {
         public required string UserRole { get; set; }
         public string? Avatar { get; set; }
         public string? Banner { get; set; } 
+        public string? MfaSecret { get; set; }
         public required bool EmailVerified { get; set; } = false;
         public string? EmailVerificationToken { get; set; }
         public string? EmailVerificationTokenExpiry { get; set; }
+        public required bool PhoneVerified { get; set; } = false;
+        public string? PhoneVerificationToken { get; set; }
+        public string? PhoneVerificationTokenExpiry { get; set; }
+        public string? resetKey { get; set; }
+        public string? resetKeyExpiry { get; set; }
         public ICollection<Inbox>? Inboxes { get; set; }
         public Admin? Admin { get; set; }
     }

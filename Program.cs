@@ -1300,12 +1300,13 @@ namespace Backend {
                         { "Name", "Lana Ng" },
                         { "FName", "Lana" },
                         { "LName", "Ng" },
-                        { "Email", "lanang@example.com" },
+                        { "Email", "000000p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1315,12 +1316,13 @@ namespace Backend {
                         { "Name", "Kate Gibson" },
                         { "FName", "Kate" },
                         { "LName", "Gibson" },
-                        { "Email", "kategibson@example.com" },
+                        { "Email", "000001p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1330,12 +1332,13 @@ namespace Backend {
                         { "Name", "Peter Parker" },
                         { "FName", "Peter" },
                         { "LName", "Parker" },
-                        { "Email", "peterparker@example.com" },
+                        { "Email", "000002p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1345,12 +1348,13 @@ namespace Backend {
                         { "Name", "Ethan Carter" },
                         { "FName", "Ethan" },
                         { "LName", "Carter" },
-                        { "Email", "ethancarter@example.com" },
+                        { "Email", "000003p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1360,12 +1364,13 @@ namespace Backend {
                         { "Name", "Olivia Bennett" },
                         { "FName", "Olivia" },
                         { "LName", "Bennett" },
-                        { "Email", "oliviabennett@example.com" },
+                        { "Email", "000004p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1375,12 +1380,13 @@ namespace Backend {
                         { "Name", "Noah Mitchell" },
                         { "FName", "Noah" },
                         { "LName", "Mitchell" },
-                        { "Email", "noahmitchell@example.com" },
+                        { "Email", "000005p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1390,12 +1396,13 @@ namespace Backend {
                         { "Name", "Emma Robinson" },
                         { "FName", "Emma" },
                         { "LName", "Robinson" },
-                        { "Email", "emmarobinson@example.com" },
+                        { "Email", "000006p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1405,12 +1412,13 @@ namespace Backend {
                         { "Name", "Liam Turner" },
                         { "FName", "Liam" },
                         { "LName", "Turner" },
-                        { "Email", "liamturner@example.com" },
+                        { "Email", "000007p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1420,12 +1428,13 @@ namespace Backend {
                         { "Name", "Ava Parker" },
                         { "FName", "Ava" },
                         { "LName", "Parker" },
-                        { "Email", "avaparker@example.com" },
+                        { "Email", "000008p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1435,12 +1444,13 @@ namespace Backend {
                         { "Name", "Sophia Ramirez" },
                         { "FName", "Sophia" },
                         { "LName", "Ramirez" },
-                        { "Email", "sophiaramirez@example.com" },
+                        { "Email", "000009p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
                         { "Avatar", "student_avatar.jpg" },
-                        { "EmailVerified", false }
+                        { "EmailVerified", false },
+                        { "PhoneVerified", false }
                     }
                 });
 
@@ -1530,6 +1540,7 @@ namespace Backend {
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<Captcha>();
             builder.Services.AddScoped<CheckSystemLockedFilter>();
+            builder.Services.AddScoped<MSAuth>();
             builder.Services.AddScoped<OpenAIChatService>();
             builder.Services.AddSingleton<IVectorStoreService, VectorStoreService>();
             builder.Services.AddTransient<RagOpenAIChatService>();

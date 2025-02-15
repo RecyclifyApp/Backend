@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250214183357_Events")]
-    partial class Events
+    [Migration("20250215131742_clouddb_v47")]
+    partial class clouddb_v47
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -559,6 +559,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("MfaSecret")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -567,8 +570,23 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PhoneVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneVerified")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("UserRole")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("resetKey")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("resetKeyExpiry")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
