@@ -415,12 +415,8 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("loginVerifyMfa")]
         public async Task<IActionResult> LoginVerifyMfa([FromBody] LoginVerifyCodeRequest request) {
-            Console.WriteLine("LoginVerifyMfa");
-            Console.WriteLine(request.Code);
-            Console.WriteLine(request.UserId);
             try {
                 var userId = request.UserId;
-                Console.WriteLine(userId);
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null || string.IsNullOrEmpty(user.MfaSecret))
                     return Unauthorized(new { error = "Invalid request." });
@@ -433,7 +429,6 @@ namespace Backend.Controllers.Identity {
 
                 return Unauthorized(new { error = "Invalid code." });
             } catch (Exception ex) {
-                Console.WriteLine(ex);
                 return StatusCode(500, new { error = "An error occurred while verifying MFA.", details = ex.Message });
             }
         }
@@ -556,7 +551,6 @@ namespace Backend.Controllers.Identity {
             } catch (ArgumentException ex) {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
             } catch (Exception ex) {
-                Console.WriteLine(ex);
                 return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
             }
         }
@@ -578,7 +572,6 @@ namespace Backend.Controllers.Identity {
 
                 return Unauthorized(new { error = "Invalid code." });
             } catch (Exception ex) {
-                Console.WriteLine(ex);
                 return StatusCode(500, new { error = "An error occurred while verifying MFA.", details = ex.Message });
             }
         }
