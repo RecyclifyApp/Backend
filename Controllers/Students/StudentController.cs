@@ -253,7 +253,7 @@ namespace Backend.Controllers {
 
         [HttpGet("get-all-rewards")]
         public async Task<IActionResult> GetAllRewards() {
-            var allRewards = await _context.RewardItems.ToListAsync();
+            var allRewards = await _context.RewardItems.Where(r => r.IsAvailable == true).ToListAsync();
             return Ok(new { message = "SUCCESS: All rewards retrieved", data = allRewards });
         }
 
