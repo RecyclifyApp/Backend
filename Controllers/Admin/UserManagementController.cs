@@ -9,7 +9,7 @@ using System.Security.Claims;
 using System.Text;
 
 
-namespace Backend.Controllers.Admin {
+namespace Backend.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     [ServiceFilter(typeof(CheckSystemLockedFilter))]
