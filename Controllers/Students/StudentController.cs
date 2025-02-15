@@ -518,7 +518,7 @@ namespace Backend.Controllers {
 
                 var studentClass = await _context.Classes.FirstOrDefaultAsync(c => c.JoinCode == joinCode);
                 if (studentClass == null) {
-                    return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
+                    return BadRequest(new { error = "ERROR: Invalid Class Join Code" });
                 }
 
                 var existingStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
