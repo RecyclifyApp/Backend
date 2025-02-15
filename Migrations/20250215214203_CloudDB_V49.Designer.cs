@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250214183357_Events")]
-    partial class Events
+    [Migration("20250215214203_CloudDB_V49")]
+    partial class CloudDB_V49
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -167,11 +167,8 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Event", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -381,6 +378,9 @@ namespace Backend.Migrations
                     b.Property<int>("CurrentPoints")
                         .HasColumnType("int");
 
+                    b.Property<string>("LastActiveDate")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("LastClaimedStreak")
                         .HasColumnType("longtext");
 
@@ -559,6 +559,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("MfaSecret")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -567,8 +570,23 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PhoneVerificationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneVerificationTokenExpiry")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneVerified")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("UserRole")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("resetKey")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("resetKeyExpiry")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

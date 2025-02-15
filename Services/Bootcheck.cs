@@ -29,7 +29,11 @@ namespace Backend.Services {
             "ACCREDIBLE_API_KEY",
             "ACCREDIBLE_RECYCLIFY_CERTIFICATE_GROUP_ID",
             "CAPTCHA_SECRET_KEY",
-            "RapidAPIKey"
+            "RapidAPIKey",
+            "DEFAULT_ADMIN_PASSWORD",
+            "DEFAULT_TEACHER_PASSWORD",
+            "DEFAULT_STUDENT_PASSWORD",
+            "DEFAULT_PARENT_PASSWORD",
         };
         public static void Run(MyDbContext context) {
             var missingVariables = new List<string>();

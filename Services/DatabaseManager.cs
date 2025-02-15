@@ -36,17 +36,24 @@ namespace Backend.Services {
             return username;
         } 
 
-        public static string ValidateEmail(string email, MyDbContext context) {
+        public static string ValidateEmail(string email, string userRole, MyDbContext context) {
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            var studentEmailRegex = new Regex(@"^\d{6}[a-zA-Z]@mymail\.nyp\.edu\.sg$");
+
             if (!emailRegex.IsMatch(email)) {
                 throw new ArgumentException("Invalid email format."); 
             }
+
+            if (userRole.ToLower() == "student" && !studentEmailRegex.IsMatch(email.Trim())) {
+                throw new ArgumentException("Student email must follow the format: 6 digits, 1 letter, and end with @mymail.nyp.edu.sg");
+            }
+
             if (context.Users.Any(u => u.Email == email)) {
                 throw new ArgumentException("Email must be unique.");
             }
+
             return email;
         }
-
         public static string ValidatePassword(string password) {
             if (password.Length < 8)
                 throw new ArgumentException("Password must be at least 8 characters long.");
@@ -74,13 +81,13 @@ namespace Backend.Services {
             } else {
                 id = Utilities.GenerateUniqueID();
             }
+            string userRole = ValidateField(userDetails, "UserRole", required: true, "UserRole is required.");
             string name = ValidateUsername(userDetails.GetValueOrDefault("Name")?.ToString() ?? throw new ArgumentException("Username is required."), context);
             string fname = ValidateField(userDetails, "FName", required: true, "FName is required.");
             string lname = ValidateField(userDetails, "LName", required: true, "LName is required.");
-            string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), context);
+            string email = ValidateEmail(userDetails.GetValueOrDefault("Email")?.ToString() ?? throw new ArgumentException("Email is required."), userRole, context);
             string password = ValidatePassword(userDetails.GetValueOrDefault("Password")?.ToString() ?? throw new ArgumentException("Password is required."));
             string contactNumber = ValidateContactNumber(userDetails.GetValueOrDefault("ContactNumber")?.ToString() ?? "", context);
-            string userRole = ValidateField(userDetails, "UserRole", required: true, "UserRole is required.");
             string avatar = userDetails.GetValueOrDefault("Avatar")?.ToString() ?? "";
             string linkedStudent = userDetails.GetValueOrDefault("StudentID")?.ToString() ?? "";
 
@@ -94,18 +101,18 @@ namespace Backend.Services {
                 ContactNumber = contactNumber,
                 UserRole = userRole,
                 Avatar = avatar,
-                EmailVerified = false
+                EmailVerified = false,
+                PhoneVerified = false
             };
 
             if (baseUser == "student") {
-                var generateCurrentPoints = Utilities.GenerateRandomInt(0, 500);
                 var specificStudentObj = new Student {
                     UserID = baseUserObj.Id,
                     StudentID = baseUserObj.Id,
-                    Streak = 7,
-                    League = new[] { "Bronze", "Silver", "Gold" }[new Random().Next(3)],
-                    CurrentPoints = generateCurrentPoints,
-                    TotalPoints = generateCurrentPoints + Utilities.GenerateRandomInt(0, 1000),
+                    Streak = 0,
+                    League = "Bronze",
+                    CurrentPoints = 0,
+                    TotalPoints = 0,
                 };
 
                 context.Students.Add(specificStudentObj);

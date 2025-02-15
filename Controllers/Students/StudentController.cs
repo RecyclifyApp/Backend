@@ -253,7 +253,7 @@ namespace Backend.Controllers {
 
         [HttpGet("get-all-rewards")]
         public async Task<IActionResult> GetAllRewards() {
-            var allRewards = await _context.RewardItems.ToListAsync();
+            var allRewards = await _context.RewardItems.Where(r => r.IsAvailable == true).ToListAsync();
             return Ok(new { message = "SUCCESS: All rewards retrieved", data = allRewards });
         }
 
@@ -305,6 +305,7 @@ namespace Backend.Controllers {
                     try {
                         await AssetsManager.UploadFileAsync(file);
                         selectedTaskProgress.ImageUrls = (await AssetsManager.GetFileUrlAsync(file.FileName)).Substring("SUCCESS: ".Length).Trim();
+                        selectedTaskProgress.TaskRejected = false;
                         selectedTaskProgress.VerificationPending = true;
 
                         try {
@@ -518,7 +519,7 @@ namespace Backend.Controllers {
 
                 var studentClass = await _context.Classes.FirstOrDefaultAsync(c => c.JoinCode == joinCode);
                 if (studentClass == null) {
-                    return NotFound(new { error = "ERROR: Class not found. Please Join a Class" });
+                    return BadRequest(new { error = "ERROR: Invalid Class Join Code" });
                 }
 
                 var existingStudent = await _context.ClassStudents.FirstOrDefaultAsync(cs => cs.StudentID == studentID);
