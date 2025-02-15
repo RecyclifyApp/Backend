@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250215062713_clouddb_v46")]
-    partial class clouddb_v46
+    [Migration("20250215131742_clouddb_v47")]
+    partial class clouddb_v47
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -581,6 +581,12 @@ namespace Backend.Migrations
 
                     b.Property<string>("UserRole")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("resetKey")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("resetKeyExpiry")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

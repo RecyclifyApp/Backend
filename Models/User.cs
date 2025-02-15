@@ -21,6 +21,8 @@ namespace Backend.Models {
         public required bool PhoneVerified { get; set; } = false;
         public string? PhoneVerificationToken { get; set; }
         public string? PhoneVerificationTokenExpiry { get; set; }
+        public string? resetKey { get; set; }
+        public string? resetKeyExpiry { get; set; }
         public ICollection<Inbox>? Inboxes { get; set; }
         public Admin? Admin { get; set; }
     }
