@@ -4,6 +4,7 @@ using Backend.Filters;
 using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
+using EcoPilotApp;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
