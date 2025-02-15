@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250214183357_Events")]
-    partial class Events
+    [Migration("20250215014944_clouddb_v45")]
+    partial class clouddb_v45
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -557,6 +557,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("LName")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("MfaSecret")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")

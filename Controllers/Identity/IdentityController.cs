@@ -8,14 +8,16 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Backend.Controllers.Identity {
     [ApiController]
     [Route("/api/[controller]")]
     [ServiceFilter(typeof(CheckSystemLockedFilter))]
-    public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService) : ControllerBase {
+    public class IdentityController (MyDbContext context, IConfiguration configuration, Captcha captchaService, MSAuth msAuthService) : ControllerBase {
         private readonly MyDbContext _context = context;
         private readonly Captcha _captchaService = captchaService;
+        private readonly MSAuth _msAuth = msAuthService;
         private readonly IConfiguration _configuration = configuration;
 
         private string CreateToken(User user) {
@@ -436,6 +438,16 @@ namespace Backend.Controllers.Identity {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
+                // MFA Setup
+                string qrCodeUrl = null;
+                if (await IsMSAuthEnabledAsync()) {
+                    var newSecretResult = await _msAuth.NewSecret();
+                    string secret = newSecretResult.ToString().Trim();
+                    var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret);
+                    user.MfaSecret = secret;
+                    qrCodeUrl = enrollResult.ToString();
+                }
+
                 // Generate 6-digit code
                 var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
                 var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
@@ -474,13 +486,38 @@ namespace Backend.Controllers.Identity {
                         user.UserRole
                     },
                     captchaSuccess,
-                    captchaScore
+                    captchaScore,
+                    qrCodeUrl
                 });
             } catch (ArgumentException ex) {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
             } catch (Exception ex) {
                 Console.WriteLine(ex);
                 return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("verifyMfa")]
+        [Authorize]
+        public async Task<IActionResult> VerifyMfa([FromBody] MfaVerificationRequest request) {
+            Console.WriteLine("MFA VERIFICATION REQUEST");
+            Console.WriteLine(request);
+            try {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null || string.IsNullOrEmpty(user.MfaSecret))
+                    return Unauthorized(new { error = "Invalid request." });
+
+                var validationResult = await _msAuth.Validate(request.Code, user.MfaSecret);
+                if (validationResult is bool isValid && isValid) {
+                    string token = CreateToken(user);
+                    return Ok(new { token, user = new { user.Id, user.Name, user.Email } });
+                }
+
+                return Unauthorized(new { error = "Invalid code." });
+            } catch (Exception ex) {
+                Console.WriteLine(ex);
+                return StatusCode(500, new { error = "An error occurred while verifying MFA.", details = ex.Message });
             }
         }
 
@@ -910,6 +947,15 @@ namespace Backend.Controllers.Identity {
         public class ChangePasswordRequest {
             public required string OldPassword { get; set; }
             public required string NewPassword { get; set; }
+        }
+
+        public class MfaVerificationRequest {
+            public string Code { get; set; }
+        }
+
+        private async Task<bool> IsMSAuthEnabledAsync() {
+            var config = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled");
+            return config?.Value == "true";
         }
     }
 }

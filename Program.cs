@@ -1526,6 +1526,7 @@ namespace Backend {
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<Captcha>();
             builder.Services.AddScoped<CheckSystemLockedFilter>();
+            builder.Services.AddScoped<MSAuth>();
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
