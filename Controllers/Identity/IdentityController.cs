@@ -573,7 +573,7 @@ namespace Backend.Controllers.Identity {
                 // Validate email only if it has changed
                 var email = user.Email; // Default to the current email
                 if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email) {
-                    email = DatabaseManager.ValidateEmail(request.Email.Trim(), _context);
+                    email = DatabaseManager.ValidateEmail(request.Email.Trim(), user.UserRole, _context);
                 }
 
                 // Validate contact number only if it has changed
