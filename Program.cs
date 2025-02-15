@@ -4,29 +4,24 @@ using Backend.Filters;
 using Backend.Models;
 using Backend.Services;
 using DotNetEnv;
-using EcoPilotApp;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Task = System.Threading.Tasks.Task;
 
-namespace Backend
-{
-    class SuperuserScript
-    {
+namespace Backend {
+    class SuperuserScript {
         private readonly MyDbContext _context;
         private readonly IConfiguration _config;
         private static readonly Random random = new Random();
 
-        public SuperuserScript(MyDbContext context, IConfiguration config)
-        {
+        public SuperuserScript(MyDbContext context, IConfiguration config) {
             _context = context;
             _config = config;
         }
 
-        public async Task Run()
-        {
+        public async Task Run() {
             Console.WriteLine("");
             Console.Write("Username: ");
             string superuserUsername = Console.ReadLine() ?? "";
@@ -35,21 +30,16 @@ namespace Backend
             Console.Write("PIN: ");
             string superuserPIN = Console.ReadLine() ?? "";
 
-            if (superuserUsername != _config["SUPERUSER_USERNAME"] || superuserPassword != _config["SUPERUSER_PASSWORD"] || superuserPIN != _config["SUPERUSER_PIN"])
-            {
+            if (superuserUsername != _config["SUPERUSER_USERNAME"] || superuserPassword != _config["SUPERUSER_PASSWORD"] || superuserPIN != _config["SUPERUSER_PIN"]) {
                 Console.WriteLine("");
                 Console.WriteLine("ACCESS UNAUTHORISED: Invalid superuser credentials.");
                 Console.WriteLine("");
 
-                for (int i = 6; i > 0; i--)
-                {
-                    for (int j = 0; j < 10; j++)
-                    {
-                        if (Console.KeyAvailable)
-                        {
+                for (int i = 6; i > 0; i--) {
+                    for (int j = 0; j < 10; j++) {
+                        if (Console.KeyAvailable) {
                             var key = Console.ReadKey(true);
-                            if (key.Key == ConsoleKey.Enter)
-                            {
+                            if (key.Key == ConsoleKey.Enter) {
                                 Console.WriteLine("");
                                 Console.WriteLine("");
                                 Console.WriteLine("Console terminated. Goodbye!");
@@ -67,14 +57,11 @@ namespace Backend
                 Console.WriteLine();
                 Console.Write($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}/swagger/index.html");
                 return;
-            }
-            else
-            {
+            } else {
                 Console.WriteLine("");
                 Console.WriteLine("ACCESS AUTHORISED: Launching superuser script...");
                 bool running = true;
-                while (running)
-                {
+                while (running) {
                     Console.WriteLine();
                     Console.WriteLine("---------------------------------Welcome to the Recyclify System Superuser Console----------------------------------------------");
                     Console.WriteLine("Population Sequence: Wipe CloudSQL Database -> Populate CloudSQL Database -> Create New Teacher Account -> Populate Students");
@@ -92,15 +79,13 @@ namespace Backend
                     Console.WriteLine();
                     Console.Write("Enter action: ");
 
-                    if (!int.TryParse(Console.ReadLine(), out int action))
-                    {
+                    if (!int.TryParse(Console.ReadLine(), out int action)) {
                         Console.WriteLine("");
                         Console.WriteLine("ERROR: Please enter a valid integer.");
                         continue;
                     }
 
-                    switch (action)
-                    {
+                    switch (action) {
                         case 1:
                             await CreateAccount();
                             break;
@@ -143,8 +128,7 @@ namespace Backend
             }
         }
 
-        private async Task CreateAccount()
-        {
+        private async Task CreateAccount() {
             Console.WriteLine("");
             Console.WriteLine("1. Admin");
             Console.WriteLine("2. Teacher");
@@ -155,15 +139,13 @@ namespace Backend
             Console.WriteLine();
 
             Console.Write("Enter account type: ");
-            if (!int.TryParse(Console.ReadLine(), out int accountType))
-            {
+            if (!int.TryParse(Console.ReadLine(), out int accountType)) {
                 Console.WriteLine("");
                 Console.WriteLine("ERROR: Please enter a valid integer.");
                 return;
             }
 
-            switch (accountType)
-            {
+            switch (accountType) {
                 case 1:
                     Console.WriteLine("");
                     Console.Write("Admin First Name: ");
@@ -176,7 +158,7 @@ namespace Backend
                     string adminPassword = Console.ReadLine() ?? "";
                     Console.Write("Admin Contact Number: ");
                     string adminContactNumber = Console.ReadLine() ?? "";
-
+            
                     var adminKvp = new List<Dictionary<string, object>> {
                         new Dictionary<string, object> {
                             { "Name", adminFName + " " + adminLName },
@@ -191,8 +173,7 @@ namespace Backend
                         }
                     };
 
-                    try
-                    {
+                    try {
                         await DatabaseManager.CreateUserRecords(_context, "admin", adminKvp);
                         Console.WriteLine("");
                         Console.WriteLine("Admin Account created successfully.");
@@ -200,11 +181,9 @@ namespace Backend
                         Console.WriteLine("Admin Username: " + adminKvp[0]["Email"]);
                         Console.WriteLine("Admin Password: " + adminKvp[0]["Password"]);
                         Console.WriteLine("-------------------------------------------");
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -222,8 +201,7 @@ namespace Backend
                     string teacherContactNumber = Console.ReadLine() ?? "";
                     Console.Write("Associated Class Name: ");
 
-                    if (!int.TryParse(Console.ReadLine(), out int className))
-                    {
+                    if (!int.TryParse(Console.ReadLine(), out int className)) {
                         Console.WriteLine("");
                         Console.WriteLine("ERROR: Please enter a valid integer for Class Name.");
                         return;
@@ -247,13 +225,11 @@ namespace Backend
                         }
                     };
 
-                    try
-                    {
+                    try {
                         await DatabaseManager.CreateUserRecords(_context, "teacher", teacherKvp);
 
                         var teacherClassID = Utilities.GenerateUniqueID();
-                        var teacherClass = new Class
-                        {
+                        var teacherClass = new Class {
                             ClassID = teacherClassID,
                             ClassName = className,
                             ClassDescription = classDescription,
@@ -277,16 +253,13 @@ namespace Backend
 
                         var questList = _context.Quests.ToList();
 
-                        if (questList.Count < 3)
-                        {
+                        if (questList.Count < 3) {
                             throw new Exception("ERROR: Not enough quests in database. Please Populate CloudSQL Database first.");
                         }
 
-                        for (int i = 0; i < 3; i++)
-                        {
+                        for (int i = 0; i < 3; i++) {
                             var randomQuest = questList[random.Next(questList.Count)];
-                            var classQuestProgress = new QuestProgress
-                            {
+                            var classQuestProgress = new QuestProgress {
                                 ClassID = teacherClassID,
                                 QuestID = randomQuest.QuestID,
                                 Quest = randomQuest,
@@ -312,11 +285,9 @@ namespace Backend
                         Console.WriteLine("Associated Class ID: " + teacherClass.ClassID);
                         Console.WriteLine("Associated Class Name: " + teacherClass.ClassName);
                         Console.WriteLine("-------------------------------------------");
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -348,8 +319,7 @@ namespace Backend
                         }
                     };
 
-                    try
-                    {
+                    try {
                         await DatabaseManager.CreateUserRecords(_context, "parent", parentKvp);
                         Console.WriteLine("");
                         Console.WriteLine("Parent Account created successfully.");
@@ -357,11 +327,9 @@ namespace Backend
                         Console.WriteLine("Parent Username: " + parentKvp[0]["Email"]);
                         Console.WriteLine("Parent Password: " + parentKvp[0]["Password"]);
                         Console.WriteLine("-------------------------------------------");
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -393,14 +361,11 @@ namespace Backend
                         }
                     };
 
-                    try
-                    {
+                    try {
                         await DatabaseManager.CreateUserRecords(_context, "student", studentKvp);
 
-                        for (int i = 0; i < 10; i++)
-                        {
-                            var studentPoints = new StudentPoints
-                            {
+                        for (int i = 0; i < 10; i++) {
+                            var studentPoints = new StudentPoints {
                                 StudentID = studentKvp[0]["Id"].ToString() ?? "",
                                 TaskID = _context.Tasks.ToList()[i].TaskID,
                                 DateCompleted = DateTime.Now.AddDays(i).ToString("yyyy-MM-dd"),
@@ -418,11 +383,9 @@ namespace Backend
                         Console.WriteLine("Student Username: " + studentKvp[0]["Email"]);
                         Console.WriteLine("Student Password: " + studentKvp[0]["Password"]);
                         Console.WriteLine("-------------------------------------------");
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         Console.WriteLine("");
-                        Console.WriteLine($"ERROR: {ex.Message}");
+                        Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
 
                     break;
@@ -437,30 +400,24 @@ namespace Backend
             }
         }
 
-        private async Task DeleteAccount()
-        {
+        private async Task DeleteAccount() {
             Console.WriteLine("");
             Console.Write("Enter UserID of account to be deleted: ");
             string userID = Console.ReadLine() ?? "";
-            try
-            {
+            try {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userID) ?? throw new Exception("ERROR: No such user.");
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
                 Console.WriteLine("");
                 Console.WriteLine("SUCCESS: Account deleted.");
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
             }
         }
 
-        private async Task ToggleLockSystem()
-        {
-            try
-            {
+        private async Task ToggleLockSystem() {
+            try {
                 var systemLocked = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "SYSTEM_LOCKED") ?? throw new Exception("ERROR: SYSTEM_LOCKED environment variable not found.");
                 Console.WriteLine("");
                 Console.WriteLine("System Lock Status: " + systemLocked.Value);
@@ -471,15 +428,13 @@ namespace Backend
 
                 Console.WriteLine();
                 Console.Write("Enter action: ");
-                if (!int.TryParse(Console.ReadLine(), out int action))
-                {
+                if (!int.TryParse(Console.ReadLine(), out int action)) {
                     Console.WriteLine("");
                     Console.WriteLine("ERROR: Please enter a valid integer.");
                     return;
                 }
 
-                switch (action)
-                {
+                switch (action) {
                     case 1:
                         systemLocked.Value = "true";
                         await _context.SaveChangesAsync();
@@ -500,23 +455,19 @@ namespace Backend
                         Console.WriteLine("");
                         Console.WriteLine("ERROR: Please enter a valid integer from 1-3.");
                         break;
-                }
+                } 
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
 
-        private async Task ToggleServices()
-        {
-            while (true)
-            {
+        private async Task ToggleServices() {
+            while (true) {
                 var compVisionEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "COMPVISION_ENABLED")
                     ?? throw new Exception("ERROR: COMPVISION_ENABLED environment variable not found.");
                 var emailerEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "EMAILER_ENABLED")
@@ -542,136 +493,126 @@ namespace Backend
                 Console.WriteLine();
                 Console.Write("Select service to toggle: ");
 
-                if (!int.TryParse(Console.ReadLine(), out int service))
-                {
+                if (!int.TryParse(Console.ReadLine(), out int service)) {
                     Console.WriteLine("");
                     Console.WriteLine("ERROR: Please enter a valid integer.");
                     continue;
                 }
 
-                switch (service)
-                {
-                    case 1:
-                        compVisionEnabled.Value = compVisionEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 2:
-                        emailerEnabled.Value = emailerEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 3:
-                        openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 4:
-                        smsServiceEnabled.Value = smsServiceEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 5:
-                        msAuthEnabled.Value = msAuthEnabled.Value == "true" ? "false" : "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: Microsoft Auth service " + (msAuthEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
-                        break;
-                    case 6:
-                        Console.WriteLine("");
+                try {
+                    switch (service) {
+                        case 1:
+                            compVisionEnabled.Value = compVisionEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: CompVision service " + (compVisionEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 2:
+                            emailerEnabled.Value = emailerEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: Emailer service " + (emailerEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 3:
+                            openAIChatServiceEnabled.Value = openAIChatServiceEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: OpenAIChatService service " + (openAIChatServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 4:
+                            smsServiceEnabled.Value = smsServiceEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: SmsService service " + (smsServiceEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 5:
+                            msAuthEnabled.Value = msAuthEnabled.Value == "true" ? "false" : "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: Microsoft Auth service " + (msAuthEnabled.Value == "true" ? "ENABLED." : "DISABLED."));
+                            break;
+                        case 6:
+                            Console.WriteLine("");
 
-                        for (int i = 6; i > 0; i--)
-                        {
-                            for (int j = 0; j < 10; j++)
-                            {
-                                if (Console.KeyAvailable)
-                                {
-                                    var key = Console.ReadKey(true);
-                                    if (key.Key == ConsoleKey.Enter)
-                                    {
-                                        Console.WriteLine("");
-                                        Console.WriteLine("");
-                                        Console.WriteLine("[ABORT] - Process terminated.");
-                                        return;
+                            for (int i = 6; i > 0; i--) {
+                                for (int j = 0; j < 10; j++) {
+                                    if (Console.KeyAvailable) {
+                                        var key = Console.ReadKey(true);
+                                        if (key.Key == ConsoleKey.Enter) {
+                                            Console.WriteLine("");
+                                            Console.WriteLine("");
+                                            Console.WriteLine("[ABORT] - Process terminated.");
+                                            return;
+                                        }
                                     }
+                                    Thread.Sleep(100);
                                 }
-                                Thread.Sleep(100);
+                                Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
                             }
-                            Console.Write($"\r[Press ENTER to CANCEL] DISABLING ALL SERVICES in {i - 1} seconds...");
-                        }
 
-                        compVisionEnabled.Value = "false";
-                        emailerEnabled.Value = "false";
-                        openAIChatServiceEnabled.Value = "false";
-                        smsServiceEnabled.Value = "false";
-                        msAuthEnabled.Value = "false";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
-                        break;
-                    case 7:
-                        Console.WriteLine("");
+                            compVisionEnabled.Value = "false";
+                            emailerEnabled.Value = "false";
+                            openAIChatServiceEnabled.Value = "false";
+                            smsServiceEnabled.Value = "false";
+                            msAuthEnabled.Value = "false";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: ALL SERVICES DISABLED.");
+                            break;
+                        case 7:
+                            Console.WriteLine("");
 
-                        for (int i = 6; i > 0; i--)
-                        {
-                            for (int j = 0; j < 10; j++)
-                            {
-                                if (Console.KeyAvailable)
-                                {
-                                    var key = Console.ReadKey(true);
-                                    if (key.Key == ConsoleKey.Enter)
-                                    {
-                                        Console.WriteLine("");
-                                        Console.WriteLine("");
-                                        Console.WriteLine("[ABORT] - Process terminated.");
-                                        return;
+                            for (int i = 6; i > 0; i--) {
+                                for (int j = 0; j < 10; j++) {
+                                    if (Console.KeyAvailable) {
+                                        var key = Console.ReadKey(true);
+                                        if (key.Key == ConsoleKey.Enter) {
+                                            Console.WriteLine("");
+                                            Console.WriteLine("");
+                                            Console.WriteLine("[ABORT] - Process terminated.");
+                                            return;
+                                        }
                                     }
+                                    Thread.Sleep(100);
                                 }
-                                Thread.Sleep(100);
+                                Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
                             }
-                            Console.Write($"\r[Press ENTER to CANCEL] ENABLING ALL SERVICES in {i - 1} seconds...");
-                        }
 
-                        compVisionEnabled.Value = "true";
-                        emailerEnabled.Value = "true";
-                        openAIChatServiceEnabled.Value = "true";
-                        smsServiceEnabled.Value = "true";
-                        msAuthEnabled.Value = "true";
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("");
-                        Console.WriteLine("");
-                        Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
-                        break;
-                    case 8:
-                        Console.WriteLine("");
-                        Console.WriteLine("Exiting Service Toggle Mode...");
-                        return;
-                    default:
-                        Console.WriteLine("");
-                        Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
-                        break;
+                            compVisionEnabled.Value = "true";
+                            emailerEnabled.Value = "true";
+                            openAIChatServiceEnabled.Value = "true";
+                            smsServiceEnabled.Value = "true";
+                            msAuthEnabled.Value = "true";
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine("");
+                            Console.WriteLine("");
+                            Console.WriteLine("SUCCESS: ALL SERVICES ENABLED.");
+                            break;
+                        case 8:
+                            Console.WriteLine("");
+                            Console.WriteLine("Exiting Service Toggle Mode...");
+                            return;
+                        default:
+                            Console.WriteLine("");
+                            Console.WriteLine("ERROR: Please enter a valid integer from 1-8.");
+                            break;
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine("");
+                    Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                 }
             }
         }
 
-        private async Task ClearFirebaseCloudStorage()
-        {
+        private async Task ClearFirebaseCloudStorage() {
             Console.WriteLine("");
 
-            for (int i = 6; i > 0; i--)
-            {
-                for (int j = 0; j < 10; j++)
-                {
-                    if (Console.KeyAvailable)
-                    {
+            for (int i = 6; i > 0; i--) {
+                for (int j = 0; j < 10; j++) {
+                    if (Console.KeyAvailable) {
                         var key = Console.ReadKey(true);
-                        if (key.Key == ConsoleKey.Enter)
-                        {
+                        if (key.Key == ConsoleKey.Enter) {
                             Console.WriteLine("");
                             Console.WriteLine("");
                             Console.WriteLine("[ABORT] - Process terminated.");
@@ -683,8 +624,7 @@ namespace Backend
                 Console.Write($"\r[Press ENTER to CANCEL] Wiping Firebase Cloud Storage in {i - 1} seconds...   ");
             }
 
-            try
-            {
+            try {
                 Console.WriteLine("");
                 Console.WriteLine("");
                 Console.WriteLine("Database Wipe in progress. This may take a while...");
@@ -695,29 +635,22 @@ namespace Backend
                 Console.WriteLine("SUCCESS: FIREBASE CLOUD STORAGE WIPED.");
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
 
-        private async Task WipeDatabase()
-        {
+        private async Task WipeDatabase() {
             Console.WriteLine("");
 
-            for (int i = 6; i > 0; i--)
-            {
-                for (int j = 0; j < 10; j++)
-                {
-                    if (Console.KeyAvailable)
-                    {
+            for (int i = 6; i > 0; i--) {
+                for (int j = 0; j < 10; j++) {
+                    if (Console.KeyAvailable) {
                         var key = Console.ReadKey(true);
-                        if (key.Key == ConsoleKey.Enter)
-                        {
+                        if (key.Key == ConsoleKey.Enter) {
                             Console.WriteLine("");
                             Console.WriteLine("");
                             Console.WriteLine("[ABORT] - Process terminated.");
@@ -729,8 +662,7 @@ namespace Backend
                 Console.Write($"\r[Press ENTER to CANCEL] Wiping CloudSQL Database in {i - 1} seconds...   ");
             }
 
-            try
-            {
+            try {
                 Console.WriteLine("");
                 Console.WriteLine("");
                 Console.WriteLine("Database Wipe in progress...");
@@ -761,20 +693,16 @@ namespace Backend
                 Console.WriteLine("SUCCESS: CLOUDSQL DATABASE WIPED.");
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
 
-        private async Task PopulateDatabase()
-        {
-            try
-            {
+        private async Task PopulateDatabase() {
+            try {
                 Console.WriteLine("");
                 Console.WriteLine("Populating Database. This may take a while...");
 
@@ -786,51 +714,40 @@ namespace Backend
                 Console.WriteLine("SUCCESS: Database populated.");
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
 
-        private async Task PopulateCloudConfigs()
-        {
-            try
-            {
+        private async Task PopulateCloudConfigs() {
+            try {
                 var environmentVariables = Bootcheck.RetrieveEnvironmentVariables();
                 _context.EnvironmentConfigs.RemoveRange(_context.EnvironmentConfigs);
 
-                foreach (var envVar in environmentVariables)
-                {
+                foreach (var envVar in environmentVariables) {
                     var value = Environment.GetEnvironmentVariable(envVar) ?? "Not set";
-                    var config = new EnvironmentConfig
-                    {
+                    var config = new EnvironmentConfig {
                         Name = envVar,
                         Value = value
                     };
-
+                    
                     _context.EnvironmentConfigs.Add(config);
                 }
                 await _context.SaveChangesAsync();
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine("ERROR: Failed to save environment variables to database.");
-                Logger.Log("SUPERUSERSCRIPT - Failed to save environment variables to database. ERROR: " + ex.Message);
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                 return;
             }
         }
 
-        private async Task PopulateTasksAndQuests()
-        {
-            try
-            {
+        private async Task PopulateTasksAndQuests() {
+            try {
                 var quest1ID = Utilities.GenerateUniqueID();
                 var quest2ID = Utilities.GenerateUniqueID();
                 var quest3ID = Utilities.GenerateUniqueID();
@@ -852,8 +769,7 @@ namespace Backend
                 var quest19ID = Utilities.GenerateUniqueID();
                 var quest20ID = Utilities.GenerateUniqueID();
 
-                var quest1 = new Quest
-                {
+                var quest1 = new Quest {
                     QuestID = quest1ID,
                     QuestTitle = "Quest 1",
                     QuestDescription = "Bring 30 plastic bottles for recycling.",
@@ -862,8 +778,7 @@ namespace Backend
                     TotalAmountToComplete = 30
                 };
 
-                var quest2 = new Quest
-                {
+                var quest2 = new Quest {
                     QuestID = quest2ID,
                     QuestTitle = "Quest 2",
                     QuestDescription = "Sort and recycle 20 used cans.",
@@ -872,8 +787,7 @@ namespace Backend
                     TotalAmountToComplete = 20
                 };
 
-                var quest3 = new Quest
-                {
+                var quest3 = new Quest {
                     QuestID = quest3ID,
                     QuestTitle = "Quest 3",
                     QuestDescription = "Recycle 50 sheets of paper.",
@@ -882,8 +796,7 @@ namespace Backend
                     TotalAmountToComplete = 50
                 };
 
-                var quest4 = new Quest
-                {
+                var quest4 = new Quest {
                     QuestID = quest4ID,
                     QuestTitle = "Quest 4",
                     QuestDescription = "Collect 20 used batteries for recycling.",
@@ -892,8 +805,7 @@ namespace Backend
                     TotalAmountToComplete = 20
                 };
 
-                var quest5 = new Quest
-                {
+                var quest5 = new Quest {
                     QuestID = quest5ID,
                     QuestTitle = "Quest 5",
                     QuestDescription = "Bring 30 plastic containers to school for recycling.",
@@ -902,8 +814,7 @@ namespace Backend
                     TotalAmountToComplete = 30
                 };
 
-                var quest6 = new Quest
-                {
+                var quest6 = new Quest {
                     QuestID = quest6ID,
                     QuestTitle = "Quest 6",
                     QuestDescription = "Collect 30 cardboard items and recycle them.",
@@ -912,8 +823,7 @@ namespace Backend
                     TotalAmountToComplete = 30
                 };
 
-                var quest7 = new Quest
-                {
+                var quest7 = new Quest {
                     QuestID = quest7ID,
                     QuestTitle = "Quest 7",
                     QuestDescription = "Collect 10 empty cans and bring them to the recycling bin.",
@@ -922,8 +832,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest8 = new Quest
-                {
+                var quest8 = new Quest {
                     QuestID = quest8ID,
                     QuestTitle = "Quest 8",
                     QuestDescription = "5 students turn off all lights in your home when not in use for a day.",
@@ -932,8 +841,7 @@ namespace Backend
                     TotalAmountToComplete = 5
                 };
 
-                var quest9 = new Quest
-                {
+                var quest9 = new Quest {
                     QuestID = quest9ID,
                     QuestTitle = "Quest 9",
                     QuestDescription = "5 students track and reduce your electricity usage for a day.",
@@ -942,8 +850,7 @@ namespace Backend
                     TotalAmountToComplete = 5
                 };
 
-                var quest10 = new Quest
-                {
+                var quest10 = new Quest {
                     QuestID = quest10ID,
                     QuestTitle = "Quest 10",
                     QuestDescription = "10 students use natural sunlight instead of electrical lights for a day.",
@@ -952,8 +859,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest11 = new Quest
-                {
+                var quest11 = new Quest {
                     QuestID = quest11ID,
                     QuestTitle = "Quest 11",
                     QuestDescription = "5 students use energy-saving appliances for a day.",
@@ -962,8 +868,7 @@ namespace Backend
                     TotalAmountToComplete = 5
                 };
 
-                var quest12 = new Quest
-                {
+                var quest12 = new Quest {
                     QuestID = quest12ID,
                     QuestTitle = "Quest 12",
                     QuestDescription = "5 students engage in outdoor activities instead of using electronic devices for a day.",
@@ -972,8 +877,7 @@ namespace Backend
                     TotalAmountToComplete = 5
                 };
 
-                var quest13 = new Quest
-                {
+                var quest13 = new Quest {
                     QuestID = quest13ID,
                     QuestTitle = "Quest 13",
                     QuestDescription = "10 students use fans instead of air-conditioning for a day.",
@@ -982,8 +886,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest14 = new Quest
-                {
+                var quest14 = new Quest {
                     QuestID = quest14ID,
                     QuestTitle = "Quest 14",
                     QuestDescription = "10 students plant 1 small plant at home.",
@@ -992,8 +895,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest15 = new Quest
-                {
+                var quest15 = new Quest {
                     QuestID = quest15ID,
                     QuestTitle = "Quest 15",
                     QuestDescription = "Pick up 30 pieces of litter from surroundings.",
@@ -1002,8 +904,7 @@ namespace Backend
                     TotalAmountToComplete = 30
                 };
 
-                var quest16 = new Quest
-                {
+                var quest16 = new Quest {
                     QuestID = quest16ID,
                     QuestTitle = "Quest 16",
                     QuestDescription = "10 students use re-usable cutlery for a day.",
@@ -1012,8 +913,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest17 = new Quest
-                {
+                var quest17 = new Quest {
                     QuestID = quest17ID,
                     QuestTitle = "Quest 17",
                     QuestDescription = "10 students bring their own re-usable food containers for a day.",
@@ -1022,8 +922,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest18 = new Quest
-                {
+                var quest18 = new Quest {
                     QuestID = quest18ID,
                     QuestTitle = "Quest 18",
                     QuestDescription = "10 students help water the plants in the school garden.",
@@ -1032,8 +931,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest19 = new Quest
-                {
+                var quest19 = new Quest {
                     QuestID = quest19ID,
                     QuestTitle = "Quest 19",
                     QuestDescription = "Create 10 posters on how to reduce waste at school.",
@@ -1042,8 +940,7 @@ namespace Backend
                     TotalAmountToComplete = 10
                 };
 
-                var quest20 = new Quest
-                {
+                var quest20 = new Quest {
                     QuestID = quest20ID,
                     QuestTitle = "Quest 20",
                     QuestDescription = "10 students walk or cycle to school for a day.",
@@ -1054,8 +951,7 @@ namespace Backend
 
                 _context.Quests.AddRange(quest1, quest2, quest3, quest4, quest5, quest6, quest7, quest8, quest9, quest10, quest11, quest12, quest13, quest14, quest15, quest16, quest17, quest18, quest19, quest20);
 
-                var task1 = new Models.Task
-                {
+                var task1 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 1",
                     TaskDescription = "Bring 5 plastic bottles for recycling.",
@@ -1064,8 +960,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 5
                 };
 
-                var task2 = new Models.Task
-                {
+                var task2 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 2",
                     TaskDescription = "Sort and recycle 10 used cans.",
@@ -1074,8 +969,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 10
                 };
 
-                var task3 = new Models.Task
-                {
+                var task3 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 3",
                     TaskDescription = "Recycle 20 sheets of paper.",
@@ -1084,8 +978,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 20
                 };
 
-                var task4 = new Models.Task
-                {
+                var task4 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 4",
                     TaskDescription = "Collect 5 used batteries for recycling.",
@@ -1094,8 +987,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 5
                 };
 
-                var task5 = new Models.Task
-                {
+                var task5 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 5",
                     TaskDescription = "Bring 3 plastic containers to school for recycling.",
@@ -1104,8 +996,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 3
                 };
 
-                var task6 = new Models.Task
-                {
+                var task6 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 6",
                     TaskDescription = "Collect 10 cardboard items and recycle them.",
@@ -1114,8 +1005,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 10
                 };
 
-                var task7 = new Models.Task
-                {
+                var task7 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 7",
                     TaskDescription = "Collect 5 empty cans and bring them to the recycling bin.",
@@ -1124,8 +1014,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 5
                 };
 
-                var task8 = new Models.Task
-                {
+                var task8 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 8",
                     TaskDescription = "Turn off all lights in your home when not in use for a day.",
@@ -1134,8 +1023,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task9 = new Models.Task
-                {
+                var task9 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 9",
                     TaskDescription = "Track and reduce your electricity usage for a day.",
@@ -1144,8 +1032,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task10 = new Models.Task
-                {
+                var task10 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 10",
                     TaskDescription = "Use natural sunlight instead of electrical lights for a day.",
@@ -1154,8 +1041,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task11 = new Models.Task
-                {
+                var task11 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 11",
                     TaskDescription = "Use energy-saving appliances for a day.",
@@ -1164,8 +1050,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task12 = new Models.Task
-                {
+                var task12 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 12",
                     TaskDescription = "Engage in outdoor activities instead of using electronic devices for a day.",
@@ -1174,8 +1059,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task13 = new Models.Task
-                {
+                var task13 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 13",
                     TaskDescription = "Use fans instead of air-conditioning for a day.",
@@ -1184,8 +1068,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task14 = new Models.Task
-                {
+                var task14 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 14",
                     TaskDescription = "Plant 1 small plant at home.",
@@ -1194,8 +1077,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task15 = new Models.Task
-                {
+                var task15 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 15",
                     TaskDescription = "Pick up 10 pieces of litter from your surroundings.",
@@ -1204,8 +1086,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 10
                 };
 
-                var task16 = new Models.Task
-                {
+                var task16 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 16",
                     TaskDescription = "Use re-usable cutlery for a day.",
@@ -1214,8 +1095,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task17 = new Models.Task
-                {
+                var task17 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 17",
                     TaskDescription = "Bring your own re-usable food containers for a day.",
@@ -1224,8 +1104,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task18 = new Models.Task
-                {
+                var task18 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 18",
                     TaskDescription = "Help water the plants in the school garden.",
@@ -1234,8 +1113,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task19 = new Models.Task
-                {
+                var task19 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 19",
                     TaskDescription = "Create 1 poster on how to reduce waste at school.",
@@ -1244,8 +1122,7 @@ namespace Backend
                     QuestContributionAmountOnComplete = 1
                 };
 
-                var task20 = new Models.Task
-                {
+                var task20 = new Models.Task {
                     TaskID = Utilities.GenerateUniqueID(),
                     TaskTitle = "Task 20",
                     TaskDescription = "Walk or cycle to school for a day.",
@@ -1259,20 +1136,16 @@ namespace Backend
                 await _context.SaveChangesAsync();
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch(Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
 
-        private async Task PopulateRewardItems()
-        {
-            try
-            {
+        private async Task PopulateRewardItems() {
+            try {
                 var defaultRewards = new List<RewardItem> {
                     new RewardItem {
                         RewardID = Utilities.GenerateUniqueID(),
@@ -1366,33 +1239,26 @@ namespace Backend
                     }
                 };
 
-                foreach (var reward in defaultRewards)
-                {
-                    try
-                    {
+                foreach (var reward in defaultRewards) {
+                    try {
                         var filePath = Path.Combine("wwwroot", "Assets", "Rewards", Path.GetFileName(reward.ImageUrl ?? string.Empty));
-
-                        if (File.Exists(filePath))
-                        {
+                        
+                        if (File.Exists(filePath)) {
                             using var stream = new FileStream(filePath, FileMode.Open);
-
-                            var formFile = new FormFile(stream, 0, stream.Length, "", Path.GetFileName(filePath))
-                            {
+                            
+                            var formFile = new FormFile(stream, 0, stream.Length, "", Path.GetFileName(filePath)) {
                                 Headers = new HeaderDictionary(),
                                 ContentType = "image/jpeg"
                             };
 
                             var uploadResult = await AssetsManager.UploadFileAsync(formFile);
 
-                            if (uploadResult.StartsWith("SUCCESS"))
-                            {
+                            if (uploadResult.StartsWith("SUCCESS")) {
                                 reward.ImageUrl = await AssetsManager.GetFileUrlAsync(Path.GetFileName(filePath));
                                 reward.ImageUrl = reward.ImageUrl.Substring("SUCCESS: ".Length).Trim();
                             }
                         }
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {    
                         Console.WriteLine("");
                         Console.WriteLine($"ERROR: {ex.Message}");
                     }
@@ -1402,28 +1268,23 @@ namespace Backend
                 await _context.SaveChangesAsync();
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
 
-        private async Task PopulateStudents()
-        {
+        private async Task PopulateStudents() {
             var existingTeachers = _context.Teachers.ToList();
             var classes = _context.Classes.ToList();
-            if (existingTeachers.Count == 0)
-            {
+            if (existingTeachers.Count == 0) {
                 Console.WriteLine("");
                 Console.WriteLine("ERROR: Please create a Teacher Account first.");
                 return;
             }
-            if (classes.Count == 0)
-            {
+            if (classes.Count == 0) {
                 Console.WriteLine("");
                 Console.WriteLine("ERROR: No Classes found. Wipe Database and try creating a new Teacher Account again.");
                 return;
@@ -1432,8 +1293,7 @@ namespace Backend
             Console.WriteLine("");
             Console.WriteLine("Populating Students...");
 
-            try
-            {
+            try {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
@@ -1592,13 +1452,10 @@ namespace Backend
                 var studentsPerClass = studentCount / classCount;
                 var remainingStudents = studentCount % classCount;
 
-                for (var i = 0; i < classCount; i++)
-                {
-                    for (var j = 0; j < studentsPerClass; j++)
-                    {
+                for (var i = 0; i < classCount; i++) {
+                    for (var j = 0; j < studentsPerClass; j++) {
                         var student = studentsList[i * studentsPerClass + j];
-                        var classStudent = new ClassStudents
-                        {
+                        var classStudent = new ClassStudents {
                             ClassID = classes[i].ClassID,
                             StudentID = student.StudentID
                         };
@@ -1607,11 +1464,9 @@ namespace Backend
                     }
                 }
 
-                for (var i = 0; i < remainingStudents; i++)
-                {
+                for (var i = 0; i < remainingStudents; i++) {
                     var student = studentsList[studentCount - remainingStudents + i];
-                    var classStudent = new ClassStudents
-                    {
+                    var classStudent = new ClassStudents {
                         ClassID = classes[classCount - 1].ClassID,
                         StudentID = student.StudentID
                     };
@@ -1621,10 +1476,8 @@ namespace Backend
 
                 await _context.SaveChangesAsync();
 
-                for (int i = 0; i < 10; i++)
-                {
-                    var classPoints = new ClassPoints
-                    {
+                for (int i = 0; i < 10; i++) {
+                    var classPoints = new ClassPoints {
                         ClassID = _context.ClassStudents.ToList()[i].ClassID,
                         QuestID = questList[i].QuestID,
                         ContributingStudentID = studentsList[i].StudentID,
@@ -1641,40 +1494,32 @@ namespace Backend
                 Console.WriteLine("SUCCESS: Students created and assigned to classes.");
 
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
 
                 return;
             }
         }
     }
 
-    public class Program
-    {
-        public static async Task Main(string[] args)
-        {
+    public class Program {
+        public static async Task Main(string[] args) {
             Env.Load();
 
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddDbContext<MyDbContext>();
 
-            if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase))
-            {
+            if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase)) {
                 Console.WriteLine("");
                 Console.WriteLine("SERVER MODE: SUPERUSER");
-            }
-            else if (args.Length == 0)
-            {
+            } else if (args.Length == 0) {
                 Console.WriteLine("");
                 Console.WriteLine("SERVER MODE: STANDARD");
             }
 
-            using (var scope = builder.Services.BuildServiceProvider().CreateScope())
-            {
+            using (var scope = builder.Services.BuildServiceProvider().CreateScope()) {
                 var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
                 Bootcheck.Run(dbContext);
             }
@@ -1685,14 +1530,14 @@ namespace Backend
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<Captcha>();
             builder.Services.AddScoped<CheckSystemLockedFilter>();
+            builder.Services.AddScoped<OpenAIChatService>();
+            builder.Services.AddSingleton<IVectorStoreService, VectorStoreService>();
+            builder.Services.AddTransient<RagOpenAIChatService>();
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowSpecificOrigins", policy =>
-                {
+            builder.Services.AddCors(options => {
+                options.AddPolicy("AllowSpecificOrigins", policy => {
                     var frontendUrl = "http://localhost:5173";
-                    if (!string.IsNullOrEmpty(frontendUrl))
-                    {
+                    if (!string.IsNullOrEmpty(frontendUrl)) {
                         policy.WithOrigins(frontendUrl)
                               .AllowAnyHeader()
                               .AllowAnyMethod();
@@ -1700,21 +1545,17 @@ namespace Backend
                 });
             });
 
-            builder.Services.AddAuthentication(options =>
-            {
+            builder.Services.AddAuthentication(options => {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
-            {
+            .AddJwtBearer(options => {
                 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
-                if (string.IsNullOrEmpty(jwtKey))
-                {
+                if (string.IsNullOrEmpty(jwtKey)) {
                     throw new Exception("JWT secret key is missing.");
                 }
 
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
+                options.TokenValidationParameters = new TokenValidationParameters {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
                     ValidateIssuer = false,
@@ -1723,10 +1564,8 @@ namespace Backend
                 };
             });
 
-            builder.Services.AddSwaggerGen(options =>
-            {
-                var securityScheme = new OpenApiSecurityScheme
-                {
+            builder.Services.AddSwaggerGen(options => {
+                var securityScheme = new OpenApiSecurityScheme {
                     In = ParameterLocation.Header,
                     Description = "Enter JWT Bearer token **_only_**",
                     Name = "Authorization",
@@ -1742,89 +1581,58 @@ namespace Backend
                 });
             });
 
-            builder.WebHost.ConfigureKestrel((context, options) =>
-            {
+            builder.WebHost.ConfigureKestrel((context, options) => {
                 var kestrelConfig = context.Configuration.GetSection("Kestrel:Endpoints");
 
                 var httpUrl = kestrelConfig.GetValue<string>("Http:Url");
-                if (!string.IsNullOrEmpty(httpUrl))
-                {
+                if (!string.IsNullOrEmpty(httpUrl)) {
                     var httpPort = new Uri(httpUrl).Port;
                     options.Listen(IPAddress.Any, httpPort);
                 }
 
                 var httpsUrl = kestrelConfig.GetValue<string>("Https:Url");
-                if (!string.IsNullOrEmpty(httpsUrl))
-                {
+                if (!string.IsNullOrEmpty(httpsUrl)) {
                     var httpsPort = new Uri(httpsUrl).Port;
-                    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
-                    {
+                    options.Listen(IPAddress.Any, httpsPort, listenOptions => {
                         listenOptions.UseHttps();
                     });
                 }
             });
 
-            builder.Services.AddScoped<OpenAIChatService>();
-
-            // Register Vector Store Service
-            builder.Services.AddSingleton<IVectorStoreService, VectorStoreService>();
-
-            // Register RAG Chat Service
-            builder.Services.AddTransient<RagOpenAIChatService>();
-
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
+            using (var scope = app.Services.CreateScope()) {
                 var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
 
-                if (Environment.GetEnvironmentVariable("DB_MODE") == "cloud")
-                {
-                    try
-                    {
-                        if (await dbContext.Database.CanConnectAsync())
-                        {
+                if (Environment.GetEnvironmentVariable("DB_MODE") == "cloud") {
+                    try {
+                        if (await dbContext.Database.CanConnectAsync()) {
                             Console.WriteLine("Successfully connected to CloudSQL.");
-                        }
-                        else
-                        {
+                        } else {
                             Console.WriteLine("Failed to connect to CloudSQL.");
                         }
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Error connecting to CloudSQL: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error connecting to CloudSQL: {ex.Message}");
-                    }
-                }
-                else if (Environment.GetEnvironmentVariable("DB_MODE") == "local")
-                {
-                    try
-                    {
+                } else if (Environment.GetEnvironmentVariable("DB_MODE") == "local") {
+                    try {
                         dbContext.Database.EnsureCreated();
-                        if (await dbContext.Database.CanConnectAsync())
-                        {
+                        if (await dbContext.Database.CanConnectAsync()) {
                             Console.WriteLine("Successfully connected to local SQLite.");
-                        }
-                        else
-                        {
+                        } else {
                             Console.WriteLine("Failed to connect to local SQLite.");
                         }
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Error connecting to local SQLite: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error connecting to local SQLite: {ex.Message}");
-                    }
-                }
-                else
-                {
+                } else {
                     Console.WriteLine("Invalid DB_MODE configuration.");
                 }
             }
 
             app.UseStaticFiles();
 
-            if (app.Environment.IsDevelopment())
-            {
+            if (app.Environment.IsDevelopment()) {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
@@ -1840,12 +1648,10 @@ namespace Backend
             Console.Write($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}/swagger/index.html");
             Console.WriteLine();
 
-            if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase))
-            {
+            if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase))  {
                 var serverTask = app.RunAsync();
 
-                using (var scope = app.Services.CreateScope())
-                {
+                using (var scope = app.Services.CreateScope())  {
                     var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
                     var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                     var script = new SuperuserScript(dbContext, config);
@@ -1853,9 +1659,7 @@ namespace Backend
                 }
 
                 await serverTask;
-            }
-            else if (args.Length == 0)
-            {
+            } else if (args.Length == 0) {
                 app.Run();
             }
         }
