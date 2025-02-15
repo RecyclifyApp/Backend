@@ -99,12 +99,12 @@ namespace Backend.Controllers
             // Create a new Event object
             var newEvent = new Event
             {
-                Id = new Random().Next(100, 1000),
+                Id = Utilities.GenerateUniqueID(),
                 Title = eventRequest.Title,
                 Description = eventRequest.Description,
                 EventDateTime = eventRequest.EventDateTime,
                 PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                ImageUrl = imageUrl // Store the image URL if uploaded
+                ImageUrl = imageUrl ?? string.Empty // Store the image URL if uploaded
             };
 
             // Save the event to the database

@@ -182,8 +182,7 @@ namespace Backend.Controllers.Identity {
                         break;
                     case "student":
                         var student = _context.Students
-                            .Include(s => s.Parent)
-                                .ThenInclude(p => p.User)
+                            .Include(s => s.Parent).ThenInclude(p => p!.User)
                             .FirstOrDefault(s => s.UserID == userId);
 
                         if (student == null) {
@@ -195,11 +194,11 @@ namespace Backend.Controllers.Identity {
                             parentName = $"{student.Parent.User.FName} {student.Parent.User.LName}".Trim();
                             parentName = string.IsNullOrEmpty(parentName) ? "" : parentName;
                         }
-
+                        
                         // Retrieve class name instead of class ID
                         var classStudent = _context.ClassStudents
                             .Include(cs => cs.Class) // Include the Class navigation property
-                            .ThenInclude(c => c.Teacher)
+                            .ThenInclude(c => c!.Teacher)
                             .FirstOrDefault(cs => cs.StudentID == student.StudentID);
 
                         string className = "";
@@ -483,13 +482,13 @@ namespace Backend.Controllers.Identity {
                 }
 
                 // MFA Setup
-                string qrCodeUrl = null;
+                string qrCodeUrl = "";
                 if (await IsMSAuthEnabledAsync()) {
                     var newSecretResult = await _msAuth.NewSecret();
-                    string secret = newSecretResult.ToString().Trim();
-                    var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret);
+                    string secret = newSecretResult.ToString() ?? string.Empty;
+                    var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
                     user.MfaSecret = secret;
-                    qrCodeUrl = enrollResult.ToString();
+                    qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
                 }
 
                 // Generate email verification code
@@ -578,8 +577,7 @@ namespace Backend.Controllers.Identity {
 
         [HttpPost("sendResetKey")]
         public async Task<IActionResult> SendResetKey([FromBody] SendResetKeyRequest request) {
-            var user = _context.Users.SingleOrDefault(u =>
-                u.Email == request.Identifier || u.Name == request.Identifier);
+            var user = _context.Users.SingleOrDefault(u => u.Email == request.Identifier || u.Name == request.Identifier);
 
             try {
                 if (user == null) {
@@ -613,7 +611,7 @@ namespace Backend.Controllers.Identity {
                     : BadRequest(new { error = result });
             }
             catch (Exception ex) {
-                Logger.Log($"[ERROR] IDENTITY SENDRESETKEY: Error processing reset request for user {user.Id}. Error: {ex.Message}");
+                Logger.Log($"[ERROR] IDENTITY SENDRESETKEY: Error processing reset request for user {user?.Id}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: Failed to process reset request", details = ex.Message });
             }
         }
@@ -634,7 +632,7 @@ namespace Backend.Controllers.Identity {
                 }
 
                 // Check expiry
-                if (DateTime.UtcNow > DateTime.Parse(user.resetKeyExpiry)) {
+                if (user.resetKeyExpiry == null || DateTime.UtcNow > DateTime.Parse(user.resetKeyExpiry)) {
                     return BadRequest(new { error = "UERROR: Reset key expired." });
                 }
 
@@ -652,7 +650,7 @@ namespace Backend.Controllers.Identity {
                 return Ok(new { message = "SUCCESS: Password has been reset." });
             }
             catch (Exception ex) {
-                Logger.Log($"[ERROR] IDENTITY RESETPASSWORD: Error processing password reset for user {user.Id}. Error: {ex.Message}");
+                Logger.Log($"[ERROR] IDENTITY RESETPASSWORD: Error processing password reset for user {user?.Id}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: Failed to reset password", details = ex.Message });
             }
         }
