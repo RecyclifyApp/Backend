@@ -1011,6 +1011,26 @@ namespace Backend.Controllers.Teachers
 
             try
             {
+                var existingUser = await _context.Users.FirstOrDefaultAsync(s => s.Email == topContributorEmail);
+                if (existingUser == null)
+                {
+                    return NotFound(new { error = "ERROR: User not found." });
+                }
+
+                var existingStudent = await _context.Students.FirstOrDefaultAsync(s => s.UserID == existingUser.Id);
+                if (existingStudent == null)
+                {
+                    return NotFound(new { error = "ERROR: Student not found." });
+                }
+
+                if (existingStudent.League == "Bronze") {
+                    existingStudent.League = "Silver";
+                } else if (existingStudent.League == "Silver") {
+                    existingStudent.League = "Gold";
+                }
+
+                await _context.SaveChangesAsync();
+
                 var certificateData = new
                 {
                     credential = new
