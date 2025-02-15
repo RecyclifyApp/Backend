@@ -36,17 +36,23 @@ namespace Backend.Services {
             return username;
         } 
 
-        public static string ValidateEmail(string email, MyDbContext context) {
+        public static string ValidateEmail(string email, string userRole, MyDbContext context) {
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            
             if (!emailRegex.IsMatch(email)) {
                 throw new ArgumentException("Invalid email format."); 
             }
+            
+            if (userRole.ToLower() == "student" && !email.Trim().EndsWith("@mymail.nyp.edu.sg")) {
+                throw new ArgumentException("Student email must end with @mymail.nyp.edu.sg");
+            }
+            
             if (context.Users.Any(u => u.Email == email)) {
                 throw new ArgumentException("Email must be unique.");
             }
+
             return email;
         }
-
         public static string ValidatePassword(string password) {
             if (password.Length < 8)
                 throw new ArgumentException("Password must be at least 8 characters long.");
