@@ -1768,6 +1768,8 @@ namespace Backend {
 
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.WebHost.UseUrls("http://*:5082");
+
             builder.Services.AddDbContext<MyDbContext>();
 
             if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase)) {
