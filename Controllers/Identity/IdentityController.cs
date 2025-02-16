@@ -390,7 +390,7 @@ namespace Backend.Controllers.Identity {
                 return Unauthorized(new { error = "UERROR: Invalid login credentials." });
             }
 
-            if (await IsMSAuthEnabledAsync()) {
+            if (await IsMSAuthEnabledAsync() && (user.UserRole == "student" || user.UserRole == "parent")) {
                 return Ok(new { message = "SUCCESS: Account credentials valid.", userId = user.Id }); 
             } else {
                 // Generate JWT Token
@@ -429,6 +429,40 @@ namespace Backend.Controllers.Identity {
                 return Unauthorized(new { error = "Invalid code." });
             } catch (Exception ex) {
                 return StatusCode(500, new { error = "An error occurred while verifying MFA.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("getMfaQrCode")]
+        public async Task<IActionResult> GetMfQrCode([FromQuery] string id) {
+            try {
+                var user = _context.Users.SingleOrDefault(u => u.Id == id);
+                if (user == null) {
+                    return NotFound(new { error = "User not found." });
+                }
+
+                Console.WriteLine("User found");
+
+                string qrCodeUrl = "";
+                if (await IsMSAuthEnabledAsync()) {
+                    if (user.MfaSecret == null || user.MfaSecret == string.Empty) {
+                        Console.WriteLine("If");
+                        var newSecretResult = await _msAuth.NewSecret();
+                        string secret = newSecretResult.ToString() ?? string.Empty;
+                        var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
+                        user.MfaSecret = secret;
+                        qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
+                        _context.SaveChanges();
+                    } else {
+                        Console.WriteLine("Else");
+                        var secret = user.MfaSecret;
+                        var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
+                        qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
+                    }
+                }
+
+                return Ok(new { qrCodeUrl });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "An error occurred while retrieving MFA QR code.", details = ex.Message });
             }
         }
 
