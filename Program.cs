@@ -1344,11 +1344,25 @@ namespace Backend {
                 var specificStudentObj = new Student {
                     UserID = baseUserObj.Id,
                     StudentID = baseUserObj.Id,
-                    Streak = 0,
+                    Streak = 6,
                     League = "Bronze",
                     CurrentPoints = 0,
                     TotalPoints = 0,
                 };
+
+                for (int i = 0; i < 10; i++) {
+                    var addStudentPoints = new StudentPoints {
+                        StudentID = baseUserObj.Id,
+                        TaskID = _context.Tasks.ToList()[i].TaskID,
+                        PointsAwarded = _context.Tasks.ToList()[i].TaskPoints,
+                        DateCompleted = DateTime.Now.AddDays(-7).AddDays(i).ToString("yyyy-MM-dd"),
+                    };
+
+                    specificStudentObj.CurrentPoints += addStudentPoints.PointsAwarded;
+                    specificStudentObj.TotalPoints += addStudentPoints.PointsAwarded;
+
+                    await _context.StudentPoints.AddAsync(addStudentPoints);
+                }
 
                 await _context.Users.AddAsync(baseUserObj);
                 await _context.Students.AddAsync(specificStudentObj);
