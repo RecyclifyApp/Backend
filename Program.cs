@@ -1841,16 +1841,6 @@ namespace Backend {
                 });
             });
 
-            builder.WebHost.ConfigureKestrel((context, options) => {
-                var kestrelConfig = context.Configuration.GetSection("Kestrel:Endpoints");
-
-                var httpUrl = kestrelConfig.GetValue<string>("Http:Url");
-                if (!string.IsNullOrEmpty(httpUrl)) {
-                    var httpPort = new Uri(httpUrl).Port;
-                    options.Listen(IPAddress.Any, httpPort);
-                }
-            });
-
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope()) {
