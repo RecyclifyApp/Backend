@@ -440,12 +440,9 @@ namespace Backend.Controllers.Identity {
                     return NotFound(new { error = "User not found." });
                 }
 
-                Console.WriteLine("User found");
-
                 string qrCodeUrl = "";
                 if (await IsMSAuthEnabledAsync()) {
                     if (user.MfaSecret == null || user.MfaSecret == string.Empty) {
-                        Console.WriteLine("If");
                         var newSecretResult = await _msAuth.NewSecret();
                         string secret = newSecretResult.ToString() ?? string.Empty;
                         var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
@@ -453,7 +450,6 @@ namespace Backend.Controllers.Identity {
                         qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
                         _context.SaveChanges();
                     } else {
-                        Console.WriteLine("Else");
                         var secret = user.MfaSecret;
                         var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
                         qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
