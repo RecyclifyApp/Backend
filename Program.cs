@@ -1408,7 +1408,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1424,7 +1426,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1440,7 +1444,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1456,7 +1462,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1472,7 +1480,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1488,7 +1498,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1504,7 +1516,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1520,7 +1534,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1536,7 +1552,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
@@ -1552,7 +1570,9 @@ namespace Backend {
                         { "UserRole", "student" },
                         { "Avatar", "" },
                         { "EmailVerified", false },
-                        { "PhoneVerified", false }
+                        { "PhoneVerified", false },
+                        { "CurrentPoints", Utilities.GenerateRandomInt(100, 300) },
+                        { "TotalPoints", Utilities.GenerateRandomInt(300, 600) }
                     }
                 });
 
