@@ -1277,7 +1277,7 @@ namespace Backend {
 
                 await DatabaseManager.CreateUserRecords(_context, "admin", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
-                        { "Name", "Nicholas Chew" },
+                        { "Name", "3xpect1916" },
                         { "FName", "Nicholas" },
                         { "LName", "Chew" },
                         { "Email", "3xpect1916@gmail.com" },
@@ -1293,7 +1293,7 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "teacher", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", teacherID },
-                        { "Name", "Lincoln Lim" },
+                        { "Name", "lincolnlim267" },
                         { "FName", "Lincoln" },
                         { "LName", "Lim" },
                         { "Email", "lincolnlim267@gmail.com" },
@@ -1329,7 +1329,7 @@ namespace Backend {
                 var studentObjPassword = Environment.GetEnvironmentVariable("DEFAULT_STUDENT_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_STUDENT_PASSWORD environment variable not found.");
                 var baseUserObj = new User {
                     Id = Utilities.GenerateUniqueID(),
-                    Name = "Joshua Long",
+                    Name = "joshu5739yx",
                     FName = "Joshua",
                     LName = "Long",
                     Email = "joshu5739yx@gmail.com",
@@ -1357,10 +1357,10 @@ namespace Backend {
 
                 await DatabaseManager.CreateUserRecords(_context, "parent", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
-                        { "Name", "Tan Qian Peng" },
+                        { "Name", "tanqianpeng18" },
                         { "FName", "Qian Peng" },
                         { "LName", "Tan" },
-                        { "Email", "234504H@mymail.nyp.edu.sg" },
+                        { "Email", "tanqianpeng18@gmail.com" },
                         { "Password", Environment.GetEnvironmentVariable("DEFAULT_PARENT_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_PARENT_PASSWORD environment variable not found.") },
                         { "ContactNumber", "87810955" },
                         { "UserRole", "parent" },
@@ -1399,14 +1399,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Lana Ng" },
+                        { "Name", "lanang" },
                         { "FName", "Lana" },
                         { "LName", "Ng" },
                         { "Email", "000000p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1415,14 +1415,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Kate Gibson" },
+                        { "Name", "kategibson" },
                         { "FName", "Kate" },
                         { "LName", "Gibson" },
                         { "Email", "000001p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1431,14 +1431,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Peter Parker" },
+                        { "Name", "peterparker" },
                         { "FName", "Peter" },
                         { "LName", "Parker" },
                         { "Email", "000002p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1447,14 +1447,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Ethan Carter" },
+                        { "Name", "ethancarter" },
                         { "FName", "Ethan" },
                         { "LName", "Carter" },
                         { "Email", "000003p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1463,14 +1463,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Olivia Bennett" },
+                        { "Name", "oliviabennett" },
                         { "FName", "Olivia" },
                         { "LName", "Bennett" },
                         { "Email", "000004p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1479,14 +1479,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Noah Mitchell" },
+                        { "Name", "noahmitchell" },
                         { "FName", "Noah" },
                         { "LName", "Mitchell" },
                         { "Email", "000005p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1495,14 +1495,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Emma Robinson" },
+                        { "Name", "emmarobinson" },
                         { "FName", "Emma" },
                         { "LName", "Robinson" },
                         { "Email", "000006p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1511,14 +1511,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Liam Turner" },
+                        { "Name", "liamturner" },
                         { "FName", "Liam" },
                         { "LName", "Turner" },
                         { "Email", "000007p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1527,14 +1527,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Ava Parker" },
+                        { "Name", "avaparker" },
                         { "FName", "Ava" },
                         { "LName", "Parker" },
                         { "Email", "000008p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
@@ -1543,14 +1543,14 @@ namespace Backend {
                 await DatabaseManager.CreateUserRecords(_context, "student", new List<Dictionary<string, object>> {
                     new Dictionary<string, object> {
                         { "Id", Utilities.GenerateUniqueID() },
-                        { "Name", "Sophia Ramirez" },
+                        { "Name", "sophiaramirez" },
                         { "FName", "Sophia" },
                         { "LName", "Ramirez" },
                         { "Email", "000009p@mymail.nyp.edu.sg" },
                         { "Password", Utilities.GenerateUniqueID() },
                         { "ContactNumber", Utilities.GenerateRandomInt(10000000, 99999999).ToString() },
                         { "UserRole", "student" },
-                        { "Avatar", "student_avatar.jpg" },
+                        { "Avatar", "" },
                         { "EmailVerified", false },
                         { "PhoneVerified", false }
                     }
