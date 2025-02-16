@@ -9,25 +9,31 @@ using System.Security.Claims;
 using System.Text;
 
 
-namespace Backend.Controllers {
+namespace Backend.Controllers
+{
     [ApiController]
     [Route("api/[controller]")]
     [ServiceFilter(typeof(CheckSystemLockedFilter))]
-    public class UserManagementController(MyDbContext _context) : ControllerBase {
+    public class UserManagementController(MyDbContext _context) : ControllerBase
+    {
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers() {
+        public async Task<IActionResult> GetAllUsers()
+        {
             var users = await _context.Users.ToListAsync();
             return Ok(new { message = "SUCCESS: Users retrieved", data = users });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser) {
-            if (!ModelState.IsValid) {
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
+        {
+            if (!ModelState.IsValid)
+            {
                 return BadRequest(new { error = "UERROR: Invalid user data" });
             }
 
             var existingUser = await _context.Users.FindAsync(id);
-            if (existingUser == null) {
+            if (existingUser == null)
+            {
                 return NotFound(new { error = "ERROR: User not found" });
             }
 
@@ -36,17 +42,22 @@ namespace Backend.Controllers {
             existingUser.ContactNumber = updatedUser.ContactNumber;
             existingUser.UserRole = updatedUser.UserRole;
 
-            try {
+            try
+            {
                 await _context.SaveChangesAsync();
                 return Ok(new { message = "SUCCESS: User updated", data = existingUser });
-            } catch {
+            }
+            catch
+            {
                 return StatusCode(500, new { error = "ERROR: An error occurred while updating the user" });
             }
         }
 
         [HttpPost("CreateTeacherAccount")]
-        public async Task<IActionResult> CreateTeacherAccount([FromBody] CreateTeacherAccountRequest request) {
-            if (request.UserRole?.ToLower() != "teacher") {
+        public async Task<IActionResult> CreateTeacherAccount([FromBody] CreateTeacherAccountRequest request)
+        {
+            if (request.UserRole?.ToLower() != "teacher")
+            {
                 return BadRequest(new { error = "ERROR: Only teacher accounts can be created." });
             }
 
@@ -63,11 +74,13 @@ namespace Backend.Controllers {
                 }
             };
 
-            try {
+            try
+            {
                 await DatabaseManager.CreateUserRecords(_context, request.UserRole, keyValuePairs);
 
                 var user = _context.Users.SingleOrDefault(u => u.Email == email);
-                if (user == null) {
+                if (user == null)
+                {
                     return BadRequest(new { error = "ERROR: User creation failed." });
                 }
 
@@ -99,10 +112,12 @@ namespace Backend.Controllers {
 
                 await CreateClass(request.classNumber.ToString(), request.classDescription, user.Id);
 
-                return Ok(new {
+                return Ok(new
+                {
                     message = "SUCCESS: Account created successfully.",
                     token,
-                    user = new {
+                    user = new
+                    {
                         user.Id,
                         user.Name,
                         user.FName,
@@ -111,29 +126,37 @@ namespace Backend.Controllers {
                         user.UserRole
                     }
                 });
-            } catch (ArgumentException ex) {
+            }
+            catch (ArgumentException ex)
+            {
                 return BadRequest(new { error = "UERROR: " + ex.Message });
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Console.WriteLine(ex);
                 return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
             }
         }
 
-        private string CreateToken(User user) {
+        private string CreateToken(User user)
+        {
             string? secret = Environment.GetEnvironmentVariable("JWT_KEY");
-            if (string.IsNullOrEmpty(secret)) {
+            if (string.IsNullOrEmpty(secret))
+            {
                 throw new Exception("JWT secret is missing.");
             }
 
             // Validate user properties
-            if (user.Id == null || string.IsNullOrEmpty(user.Name) || string.IsNullOrEmpty(user.Email) || string.IsNullOrEmpty(user.UserRole)) {
+            if (user.Id == null || string.IsNullOrEmpty(user.Name) || string.IsNullOrEmpty(user.Email) || string.IsNullOrEmpty(user.UserRole))
+            {
                 throw new Exception("User properties are missing or invalid.");
             }
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secret);
 
-            var tokenDescriptor = new SecurityTokenDescriptor{
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
                 Subject = new ClaimsIdentity(new[] {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.Name),
@@ -151,31 +174,38 @@ namespace Backend.Controllers {
             return tokenHandler.WriteToken(token);
         }
 
-        private async Task<string> CreateClass(string className, string classDescription, string teacherID) {
-            if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(teacherID)) {
+        private async Task<string> CreateClass(string className, string classDescription, string teacherID)
+        {
+            if (string.IsNullOrEmpty(className) || string.IsNullOrEmpty(classDescription) || string.IsNullOrEmpty(teacherID))
+            {
                 return "UERROR: Invalid class details. Please provide valid class details.";
             }
 
             // Check if class name is an integer (E.g. 101)
-            if (!int.TryParse(className, out int intClassName)) {
+            if (!int.TryParse(className, out int intClassName))
+            {
                 return "UERROR: Class name must be an integer.";
             }
 
             // Find Teacher
             var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.TeacherID == teacherID);
-            if (teacher == null) {
+            if (teacher == null)
+            {
                 return "ERROR: Teacher not found.";
             }
 
             // Find Class Existence
             var classExist = await _context.Classes.FirstOrDefaultAsync(c => c.ClassName == intClassName);
-            if (classExist != null) {
+            if (classExist != null)
+            {
                 return "UERROR: Class already exists.";
             }
 
-            try {
+            try
+            {
                 var classID = Utilities.GenerateUniqueID();
-                var newClass = new Class {
+                var newClass = new Class
+                {
                     ClassID = classID,
                     ClassName = intClassName,
                     ClassDescription = classDescription,
@@ -191,14 +221,18 @@ namespace Backend.Controllers {
 
                 var recommendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, 3);
 
-                if (recommendResponse != null) {
-                    foreach (var quest in recommendResponse.result) {
+                if (recommendResponse != null)
+                {
+                    foreach (var quest in recommendResponse.result)
+                    {
                         var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
-                        if (assignedTeacher == null) {
+                        if (assignedTeacher == null)
+                        {
                             return "ERROR: Class's teacher not found";
                         }
 
-                        var questProgress = new QuestProgress {
+                        var questProgress = new QuestProgress
+                        {
                             QuestID = quest.QuestID,
                             ClassID = classID,
                             DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
@@ -217,31 +251,80 @@ namespace Backend.Controllers {
 
                 return "SUCCESS: Class created successfully.";
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return $"ERROR: An error occurred: {ex.Message}";
             }
         }
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(string id) {
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            // Find the user first
             var user = await _context.Users.FindAsync(id);
-            if (user == null) {
+            if (user == null)
+            {
+                // User not found, return 404
                 return NotFound(new { error = "ERROR: User not found" });
             }
 
+            // Log the user role to check if it's being read correctly
+            Console.WriteLine($"Deleting user with role: {user.UserRole}");
+
+            // Check if the user is a teacher
+            if (user.UserRole == "teacher")
+            {
+                try
+                {
+                    // Fetch all related classes where the teacher is assigned
+                    var relatedClasses = await _context.Classes.Where(c => c.TeacherID == id).ToListAsync();
+                    if (relatedClasses.Any())
+                    {
+                        // Log how many classes are associated with the teacher
+                        Console.WriteLine($"Found {relatedClasses.Count} related classes to delete.");
+
+                        // Remove all related classes
+                        _context.Classes.RemoveRange(relatedClasses);
+
+                        // Save changes to delete classes
+                        await _context.SaveChangesAsync();
+                        Console.WriteLine("Related classes deleted successfully.");
+                    }
+                    else
+                    {
+                        // If no related classes, log that as well
+                        Console.WriteLine("No related classes found for this teacher.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error if deleting related classes fails
+                    return StatusCode(500, new { error = "ERROR: Failed to delete related classes.", details = ex.Message });
+                }
+            }
+
+            // Now delete the user
             _context.Users.Remove(user);
 
-            try {
+            try
+            {
+                // Save changes to delete the user
                 await _context.SaveChangesAsync();
                 return Ok(new { message = "SUCCESS: User deleted successfully" });
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
+                // Log error if deleting the user fails
                 return StatusCode(500, new { error = "ERROR: An error occurred while deleting the user.", details = ex.Message });
             }
         }
+
     }
 
-    public class CreateTeacherAccountRequest {
+    public class CreateTeacherAccountRequest
+    {
         public required string Name { get; set; }
         public required string FName { get; set; }
         public required string LName { get; set; }
