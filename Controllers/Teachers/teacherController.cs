@@ -307,7 +307,9 @@ namespace Backend.Controllers.Teachers
                             {
                                 u.Name,
                                 u.Email,
-                                u.Avatar
+                                u.Avatar,
+                                u.FName,
+                                u.LName
                             }
                         }
                     )
@@ -532,6 +534,8 @@ namespace Backend.Controllers.Teachers
                             t.Student.StudentID,
                             t.Student.UserID,
                             t.Student.User.Name,
+                            t.Student.User.FName,
+                            t.Student.User.LName,
                             t.Student.User.Email,
                             t.Student.User.Avatar
                         } : null,
