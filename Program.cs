@@ -1841,6 +1841,8 @@ namespace Backend {
                 });
             });
 
+            builder.WebHost.UseUrls("http://0.0.0.0:5082");
+
             // builder.WebHost.ConfigureKestrel((context, options) => {
             //     var kestrelConfig = context.Configuration.GetSection("Kestrel:Endpoints");
 
