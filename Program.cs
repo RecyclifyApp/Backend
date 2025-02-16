@@ -1796,7 +1796,7 @@ namespace Backend {
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
-                    var frontendUrl = "http://localhost:5173";
+                    var frontendUrl = "www.recyclify.live";
                     if (!string.IsNullOrEmpty(frontendUrl)) {
                         policy.WithOrigins(frontendUrl)
                               .AllowAnyHeader()
@@ -1848,14 +1848,6 @@ namespace Backend {
                 if (!string.IsNullOrEmpty(httpUrl)) {
                     var httpPort = new Uri(httpUrl).Port;
                     options.Listen(IPAddress.Any, httpPort);
-                }
-
-                var httpsUrl = kestrelConfig.GetValue<string>("Https:Url");
-                if (!string.IsNullOrEmpty(httpsUrl)) {
-                    var httpsPort = new Uri(httpsUrl).Port;
-                    options.Listen(IPAddress.Any, httpsPort, listenOptions => {
-                        listenOptions.UseHttps();
-                    });
                 }
             });
 
