@@ -1348,6 +1348,7 @@ namespace Backend {
                     League = "Bronze",
                     CurrentPoints = 0,
                     TotalPoints = 0,
+                    LastActiveDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")
                 };
 
                 for (int i = 0; i < 10; i++) {
