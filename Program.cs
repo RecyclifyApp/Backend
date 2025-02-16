@@ -1798,7 +1798,7 @@ namespace Backend {
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
-                    var frontendUrl = "www.recyclify.live";
+                    var frontendUrl = "https://recyclify.live";
                     if (!string.IsNullOrEmpty(frontendUrl)) {
                         policy.WithOrigins(frontendUrl)
                               .AllowAnyHeader()
