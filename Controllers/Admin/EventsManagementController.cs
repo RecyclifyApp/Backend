@@ -42,6 +42,45 @@ namespace Backend.Controllers
             }
         }
 
+        [HttpGet("send-email-newsletter")]
+        public async Task<IActionResult> SendEmailNewsletter([FromQuery] string userID) {
+            try {
+                if (string.IsNullOrEmpty(userID)) {
+                    return BadRequest(new { error = "ERROR: User ID is required" });
+                }
+
+                var user = _context.Users.FirstOrDefault(u => u.Id == userID);
+                if (user == null) {
+                    return NotFound(new { error = "ERROR: User not found" });
+                }
+
+                // fetch all events and take the most recent 5 based on the posted date
+                var events = await _context.Events.OrderByDescending(e => e.PostedDateTime).Take(5).ToListAsync();
+
+                var event1 = events.Count > 0 ? events[0] : null;
+                var event2 = events.Count > 1 ? events[1] : null;
+                var event3 = events.Count > 2 ? events[2] : null;
+                var event4 = events.Count > 3 ? events[3] : null;
+                var event5 = events.Count > 4 ? events[4] : null;
+
+                var emailVars = new Dictionary<string, string> {
+                    { "username", user.Name },
+                    { "event1", event1 != null ? $"{event1.Title} - {event1.Description}" : "" },
+                    { "event2", event2 != null ? $"{event2.Title} - {event2.Description}" : "" },
+                    { "event3", event3 != null ? $"{event3.Title} - {event3.Description}" : "" },
+                    { "event4", event4 != null ? $"{event4.Title} - {event4.Description}" : "" },
+                    { "event5", event5 != null ? $"{event5.Title} - {event5.Description}" : "" }
+                };
+
+                var Emailer = new Emailer(_context);
+                await Emailer.SendEmailAsync(user.Email, "Your e-newsletter", "Events", emailVars);
+
+                return Ok(new { message = "SUCCESS: Email newsletter sent successfully" });
+            } catch (Exception ex) {
+                return StatusCode(500, new { error = "ERROR: Failed to send email newsletter", details = ex.Message });
+            }
+        }
+
         // POST: api/Events
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromForm] EventRequest eventRequest)

@@ -690,6 +690,7 @@ namespace Backend {
                 await PopulateCloudConfigs();
                 await PopulateTasksAndQuests();
                 await PopulateRewardItems();
+                await PopulateEvents();
                 await PopulatePresentationUsers();
                 await PopulateStudents();
 
@@ -1255,6 +1256,49 @@ namespace Backend {
                 }
 
                 _context.RewardItems.AddRange(defaultRewards);
+                await _context.SaveChangesAsync();
+
+                return;
+            } catch (Exception ex) {
+                Console.WriteLine("");
+                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
+
+                return;
+            }
+        }
+
+        private async Task PopulateEvents() {
+            Console.WriteLine("");
+            Console.Write("Populating Events...");
+            try {
+                var event1 = new Event {
+                    Id = Utilities.GenerateUniqueID(),
+                    Title = "Recycling Awareness Campaign",
+                    Description = "Join us for a campaign to raise awareness about recycling.",
+                    EventDateTime = DateTime.Now.AddDays(7).ToString("yyyy-MM-dd"),
+                    ImageUrl = "",
+                    PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
+                var event2 = new Event {
+                    Id = Utilities.GenerateUniqueID(),
+                    Title = "Eco-Friendly Workshop",
+                    Description = "Learn how to make eco-friendly products at home.",
+                    EventDateTime = DateTime.Now.AddDays(14).ToString("yyyy-MM-dd"),
+                    ImageUrl = "",
+                    PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
+                var event3 = new Event {
+                    Id = Utilities.GenerateUniqueID(),
+                    Title = "Energy Conservation Talk",
+                    Description = "Join us for a talk on energy conservation and sustainability.",
+                    EventDateTime = DateTime.Now.AddDays(21).ToString("yyyy-MM-dd"),
+                    ImageUrl = "",
+                    PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
+                _context.Events.AddRange(event1, event2, event3);
                 await _context.SaveChangesAsync();
 
                 return;
