@@ -91,6 +91,9 @@ namespace Backend.Services {
             string avatar = userDetails.GetValueOrDefault("Avatar")?.ToString() ?? "";
             string linkedStudent = userDetails.GetValueOrDefault("StudentID")?.ToString() ?? "";
 
+            int currentPoints = userDetails.GetValueOrDefault("CurrentPoints") is int points ? points : 0;
+            int totalPoints = userDetails.GetValueOrDefault("TotalPoints") is int tPoints ? tPoints : 0;
+
             var baseUserObj = new User {
                 Id = id,
                 Name = name,
@@ -111,8 +114,8 @@ namespace Backend.Services {
                     StudentID = baseUserObj.Id,
                     Streak = 0,
                     League = "Bronze",
-                    CurrentPoints = 0,
-                    TotalPoints = 0,
+                    CurrentPoints = currentPoints,
+                    TotalPoints = totalPoints,
                 };
 
                 context.Students.Add(specificStudentObj);
