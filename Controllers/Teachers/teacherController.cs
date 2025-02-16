@@ -1033,10 +1033,20 @@ namespace Backend.Controllers.Teachers
                     return NotFound(new { error = "ERROR: Student not found." });
                 }
 
+                var topContributorCurrentLeague = "";
+                var topContributorPromotedLeague = "";
+
                 if (existingStudent.League == "Bronze") {
                     existingStudent.League = "Silver";
+                    topContributorCurrentLeague = "Bronze";
+                    topContributorPromotedLeague = "You have been promoted to Silver league!";
                 } else if (existingStudent.League == "Silver") {
                     existingStudent.League = "Gold";
+                    topContributorCurrentLeague = "Silver";
+                    topContributorPromotedLeague = "You have been promoted to Gold league!";
+                } else if (existingStudent.League == "Gold") {
+                    topContributorCurrentLeague = "Gold";
+                    topContributorPromotedLeague = "Congratulations! You are the top contributor in the highest league!";
                 }
 
                 await _context.SaveChangesAsync();
@@ -1052,6 +1062,11 @@ namespace Backend.Controllers.Teachers
                         },
                         group_id = Environment.GetEnvironmentVariable("ACCREDIBLE_RECYCLIFY_CERTIFICATE_GROUP_ID"),
                         issued_on = DateTime.Now.ToString("yyyy-MM-dd"),
+                        custom_attributes = new
+                        {
+                            current_league = topContributorCurrentLeague,
+                            promoted_league = topContributorPromotedLeague
+                        }
                     }
                 };
 
