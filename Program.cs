@@ -1843,23 +1843,23 @@ namespace Backend {
 
             builder.WebHost.UseUrls("http://0.0.0.0:5082");
 
-            // builder.WebHost.ConfigureKestrel((context, options) => {
-            //     var kestrelConfig = context.Configuration.GetSection("Kestrel:Endpoints");
+            builder.WebHost.ConfigureKestrel((context, options) => {
+                var kestrelConfig = context.Configuration.GetSection("Kestrel:Endpoints");
 
-            //     var httpUrl = kestrelConfig.GetValue<string>("Http:Url");
-            //     if (!string.IsNullOrEmpty(httpUrl)) {
-            //         var httpPort = new Uri(httpUrl).Port;
-            //         options.Listen(IPAddress.Any, httpPort);
-            //     }
+                var httpUrl = kestrelConfig.GetValue<string>("Http:Url");
+                if (!string.IsNullOrEmpty(httpUrl)) {
+                    var httpPort = new Uri(httpUrl).Port;
+                    options.Listen(IPAddress.Any, httpPort);
+                }
 
-            //     var httpsUrl = kestrelConfig.GetValue<string>("Https:Url");
-            //     if (!string.IsNullOrEmpty(httpsUrl)) {
-            //         var httpsPort = new Uri(httpsUrl).Port;
-            //         options.Listen(IPAddress.Any, httpsPort, listenOptions => {
-            //             listenOptions.UseHttps();
-            //         });
-            //     }
-            // });
+                var httpsUrl = kestrelConfig.GetValue<string>("Https:Url");
+                if (!string.IsNullOrEmpty(httpsUrl)) {
+                    var httpsPort = new Uri(httpsUrl).Port;
+                    options.Listen(IPAddress.Any, httpsPort, listenOptions => {
+                        listenOptions.UseHttps();
+                    });
+                }
+            });
 
             var app = builder.Build();
 
