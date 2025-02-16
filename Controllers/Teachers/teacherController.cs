@@ -360,9 +360,9 @@ namespace Backend.Controllers.Teachers
 
         // Update Student
         [HttpPut("update-student")]
-        public async Task<IActionResult> UpdateStudent(string studentID, string studentName, string studentEmail)
+        public async Task<IActionResult> UpdateStudent(string studentID, string fName, string lName, string studentEmail)
         {
-            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(studentName) || string.IsNullOrEmpty(studentEmail))
+            if (string.IsNullOrEmpty(studentID) || string.IsNullOrEmpty(fName) || string.IsNullOrEmpty(lName) || string.IsNullOrEmpty(studentEmail))
             {
                 return BadRequest(new { error = "UERROR: Invalid student details. Please provide valid student details." });
             }
@@ -380,7 +380,8 @@ namespace Backend.Controllers.Teachers
 
             try
             {
-                student.User.Name = studentName;
+                student.User.FName = fName;
+                student.User.LName = lName;
                 student.User.Email = studentEmail;
                 _context.Students.Update(student);
                 await _context.SaveChangesAsync();
