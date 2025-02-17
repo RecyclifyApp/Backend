@@ -1270,44 +1270,63 @@ namespace Backend {
         private async Task PopulateEvents() {
             Console.WriteLine("");
             Console.Write("Populating Events...");
-            try {
-                var event1 = new Event {
+
+            var defaultEvents = new List<Event> {
+                new Event {
                     Id = Utilities.GenerateUniqueID(),
                     Title = "Recycling Awareness Campaign",
                     Description = "Join us for a campaign to raise awareness about recycling.",
                     EventDateTime = DateTime.Now.AddDays(7).ToString("yyyy-MM-dd"),
-                    ImageUrl = "",
+                    ImageUrl = "RecyclingAwareness.jpg",
                     PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-                };
-
-                var event2 = new Event {
+                },
+                new Event {
                     Id = Utilities.GenerateUniqueID(),
                     Title = "Eco-Friendly Workshop",
                     Description = "Learn how to make eco-friendly products at home.",
                     EventDateTime = DateTime.Now.AddDays(14).ToString("yyyy-MM-dd"),
-                    ImageUrl = "",
+                    ImageUrl = "EcoFriendly.jpg",
                     PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-                };
-
-                var event3 = new Event {
+                },
+                new Event {
                     Id = Utilities.GenerateUniqueID(),
                     Title = "Energy Conservation Talk",
                     Description = "Join us for a talk on energy conservation and sustainability.",
                     EventDateTime = DateTime.Now.AddDays(21).ToString("yyyy-MM-dd"),
-                    ImageUrl = "",
+                    ImageUrl = "EnergyConservation.jpg",
                     PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-                };
+                }
+            };
 
-                _context.Events.AddRange(event1, event2, event3);
-                await _context.SaveChangesAsync();
+            foreach (var ev in defaultEvents) {
+                try {
+                    var filePath = Path.Combine("wwwroot", "Assets", "Events", Path.GetFileName(ev.ImageUrl ?? string.Empty));
+                    
+                    if (File.Exists(filePath)) {
+                        using var stream = new FileStream(filePath, FileMode.Open);
+                        
+                        var formFile = new FormFile(stream, 0, stream.Length, "", Path.GetFileName(filePath)) {
+                            Headers = new HeaderDictionary(),
+                            ContentType = "image/jpeg"
+                        };
 
-                return;
-            } catch (Exception ex) {
-                Console.WriteLine("");
-                Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
+                        var uploadResult = await AssetsManager.UploadFileAsync(formFile);
 
-                return;
+                        if (uploadResult.StartsWith("SUCCESS")) {
+                            ev.ImageUrl = await AssetsManager.GetFileUrlAsync(Path.GetFileName(filePath));
+                            ev.ImageUrl = ev.ImageUrl.Substring("SUCCESS: ".Length).Trim();
+                        }
+                    }
+                } catch (Exception ex) {    
+                    Console.WriteLine("");
+                    Console.WriteLine($"ERROR: {ex.Message}");
+                }
             }
+
+            _context.Events.AddRange(defaultEvents);
+            await _context.SaveChangesAsync();
+
+            return;
         }
 
         private async Task PopulatePresentationUsers() {
@@ -1350,7 +1369,7 @@ namespace Backend {
                     }
                 });
 
-                var teacherClass = new Class {
+                var teacherClass1 = new Class {
                     ClassID = teacherClassID,
                     ClassName = 101,
                     ClassDescription = "Class 101",
@@ -1361,16 +1380,36 @@ namespace Backend {
                     JoinCode = Utilities.GenerateRandomInt(100000, 999999)
                 };
 
-                teacherClass.WeeklyClassPoints = new List<WeeklyClassPoints> {
+                teacherClass1.WeeklyClassPoints = new List<WeeklyClassPoints> {
                     new WeeklyClassPoints {
                         ClassID = teacherClassID,
                         Date = DateTime.Now.AddDays(new Random().Next((DateTime.Now - new DateTime(2020, 1, 1)).Days)),
                         PointsGained = Utilities.GenerateRandomInt(500, 1000),
-                        Class = teacherClass
+                        Class = teacherClass1
                     }
                 };
 
-                await _context.Classes.AddAsync(teacherClass);
+                var teacherClass2 = new Class {
+                    ClassID = Utilities.GenerateUniqueID(),
+                    ClassName = 102,
+                    ClassDescription = "Class 102",
+                    ClassPoints = Utilities.GenerateRandomInt(500, 1000),
+                    TeacherID = teacherID,
+                    Teacher = _context.Teachers.Find(teacherID) ?? throw new Exception("ERROR: Teacher not found."),
+                    WeeklyClassPoints = new List<WeeklyClassPoints>(),
+                    JoinCode = Utilities.GenerateRandomInt(100000, 999999)
+                };
+
+                teacherClass2.WeeklyClassPoints = new List<WeeklyClassPoints> {
+                    new WeeklyClassPoints {
+                        ClassID = teacherClass2.ClassID,
+                        Date = DateTime.Now.AddDays(new Random().Next((DateTime.Now - new DateTime(2020, 1, 1)).Days)),
+                        PointsGained = Utilities.GenerateRandomInt(500, 1000),
+                        Class = teacherClass2
+                    }
+                };
+
+                await _context.Classes.AddRangeAsync(teacherClass1, teacherClass2);
 
                 var studentObjPassword = Environment.GetEnvironmentVariable("DEFAULT_STUDENT_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_STUDENT_PASSWORD environment variable not found.");
                 var baseUserObj = new User {
