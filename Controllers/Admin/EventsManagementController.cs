@@ -146,7 +146,7 @@ namespace Backend.Controllers
                 Title = eventRequest.Title,
                 Description = eventRequest.Description,
                 EventDateTime = eventRequest.EventDateTime,
-                PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                PostedDateTime = DateTime.Now.ToString("yyyy-MM-dd"),
                 ImageUrl = imageUrl ?? string.Empty // Store the image URL if uploaded
             };
 
