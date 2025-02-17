@@ -1,0 +1,29 @@
+{
+    "scripts": {
+        "run": [
+            "pm2 delete RecyclifyBackend",
+            "pm2 start \"dotnet Backend.dll\" --name RecyclifyBackend"
+        ],
+        "stop": [
+            "pm2 stop RecyclifyBackend"
+        ],
+        "clean": [
+            "dotnet clean"
+        ],
+        "build": [
+            "dotnet build"
+        ],
+        "rmPublish": [
+            "rm -rf publish"
+        ],
+        "publish": [
+            "dotnet publish -c Release -o ./publish"
+        ],
+        "gitFetch": [
+            "git pull"
+        ]
+    },
+    "customNginx": {
+        "serverBlock": "client_max_body_size 100M;"
+    }
+}
