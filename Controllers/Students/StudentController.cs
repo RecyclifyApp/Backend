@@ -352,12 +352,9 @@ namespace Backend.Controllers {
                         ClaimedOn = null,
                         RedemptionStatus = "Pending",
                         RewardID = reward.RewardID,
-                        StudentID = student.StudentID
+                        StudentID = student.StudentID,
+                        RedemptionQRCode = ""
                     };
-
-                    _context.Redemptions.Add(redemption);
-                    student.CurrentPoints -= reward.RequiredPoints;
-                    await _context.SaveChangesAsync();
 
                     var studentName = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Name ?? "Student";
                     var studentEmail = _context.Users.FirstOrDefault(u => u.Id == student.StudentID)?.Email ?? "student@mymail.nyp.edu.sg";
@@ -370,6 +367,11 @@ namespace Backend.Controllers {
                     string fullUrl = $"{frontendUrl}{apiPath}";
 
                     string qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={Uri.EscapeDataString(fullUrl)}";
+
+                    redemption.RedemptionQRCode = qrCodeUrl;
+                    _context.Redemptions.Add(redemption);
+                    student.CurrentPoints -= reward.RequiredPoints;
+                    await _context.SaveChangesAsync();
 
                     var emailVars = new Dictionary<string, string> {
                         { "username", studentName },
@@ -418,7 +420,8 @@ namespace Backend.Controllers {
                             RewardDescription = reward.RewardDescription,
                             RequiredPoints = reward.RequiredPoints,
                             ImageUrl = reward.ImageUrl,
-                            ClaimedOn = redemption.ClaimedOn
+                            ClaimedOn = redemption.ClaimedOn,
+                            RedemptionQRCode = redemption.RedemptionQRCode
                         });
                     }
                 }

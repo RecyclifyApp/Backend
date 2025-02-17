@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class CloudDB_V49 : Migration
+    public partial class CloudDB_V50 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -521,6 +521,8 @@ namespace Backend.Migrations
                     RedeemedOn = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     ClaimedOn = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     RedemptionStatus = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RedemptionQRCode = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RewardID = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),

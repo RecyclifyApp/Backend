@@ -313,6 +313,10 @@ namespace Backend.Migrations
                     b.Property<DateTime?>("RedeemedOn")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("RedemptionQRCode")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("RedemptionStatus")
                         .IsRequired()
                         .HasColumnType("longtext");

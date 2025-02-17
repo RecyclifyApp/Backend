@@ -8,6 +8,7 @@ namespace Backend.Models {
         public DateTime? RedeemedOn { get; set; }
         public DateTime? ClaimedOn { get; set; }
         public required string RedemptionStatus { get; set; } = "Pending";
+        public required string RedemptionQRCode { get; set; }
 
         public required string RewardID { get; set; }
         

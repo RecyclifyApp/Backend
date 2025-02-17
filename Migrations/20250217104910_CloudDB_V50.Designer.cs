@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250215214203_CloudDB_V49")]
-    partial class CloudDB_V49
+    [Migration("20250217104910_CloudDB_V50")]
+    partial class CloudDB_V50
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -315,6 +315,10 @@ namespace Backend.Migrations
 
                     b.Property<DateTime?>("RedeemedOn")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RedemptionQRCode")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("RedemptionStatus")
                         .IsRequired()
