@@ -353,9 +353,15 @@ namespace Backend.Controllers.Teachers
                 return NotFound(new { error = "ERROR: Student not found." });
             }
 
+            var classStudentRecords = await _context.ClassStudents.Where(cs => cs.StudentID == studentID).ToListAsync();
+            if (classStudentRecords == null )
+            {
+                return NotFound(new { error = "ERROR: Student's class records not found." });
+            }
+            
             try
             {
-                _context.Students.Remove(student);
+                _context.ClassStudents.RemoveRange(classStudentRecords);
                 await _context.SaveChangesAsync();
 
                 return Ok(new { message = "SUCCESS: Student deleted successfully." });
