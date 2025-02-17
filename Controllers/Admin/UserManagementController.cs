@@ -40,6 +40,34 @@ namespace Backend.Controllers
                 return NotFound(new { error = "ERROR: User not found" });
             }
 
+            // Check for duplicate Name
+            var duplicateName = await _context.Users
+                .Where(u => u.Name == updatedUser.Name && u.Id != id) // Ensure it's not the same user
+                .FirstOrDefaultAsync();
+            if (duplicateName != null)
+            {
+                return BadRequest(new { error = "ERROR: Name is already taken" });
+            }
+
+            // Check for duplicate Email
+            var duplicateEmail = await _context.Users
+                .Where(u => u.Email == updatedUser.Email && u.Id != id) // Ensure it's not the same user
+                .FirstOrDefaultAsync();
+            if (duplicateEmail != null)
+            {
+                return BadRequest(new { error = "ERROR: Email is already taken" });
+            }
+
+            // Check for duplicate Contact Number
+            var duplicatePhone = await _context.Users
+                .Where(u => u.ContactNumber == updatedUser.ContactNumber && u.Id != id) // Ensure it's not the same user
+                .FirstOrDefaultAsync();
+            if (duplicatePhone != null)
+            {
+                return BadRequest(new { error = "ERROR: Contact Number is already taken" });
+            }
+
+            // Proceed with updating user
             existingUser.Name = updatedUser.Name;
             existingUser.Email = updatedUser.Email;
             existingUser.ContactNumber = updatedUser.ContactNumber;
