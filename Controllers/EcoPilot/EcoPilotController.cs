@@ -4,6 +4,8 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
 using System.IO;
+using Backend.Filters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EcoPilotApp
 {
@@ -132,6 +134,7 @@ namespace EcoPilotApp
     // API Controller that uses the RAG-enabled chat service.
     [ApiController]
     [Route("api/chat-completion")]
+    [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class EcoPilotController : ControllerBase
     {
         private readonly RagOpenAIChatService _ragChatService;
@@ -142,6 +145,7 @@ namespace EcoPilotApp
         }
 
         [HttpPost("prompt")]
+        [Authorize]
         public async Task<IActionResult> QueryEcoPilotWithUserPrompt([FromBody] UserPromptRequest request)
         {
             if (string.IsNullOrEmpty(request.UserPrompt))

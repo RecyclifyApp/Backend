@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Services;
 using Backend.Filters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers {
     [ApiController]
@@ -9,12 +10,14 @@ namespace Backend.Controllers {
     [ServiceFilter(typeof(CheckSystemLockedFilter))]
     public class ContactManagementController(MyDbContext _context) : ControllerBase {
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetContactForms() {
             var contactForms = await _context.ContactForms.ToListAsync();
             return Ok(new { message = "SUCCESS: Contact forms retrieved", data = contactForms });
         }
 
         [HttpPut("{id}/mark-replied")]
+        [Authorize]
         public async Task<IActionResult> MarkAsReplied(int id) {
             var contactForm = await _context.ContactForms.FindAsync(id);
             if (contactForm == null) {
@@ -37,6 +40,7 @@ namespace Backend.Controllers {
         }
 
         [HttpPost("{id}/send-email")]
+        [Authorize]
         public async Task<IActionResult> SendEmail(int id, [FromBody] EmailRequest emailRequest) {
             var contactForm = await _context.ContactForms.FindAsync(id);
             if (contactForm == null) {

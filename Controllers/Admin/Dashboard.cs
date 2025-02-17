@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Backend.Services;
 using Backend.Filters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
@@ -14,6 +15,7 @@ namespace Backend.Controllers
     public class RecyclingController(MyDbContext _context) : ControllerBase
     {
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<object>>> GetClassPoints()
         {
             var classPoints = await _context.Classes

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Backend.Services;
 using Backend.Filters;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
@@ -26,6 +27,7 @@ namespace Backend.Controllers
 
         // GET: api/Events
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetEvents()
         {
             try
@@ -43,6 +45,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("send-email-newsletter")]
+        [Authorize]
         public async Task<IActionResult> SendEmailNewsletter([FromQuery] string userID) {
             try {
                 if (string.IsNullOrEmpty(userID)) {
@@ -83,6 +86,7 @@ namespace Backend.Controllers
 
         // POST: api/Events
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateEvent([FromForm] EventRequest eventRequest)
         {
             // Validate the input fields

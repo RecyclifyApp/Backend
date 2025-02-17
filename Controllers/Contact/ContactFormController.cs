@@ -2,6 +2,7 @@ using Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
 using Backend.Filters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers {
     [ApiController]
@@ -21,6 +22,7 @@ namespace Backend.Controllers {
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> SubmitContactForm([FromBody] ContactFormRequest contactFormRequest) {
             if (contactFormRequest == null || !ModelState.IsValid) {
                 return BadRequest(new { error = "UERROR: Invalid contact form data" });

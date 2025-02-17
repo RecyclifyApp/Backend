@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Backend.Services;
 using Backend.Filters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers {
     [ApiController]
@@ -20,12 +21,14 @@ namespace Backend.Controllers {
 
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetRewardItems() {
             var rewardItems = await _context.RewardItems.ToListAsync();
             return Ok(new { message = "SUCCESS: Reward items retrieved", data = rewardItems });
         }
 
         [HttpGet("{rewardID}")]
+        [Authorize]
         public async Task<IActionResult> GetRewardItem(string rewardID) {
             var rewardItem = await _context.RewardItems
                 .Where(item => item.RewardID == rewardID)
@@ -40,6 +43,7 @@ namespace Backend.Controllers {
 
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateRewardItem([FromForm] RewardItemRequest rewardItemRequest) {
 
             if (rewardItemRequest.ImageFile == null) {
@@ -103,6 +107,7 @@ namespace Backend.Controllers {
         }
 
         [HttpPut("{rewardID}")]
+        [Authorize]
         public async Task<IActionResult> UpdateRewardItem(string rewardID, [FromBody] RewardItem updatedItem) {
             if (rewardID != updatedItem.RewardID) {
                 return BadRequest(new { error = "UERROR: Reward ID mismatch" });
@@ -127,6 +132,7 @@ namespace Backend.Controllers {
         }
 
         [HttpGet("{rewardID}/getImageUrl")]
+        [Authorize]
         public async Task<IActionResult> GetImageUrl(string rewardID) {
             var rewardItem = await _context.RewardItems.FindAsync(rewardID);
 

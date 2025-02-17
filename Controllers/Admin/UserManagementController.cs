@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Backend.Controllers
@@ -17,6 +18,7 @@ namespace Backend.Controllers
     public class UserManagementController(MyDbContext _context) : ControllerBase
     {
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _context.Users.ToListAsync();
@@ -24,6 +26,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
         {
             if (!ModelState.IsValid)
@@ -54,6 +57,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("CreateTeacherAccount")]
+        [Authorize]
         public async Task<IActionResult> CreateTeacherAccount([FromBody] CreateTeacherAccountRequest request)
         {
             if (request.UserRole?.ToLower() != "teacher")
@@ -260,6 +264,7 @@ namespace Backend.Controllers
 
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteUser(string id)
         {
             // Find the user first
