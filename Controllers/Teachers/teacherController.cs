@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers.Teachers
 {
@@ -18,6 +19,7 @@ namespace Backend.Controllers.Teachers
         private readonly HttpClient _httpClient = httpClient;
 
         // Get Classes
+        [Authorize]
         [HttpGet("get-classes")]
         public async Task<IActionResult> GetClasses(string teacherID)
         {
@@ -49,6 +51,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Get Overall Classes Data
+        [Authorize]
         [HttpGet("get-overall-classes-data")]
         public async Task<IActionResult> GetOverallClassesData()
         {
@@ -71,6 +74,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Get Class
+        [Authorize]
         [HttpGet("get-class")]
         public async Task<IActionResult> GetClass(string classID)
         {
@@ -97,6 +101,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Create Class, (Add Class Image later)
+        [Authorize]
         [HttpPost("create-class")]
         public async Task<IActionResult> CreateClass(string className, string classDescription, string teacherID)
         {
@@ -184,6 +189,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Delete Class 
+        [Authorize]
         [HttpDelete("delete-class")]
         public async Task<IActionResult> DeleteClass(string classId)
         {
@@ -213,6 +219,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Update Class, Add Class Image later
+        [Authorize]
         [HttpPut("update-class")]
         public async Task<IActionResult> UpdateClass(string classId, string className, string classDescription)
         {
@@ -256,6 +263,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Get Student
+        [Authorize]
         [HttpGet("get-students")]
         public async Task<IActionResult> GetStudents([FromQuery] string classId)
         {
@@ -330,6 +338,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Delete Student
+        [Authorize]
         [HttpDelete("delete-student")]
         public async Task<IActionResult> DeleteStudent(string studentID)
         {
@@ -359,6 +368,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Update Student
+        [Authorize]
         [HttpPut("update-student")]
         public async Task<IActionResult> UpdateStudent(string studentID, string fName, string lName, string studentEmail)
         {
@@ -395,6 +405,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Send Update Email to Recipient (Student / Parent)
+        [Authorize]
         [HttpPost("send-update-email")]
         public async Task<IActionResult> SendUpdateEmail(
             [FromQuery] List<string> recipients,
@@ -512,6 +523,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Get Tasks Waiting for Verification
+        [Authorize]
         [HttpGet("get-all-tasks")]
         public async Task<IActionResult> GetAllTasks(string teacherID)
         {
@@ -587,6 +599,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Verify Student Task Completion
+        [Authorize]
         [HttpPut("verify-student-task")]
         public async Task<IActionResult> VerifyStudentTask(string teacherID, string studentID, string taskID)
         {
@@ -779,6 +792,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Reject Student Task Completion
+        [Authorize]
         [HttpPut("reject-student-task")]
         public async Task<IActionResult> RejectStudentTask(string teacherID, string studentID, string taskID, string rejectionReason)
         {
@@ -853,6 +867,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Get Class Points
+        [Authorize]
         [HttpGet("get-class-points")]
         public async Task<IActionResult> GetClassPoints(string classID)
         {
@@ -906,6 +921,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Re-generate Class Quests
+        [Authorize]
         [HttpPost("regenerate-class-quests")]
         public async Task<IActionResult> RegenerateClassQuests([FromForm] string classID, [FromForm] string teacherID)
         {
@@ -1016,6 +1032,7 @@ namespace Backend.Controllers.Teachers
         }
 
         // Send a certificate to class top contributor using Accredible
+        [Authorize]
         [HttpPost("send-certificate")]
         public async Task<IActionResult> SendCertificate(string topContributorName, string topContributorEmail)
         {
