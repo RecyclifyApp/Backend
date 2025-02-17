@@ -251,6 +251,7 @@ namespace Backend.Controllers {
             return Ok(new { message = "SUCCESS: All students retrieved", data = allStudents });
         }
 
+        [Authorize]
         [HttpGet("get-all-rewards")]
         public async Task<IActionResult> GetAllRewards() {
             var allRewards = await _context.RewardItems.Where(r => r.IsAvailable == true).ToListAsync();
@@ -672,6 +673,7 @@ namespace Backend.Controllers {
             }
         }
             
+        [Authorize]
         [HttpPost("recognise-image")]
         public async Task<IActionResult> RecogniseImage([FromForm] IFormFile file) {
             if (file == null || file.Length == 0) {
