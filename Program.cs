@@ -1904,6 +1904,52 @@ namespace Backend {
 
             app.UseCors("AllowSpecificOrigins");
             app.UseHttpsRedirection();
+
+            app.MapGet("/", () => {
+                var html = @"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>Server Status</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            text-align: center;
+                            background-color: #f4f4f4;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            margin: 0;
+                        }
+                        .container {
+                            background: white;
+                            padding: 30px;
+                            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                            border-radius: 10px;
+                        }
+                        h1, h3 {
+                            color: #4CAF50;
+                        }
+                        p {
+                            color: #333;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>Welcome to the Recyclify Backend Server</h1>
+                        <h3>Server status: ✅ Healthy</h3>
+                    </div>
+                </body>
+                </html>";
+                
+                return Results.Content(html, "text/html");
+            });
+
+
             app.MapControllers();
 
             app.UseAuthentication();
