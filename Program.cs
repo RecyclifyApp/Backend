@@ -1768,7 +1768,28 @@ namespace Backend {
 
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.WebHost.UseUrls("http://*:5082");
+            var developmentMode = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            if (developmentMode != "Development") {
+                builder.WebHost.UseUrls("http://*:5082");
+            } else {
+                builder.WebHost.ConfigureKestrel((context, options) => {
+                    var kestrelConfig = context.Configuration.GetSection("Kestrel:Endpoints");
+
+                    var httpUrl = kestrelConfig.GetValue<string>("Http:Url");
+                    if (!string.IsNullOrEmpty(httpUrl)) {
+                        var httpPort = new Uri(httpUrl).Port;
+                        options.Listen(IPAddress.Any, httpPort);
+                    }
+
+                    var httpsUrl = kestrelConfig.GetValue<string>("Https:Url");
+                    if (!string.IsNullOrEmpty(httpsUrl)) {
+                        var httpsPort = new Uri(httpsUrl).Port;
+                        options.Listen(IPAddress.Any, httpsPort, listenOptions => {
+                            listenOptions.UseHttps();
+                        });
+                    }
+                });
+            }
 
             builder.Services.AddDbContext<MyDbContext>();
 
@@ -1798,7 +1819,7 @@ namespace Backend {
 
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowSpecificOrigins", policy => {
-                    var frontendUrl = "https://recyclify.live";
+                    var frontendUrl = Environment.GetEnvironmentVariable("VITE_FRONTEND_URL");
                     if (!string.IsNullOrEmpty(frontendUrl)) {
                         policy.WithOrigins(frontendUrl)
                               .AllowAnyHeader()
@@ -1876,8 +1897,10 @@ namespace Backend {
 
             app.UseStaticFiles();
 
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            if (app.Environment.IsDevelopment()) {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
             app.UseCors("AllowSpecificOrigins");
             app.UseHttpsRedirection();
@@ -1886,9 +1909,15 @@ namespace Backend {
             app.UseAuthentication();
             app.UseAuthorization();
 
-            Console.WriteLine();
-            Console.Write($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}/swagger/index.html");
-            Console.WriteLine();
+            if (developmentMode == "Production") {
+                Console.WriteLine();
+                Console.Write($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}");
+                Console.WriteLine();
+            } else {
+                Console.WriteLine();
+                Console.Write($"Server running on {Environment.GetEnvironmentVariable("HTTPS_URL")}/swagger/index.html");
+                Console.WriteLine();
+            }
 
             if (args.Length > 0 && args[0].Equals("superuser", StringComparison.OrdinalIgnoreCase))  {
                 var serverTask = app.RunAsync();
