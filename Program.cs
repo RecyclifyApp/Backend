@@ -1777,16 +1777,38 @@ namespace Backend {
 
                 await _context.SaveChangesAsync();
 
-                for (int i = 0; i < 10; i++) {
-                    var classPoints = new ClassPoints {
-                        ClassID = _context.ClassStudents.ToList()[i].ClassID,
-                        QuestID = questList[i].QuestID,
-                        ContributingStudentID = studentsList[i].StudentID,
-                        DateCompleted = DateTime.Now.AddDays(i - 7).ToString("yyyy-MM-dd"),
-                        PointsAwarded = Utilities.GenerateRandomInt(10, 100)
-                    };
+                foreach (var classObj in classes) {
+                    var studentIdsInClass = _context.ClassStudents
+                        .Where(cs => cs.ClassID == classObj.ClassID)
+                        .Select(cs => cs.StudentID)
+                        .ToList();
+                    
+                    var studentsInClass = studentsList
+                        .Where(s => studentIdsInClass.Contains(s.StudentID))
+                        .ToList();
 
-                    _context.ClassPoints.Add(classPoints);
+                    if (studentsInClass.Count == 0) continue;
+
+                    if (questList.Count == 0) {
+                        Console.WriteLine("\nERROR: No quests available. Create quests first.");
+                        return;
+                    }
+
+                    for (int dayOffset = 6; dayOffset >= 0; dayOffset--) {
+                        var targetDate = DateTime.Now.AddDays(-dayOffset).Date;
+                        int studentIndex = dayOffset % studentsInClass.Count;
+                        var student = studentsInClass[studentIndex];
+
+                        var quest = questList[dayOffset % questList.Count];
+
+                        _context.ClassPoints.Add(new ClassPoints {
+                            ClassID = classObj.ClassID,
+                            QuestID = quest.QuestID,
+                            ContributingStudentID = student.StudentID,
+                            DateCompleted = targetDate.ToString("yyyy-MM-dd"),
+                            PointsAwarded = Utilities.GenerateRandomInt(10, 100)
+                        });
+                    }
                 }
 
                 await _context.SaveChangesAsync();
