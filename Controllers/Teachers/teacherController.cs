@@ -307,7 +307,7 @@ namespace Backend.Controllers.Teachers
                             Parent = combined.Parent != null && combined.Parent.User != null
                                 ? new
                                 {
-                                    ParentName = combined.Parent.User.Name,
+                                    ParentName = combined.Parent.User.FName + " " + combined.Parent.User.LName,
                                     ParentEmail = combined.Parent.User.Email
                                 }
                                 : null,
@@ -321,7 +321,7 @@ namespace Backend.Controllers.Teachers
                             }
                         }
                     )
-                    .OrderBy(student => student.User.Name)
+                    .OrderBy(student => student.User.FName + " " + student.User.LName)
                     .ToListAsync();
 
                 if (students == null || students.Count == 0)
@@ -466,7 +466,7 @@ namespace Backend.Controllers.Teachers
             try
             {
                 var emailVars = new Dictionary<string, string> {
-                    { "studentName", student.User.Name },
+                    { "studentName", student.User.FName + " " + student.User.LName },
                     { "email", studentEmail },
                     { "className", classDetails.ClassName.ToString() },
                     { "totalPoints", student.TotalPoints.ToString() },
@@ -487,7 +487,7 @@ namespace Backend.Controllers.Teachers
                     }
                     if (parentUser != null && parentUser.User != null)
                     {
-                        emailVars.Add("parentName", parentUser.User.Name);
+                        emailVars.Add("parentName", parentUser.User.FName + " " + parentUser.User.LName);
                     }
                 }
 
@@ -777,7 +777,7 @@ namespace Backend.Controllers.Teachers
                 {
                     return NotFound(new { error = "ERROR: Student user not found." });
                 }
-                var studentUsername = studentUser.Name;
+                var studentUsername = studentUser.FName + " " + studentUser.LName;
                 var studentEmail = studentUser.Email;
 
                 var emailVars = new Dictionary<string, string> {
@@ -852,7 +852,7 @@ namespace Backend.Controllers.Teachers
                 {
                     return NotFound(new { error = "ERROR: Student user not found." });
                 }
-                var studentUsername = studentUser.Name;
+                var studentUsername = studentUser.FName + " " + studentUser.LName;
                 var studentEmail = studentUser.Email;
 
                 var emailVars = new Dictionary<string, string> {
