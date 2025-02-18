@@ -1431,8 +1431,8 @@ namespace Backend {
                     StudentID = baseUserObj.Id,
                     Streak = 6,
                     League = "Bronze",
-                    CurrentPoints = 0,
-                    TotalPoints = 0,
+                    CurrentPoints = 1000,
+                    TotalPoints = 1000,
                     LastActiveDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")
                 };
 
