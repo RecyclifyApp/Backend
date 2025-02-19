@@ -1419,7 +1419,7 @@ namespace Backend {
                     LName = "Long",
                     Email = "joshu5739yx@gmail.com",
                     Password = Utilities.HashString(studentObjPassword),
-                    ContactNumber = "83880976",
+                    ContactNumber = "00000000",
                     UserRole = "student",
                     Avatar = "",
                     EmailVerified = false,
@@ -1477,56 +1477,6 @@ namespace Backend {
 
                             var Emailer = new Emailer(_context);
                             await Emailer.SendEmailAsync(user.Email, "Your Authenticator QR Code", "MsAuth", emailVars);
-                        } else {
-                            var secret = user.MfaSecret;
-                            var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
-                            qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
-                        }
-                    }
-                } catch (Exception ex) {
-                    Console.WriteLine("");
-                    Console.WriteLine($"ERROR: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
-                }
-
-                var parentID = Utilities.GenerateUniqueID();
-                var parentEmail = "tanqianpeng18@gmail.com";
-                await DatabaseManager.CreateUserRecords(_context, "parent", new List<Dictionary<string, object>> {
-                    new Dictionary<string, object> {
-                        { "Id", parentID },
-                        { "Name", "tanqianpeng18" },
-                        { "FName", "Qian Peng" },
-                        { "LName", "Tan" },
-                        { "Email", parentEmail },
-                        { "Password", Environment.GetEnvironmentVariable("DEFAULT_PARENT_PASSWORD") ?? throw new Exception("ERROR: DEFAULT_PARENT_PASSWORD environment variable not found.") },
-                        { "ContactNumber", "87810955" },
-                        { "UserRole", "parent" },
-                        { "Avatar", "" },
-                        { "StudentID", specificStudentObj.StudentID }
-                    }
-                });
-
-                try {
-                    string qrCodeUrl = "";
-                    var MsAuthEnabled = await _context.EnvironmentConfigs.FirstOrDefaultAsync(e => e.Name == "MSAuthEnabled") ?? throw new Exception("ERROR: MSAuthEnabled environment variable not found.");
-                    if (MsAuthEnabled.Value == "true") {
-                        var user = _context.Users.SingleOrDefault(u => u.Id == parentID) ?? throw new Exception("ERROR: User not found.");
-
-                        if (user.MfaSecret == null || user.MfaSecret == string.Empty) {
-                            var newSecretResult = await _msAuth.NewSecret();
-                            string secret = newSecretResult.ToString() ?? string.Empty;
-                            var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
-                            user.MfaSecret = secret;
-                            qrCodeUrl = enrollResult?.ToString() ?? string.Empty;
-
-                            _context.SaveChanges();
-
-                            var emailVars = new Dictionary<string, string> {
-                                { "username", user.Name },
-                                { "qrcode", qrCodeUrl }
-                            };
-
-                            var Emailer = new Emailer(_context);
-                            await Emailer.SendEmailAsync(parentEmail, "Your Authenticator QR Code", "MsAuth", emailVars);
                         } else {
                             var secret = user.MfaSecret;
                             var enrollResult = await _msAuth.Enroll(user.Email, "Recyclify", secret.Trim());
