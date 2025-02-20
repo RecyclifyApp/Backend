@@ -6,17 +6,13 @@ namespace Backend.Services {
             if (string.IsNullOrEmpty(message)) {
                 throw new ArgumentException("Invalid message. Please provide a valid message.");
             } else {
-                try {
-                    if (!File.Exists(_logFilePath)) {
-                        File.Create(_logFilePath).Dispose();
-                    }
+                if (!File.Exists(_logFilePath)) {
+                    File.Create(_logFilePath).Dispose();
+                }
 
-                    using (var writer = new StreamWriter(_logFilePath, append: true)) {
-                        string formattedDate = DateTime.Now.ToString("dd MMM yyyy, h:mm tt");
-                        writer.WriteLine($"{formattedDate} - {message}");
-                    }
-                } catch (Exception ex) {
-                    Console.WriteLine($"ERROR: {ex.Message}");
+                using (var writer = new StreamWriter(_logFilePath, append: true)) {
+                    string formattedDate = DateTime.Now.ToString("dd MMM yyyy, h:mm tt");
+                    writer.WriteLine($"{formattedDate} - {message}");
                 }
             }
         }

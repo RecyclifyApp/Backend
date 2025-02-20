@@ -165,7 +165,6 @@ namespace Backend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
                 return StatusCode(500, new { error = "ERROR: An error occurred while creating the account.", details = ex.Message });
             }
         }
@@ -303,9 +302,6 @@ namespace Backend.Controllers
                 return NotFound(new { error = "ERROR: User not found" });
             }
 
-            // Log the user role to check if it's being read correctly
-            Console.WriteLine($"Deleting user with role: {user.UserRole}");
-
             // Check if the user is a teacher
             if (user.UserRole == "teacher")
             {
@@ -315,20 +311,11 @@ namespace Backend.Controllers
                     var relatedClasses = await _context.Classes.Where(c => c.TeacherID == id).ToListAsync();
                     if (relatedClasses.Any())
                     {
-                        // Log how many classes are associated with the teacher
-                        Console.WriteLine($"Found {relatedClasses.Count} related classes to delete.");
-
                         // Remove all related classes
                         _context.Classes.RemoveRange(relatedClasses);
 
                         // Save changes to delete classes
                         await _context.SaveChangesAsync();
-                        Console.WriteLine("Related classes deleted successfully.");
-                    }
-                    else
-                    {
-                        // If no related classes, log that as well
-                        Console.WriteLine("No related classes found for this teacher.");
                     }
                 }
                 catch (Exception ex)

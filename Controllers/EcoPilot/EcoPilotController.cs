@@ -72,7 +72,7 @@ namespace EcoPilotApp
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading CSV file: {ex.Message}");
+                throw new Exception($"Failed to load documents from CSV file: {ex.Message}");
             }
 
             return documents;

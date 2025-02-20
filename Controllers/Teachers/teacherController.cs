@@ -966,6 +966,8 @@ namespace Backend.Controllers.Teachers
                     var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, noOfQuestsToRegenerate);
 
                     var updatedSetOfQuestProgresses = new List<QuestProgress>();
+                    var completedQuestStatistics = new object();
+                    
                     var updatedSetOfQuests = new List<dynamic>();
 
                     foreach (var quest in completedClassQuests)
@@ -985,6 +987,8 @@ namespace Backend.Controllers.Teachers
                     if (reccomendResponse != null)
                     {
                         var reccomendedQuests = reccomendResponse.result;
+                        completedQuestStatistics = reccomendResponse.completedQuestStatistics;
+
                         foreach (var quest in reccomendedQuests)
                         {
                             var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == teacherID);
@@ -1022,9 +1026,13 @@ namespace Backend.Controllers.Teachers
                         }
                     }
 
+                    var result = new {
+                        completedQuestStatistics, updatedSetOfQuests
+                    };
+
                     await _context.SaveChangesAsync();
 
-                    return Ok(new { message = "SUCCESS: Quests regenerated successfully.", data = updatedSetOfQuests });
+                    return Ok(new { message = "SUCCESS: Quests regenerated successfully.", data = result });
                 }
                 else
                 {

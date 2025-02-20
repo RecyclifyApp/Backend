@@ -582,6 +582,11 @@ namespace Backend.Controllers {
                 if (matchedClass == null) {
                     return NotFound(new { error = "ERROR: Class not found" });
                 } else {
+                    var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
+                    if (assignedTeacher == null) {
+                        return NotFound(new { error = "ERROR: Class's teacher not found" });
+                    }
+
                     var classQuestProgresses = _context.QuestProgresses.Where(qp => qp.ClassID == matchedClass.ClassID).ToList();
                     var invalidQuestProgresses = classQuestProgresses.Where(qp => DateTime.Parse(qp.DateAssigned) < DateTime.Now.AddDays(-7)).ToList();
                     var validQuestProgresses = classQuestProgresses.Where(qp => DateTime.Parse(qp.DateAssigned) >= DateTime.Now.AddDays(-7)).ToList();
@@ -595,7 +600,6 @@ namespace Backend.Controllers {
                     
                     if (validQuestProgresses.Count == 0 || validQuestProgresses.Count != 3) {
                         var numberOfQuestsToRegenerate = 3 - validQuestProgresses.Count;
-                        var reccomendResponse = await ReccommendationsManager.RecommendQuestsAsync(_context, classID, numberOfQuestsToRegenerate);
 
                         foreach (var quest in validQuestProgresses) {
                             var foundQuest = _context.Quests.FirstOrDefault(q => q.QuestID == quest.QuestID);
@@ -604,38 +608,35 @@ namespace Backend.Controllers {
                             }
                         }
 
-                        if (reccomendResponse != null) {
-                            foreach (var quest in reccomendResponse.result) {
-                                var assignedTeacher = _context.Teachers.FirstOrDefault(t => t.TeacherID == matchedClass.TeacherID);
-                                if (assignedTeacher == null) {
-                                    return NotFound(new { error = "ERROR: Class's teacher not found" });
-                                }
+                        // create a allQuests list string quests that are not in questList
+                        var allQuests = _context.Quests.ToList();
+                        allQuests = allQuests.Where(q => !questList.Any(ql => ql.QuestID == q.QuestID)).ToList();
+                        var randomQuests = allQuests.OrderBy(q => Utilities.GenerateUniqueID()).Take(numberOfQuestsToRegenerate).ToList();
 
-                                var questProgress = new QuestProgress {
-                                    QuestID = quest.QuestID,
-                                    ClassID = matchedClass.ClassID,
-                                    DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
-                                    AmountCompleted = 0,
-                                    Completed = false,
-                                    Quest = quest,
-                                    AssignedTeacherID = assignedTeacher.TeacherID,
-                                    AssignedTeacher = assignedTeacher
-                                };
+                        foreach (var quest in randomQuests) {
+                            var questProgress = new QuestProgress {
+                                Quest = quest,
+                                Class = matchedClass,
+                                QuestID = quest.QuestID,
+                                ClassID = matchedClass.ClassID,
+                                AmountCompleted = 0,
+                                DateAssigned = DateTime.Now.ToString("yyyy-MM-dd"),
+                                Completed = false,
+                                AssignedTeacherID = matchedClass.TeacherID,
+                                AssignedTeacher = assignedTeacher
+                            };
 
-                                _context.QuestProgresses.Add(questProgress);
-
-                                questList.Add(new {
-                                    quest.QuestID,
-                                    quest.QuestTitle,
-                                    quest.QuestDescription,
-                                    quest.QuestPoints,
-                                    quest.QuestType,
-                                    quest.TotalAmountToComplete,
-                                    AmountCompleted = 0
-                                });
-
-                                _context.SaveChanges();
-                            }
+                            _context.QuestProgresses.Add(questProgress);
+                            await _context.SaveChangesAsync();
+                            questList.Add(new {
+                                quest.QuestID,
+                                quest.QuestTitle,
+                                quest.QuestDescription,
+                                quest.QuestPoints,
+                                quest.QuestType,
+                                quest.TotalAmountToComplete,
+                                AmountCompleted = questProgress.AmountCompleted
+                            });
                         }
                     } else {
                         foreach (var quest in validQuestProgresses) {
