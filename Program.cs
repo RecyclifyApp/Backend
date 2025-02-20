@@ -1419,7 +1419,7 @@ namespace Backend {
                     LName = "Long",
                     Email = "joshu5739yx@gmail.com",
                     Password = Utilities.HashString(studentObjPassword),
-                    ContactNumber = "00000000",
+                    ContactNumber = "83880976",
                     UserRole = "student",
                     Avatar = "",
                     EmailVerified = true,
