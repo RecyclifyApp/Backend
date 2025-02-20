@@ -1695,8 +1695,10 @@ namespace Backend {
                     }
                 });
 
+                var presentationStudent = _context.Users.SingleOrDefault(u => u.Name == "joshu5739yx") ?? throw new Exception("ERROR: Presentation Student not found.");
+
                 var questList = _context.Quests.ToList();
-                var studentsList = _context.Students.ToList();
+                var studentsList = _context.Students.Where(s => s.StudentID != presentationStudent.Id).ToList();
 
                 var classCount = classes.Count;
                 var studentCount = studentsList.Count;
