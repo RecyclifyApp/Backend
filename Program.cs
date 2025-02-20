@@ -1422,7 +1422,7 @@ namespace Backend {
                     ContactNumber = "00000000",
                     UserRole = "student",
                     Avatar = "",
-                    EmailVerified = false,
+                    EmailVerified = true,
                     PhoneVerified = false
                 };
 
