@@ -524,16 +524,10 @@ namespace Backend.Controllers.Identity {
                 // Generate email verification code
                 var emailCode = Utilities.GenerateRandomInt(111111, 999999).ToString();
                 var emailExpiry = DateTime.UtcNow.AddMinutes(15).ToString("o");
-                
-                // Generate SMS verification code
-                var smsCode = Utilities.GenerateRandomInt(111111, 999999).ToString();
-                var smsExpiry = DateTime.UtcNow.AddMinutes(15).ToString("o");
 
                 // Store both codes
                 user.EmailVerificationToken = emailCode;
                 user.EmailVerificationTokenExpiry = emailExpiry;
-                user.PhoneVerificationToken = smsCode;
-                user.PhoneVerificationTokenExpiry = smsExpiry;
                 _context.SaveChanges();
 
                 // Send Email verification
@@ -548,14 +542,6 @@ namespace Backend.Controllers.Identity {
                     "Welcome to Recyclify",
                     "WelcomeEmail",
                     emailVars
-                );
-
-                // Send SMS verification
-                var smsService = new SmsService(_context);
-                var smsMessage = $"Your Recyclify verification code is: {smsCode}";
-                var smsResult = await smsService.SendSmsAsync(
-                    user.ContactNumber, 
-                    smsMessage
                 );
 
                 string token = CreateToken(user);
@@ -863,59 +849,6 @@ namespace Backend.Controllers.Identity {
             catch (Exception ex) {
                 Logger.Log($"[ERROR] IDENTITY VERIFYEMAIL: Failed to verify email for user {userId}. Error: {ex.Message}");
                 return StatusCode(500, new { error = "ERROR: Failed to verify email", details = ex.Message });
-            }
-        }
-
-        [HttpPost("contactVerification")]
-        [Authorize]
-        public async Task<IActionResult> SendContactVerificationCode()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = _context.Users.Find(userId);
-
-            try
-            {
-                if (user == null)
-                {
-                    return NotFound(new { error = "ERROR: User not found." });
-                }
-
-                if (string.IsNullOrEmpty(user.ContactNumber))
-                {
-                    return BadRequest(new { error = "ERROR: Phone number not found." });
-                }
-
-                // Generate 6-digit code
-                var code = Utilities.GenerateRandomInt(111111, 999999).ToString();
-                var expiry = DateTime.UtcNow.AddMinutes(15).ToString("o"); // ISO 8601 format
-
-                // Store in database
-                user.PhoneVerificationToken = code;
-                user.PhoneVerificationTokenExpiry = expiry;
-                _context.SaveChanges();
-
-                // Send SMS
-                var contactNumber = "+65" + user.ContactNumber;
-                var message = $"Your verification code is: {code}";
-                var smsService = new SmsService(_context);
-                var smsResult = await smsService.SendSmsAsync(contactNumber, message);
-
-                if (smsResult.StartsWith("ERROR") || smsResult.StartsWith("UERROR"))
-                {
-                    string errorDetails = smsResult.Substring(
-                        smsResult.StartsWith("ERROR") ? "ERROR".Length : "UERROR".Length
-                    ).TrimStart();
-                    return StatusCode(500, new { error = $"Failed to send SMS. {errorDetails}" });
-                }
-                else
-                {
-                    return Ok(new { message = "SUCCESS: Verification code sent" });
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"[ERROR] CONTACT SENDVERIFICATIONCODE: Error processing verification request for user {userId}. Error: {ex.Message}");
-                return StatusCode(500, new { error = "ERROR: Failed to process verification request", details = ex.Message });
             }
         }
 
